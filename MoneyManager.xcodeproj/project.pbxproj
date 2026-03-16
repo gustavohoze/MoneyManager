@@ -6,20 +6,56 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		041304862F6843470036F610 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0413043F2F6817B40036F610 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 041304462F6817B40036F610;
+			remoteInfo = MoneyManager;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		041304472F6817B40036F610 /* MoneyManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoneyManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		041304822F6843470036F610 /* MoneyManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoneyManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		041304792F68382B0036F610 /* Exceptions for "MoneyManager" folder in "MoneyManager" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 041304462F6817B40036F610 /* MoneyManager */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		041304492F6817B40036F610 /* MoneyManager */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				041304792F68382B0036F610 /* Exceptions for "MoneyManager" folder in "MoneyManager" target */,
+			);
 			path = MoneyManager;
+			sourceTree = "<group>";
+		};
+		041304832F6843470036F610 /* MoneyManagerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MoneyManagerTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		041304442F6817B40036F610 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0413047F2F6843470036F610 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				041304492F6817B40036F610 /* MoneyManager */,
+				041304832F6843470036F610 /* MoneyManagerTests */,
 				041304482F6817B40036F610 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				041304472F6817B40036F610 /* MoneyManager.app */,
+				041304822F6843470036F610 /* MoneyManagerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +108,29 @@
 			productReference = 041304472F6817B40036F610 /* MoneyManager.app */;
 			productType = "com.apple.product-type.application";
 		};
+		041304812F6843470036F610 /* MoneyManagerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 041304882F6843470036F610 /* Build configuration list for PBXNativeTarget "MoneyManagerTests" */;
+			buildPhases = (
+				0413047E2F6843470036F610 /* Sources */,
+				0413047F2F6843470036F610 /* Frameworks */,
+				041304802F6843470036F610 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				041304872F6843470036F610 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				041304832F6843470036F610 /* MoneyManagerTests */,
+			);
+			name = MoneyManagerTests;
+			packageProductDependencies = (
+			);
+			productName = MoneyManagerTests;
+			productReference = 041304822F6843470036F610 /* MoneyManagerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -83,14 +144,24 @@
 					041304462F6817B40036F610 = {
 						CreatedOnToolsVersion = 26.3;
 					};
+					041304812F6843470036F610 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 041304462F6817B40036F610;
+					};
 				};
 			};
 			buildConfigurationList = 041304422F6817B40036F610 /* Build configuration list for PBXProject "MoneyManager" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				de,
 				en,
+				es,
+				fr,
+				id,
+				ja,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = 0413043E2F6817B40036F610;
 			minimizedProjectReferenceProxies = 1;
@@ -100,12 +171,20 @@
 			projectRoot = "";
 			targets = (
 				041304462F6817B40036F610 /* MoneyManager */,
+				041304812F6843470036F610 /* MoneyManagerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		041304452F6817B40036F610 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		041304802F6843470036F610 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +201,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0413047E2F6843470036F610 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		041304872F6843470036F610 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 041304462F6817B40036F610 /* MoneyManager */;
+			targetProxy = 041304862F6843470036F610 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		041304502F6817B40036F610 /* Debug */ = {
@@ -251,11 +345,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MoneyManager/MoneyManager.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LCKK5B35FW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MoneyManager/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -283,11 +379,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MoneyManager/MoneyManager.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LCKK5B35FW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MoneyManager/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -310,6 +408,48 @@
 			};
 			name = Release;
 		};
+		041304892F6843470036F610 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LCKK5B35FW;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = shecraa.MoneyManagerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MoneyManager.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MoneyManager";
+			};
+			name = Debug;
+		};
+		0413048A2F6843470036F610 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LCKK5B35FW;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = shecraa.MoneyManagerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MoneyManager.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MoneyManager";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -327,6 +467,15 @@
 			buildConfigurations = (
 				041304532F6817B40036F610 /* Debug */,
 				041304542F6817B40036F610 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		041304882F6843470036F610 /* Build configuration list for PBXNativeTarget "MoneyManagerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				041304892F6843470036F610 /* Debug */,
+				0413048A2F6843470036F610 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

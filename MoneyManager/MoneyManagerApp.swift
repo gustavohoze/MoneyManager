@@ -6,16 +6,24 @@
 //
 
 import SwiftUI
-internal import CoreData
+import CoreData
 
 @main
 struct MoneyManagerApp: App {
-    private let persistenceController = PersistenceController.shared
+    @Environment(\.scenePhase) private var scenePhase
+    
+    @StateObject private var persistenceStoreManager = PersistenceStoreManager(controller: PersistenceController.shared)
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environment(\.managedObjectContext, persistenceStoreManager.viewContext)
+                .environmentObject(persistenceStoreManager)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                persistenceStoreManager.refreshIfNeeded()
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-internal import CoreData
+import CoreData
 
 enum CoreDataModelFactory {
     static func makeModel() -> NSManagedObjectModel {
@@ -17,11 +17,11 @@ enum CoreDataModelFactory {
         entity.name = "Account"
         entity.managedObjectClassName = "NSManagedObject"
         entity.properties = [
-            attribute(name: "id", type: .UUIDAttributeType, isOptional: false),
-            attribute(name: "name", type: .stringAttributeType, isOptional: false),
-            attribute(name: "type", type: .stringAttributeType, isOptional: false),
-            attribute(name: "currency", type: .stringAttributeType, isOptional: false),
-            attribute(name: "createdAt", type: .dateAttributeType, isOptional: false)
+            attribute(name: "id", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
+            attribute(name: "name", type: .stringAttributeType, isOptional: false, defaultValue: ""),
+            attribute(name: "type", type: .stringAttributeType, isOptional: false, defaultValue: "cash"),
+            attribute(name: "currency", type: .stringAttributeType, isOptional: false, defaultValue: "IDR"),
+            attribute(name: "createdAt", type: .dateAttributeType, isOptional: false, defaultValue: Date())
         ]
         return entity
     }
@@ -31,17 +31,17 @@ enum CoreDataModelFactory {
         entity.name = "Transaction"
         entity.managedObjectClassName = "NSManagedObject"
         entity.properties = [
-            attribute(name: "id", type: .UUIDAttributeType, isOptional: false),
-            attribute(name: "accountID", type: .UUIDAttributeType, isOptional: false),
-            attribute(name: "amount", type: .doubleAttributeType, isOptional: false),
-            attribute(name: "currency", type: .stringAttributeType, isOptional: false),
-            attribute(name: "date", type: .dateAttributeType, isOptional: false),
+            attribute(name: "id", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
+            attribute(name: "accountID", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
+            attribute(name: "amount", type: .doubleAttributeType, isOptional: false, defaultValue: 0.0),
+            attribute(name: "currency", type: .stringAttributeType, isOptional: false, defaultValue: "IDR"),
+            attribute(name: "date", type: .dateAttributeType, isOptional: false, defaultValue: Date()),
             attribute(name: "merchantRaw", type: .stringAttributeType, isOptional: true),
             attribute(name: "merchantNormalized", type: .stringAttributeType, isOptional: true),
             attribute(name: "categoryID", type: .UUIDAttributeType, isOptional: true),
-            attribute(name: "source", type: .stringAttributeType, isOptional: false),
+            attribute(name: "source", type: .stringAttributeType, isOptional: false, defaultValue: "manual"),
             attribute(name: "note", type: .stringAttributeType, isOptional: true),
-            attribute(name: "createdAt", type: .dateAttributeType, isOptional: false)
+            attribute(name: "createdAt", type: .dateAttributeType, isOptional: false, defaultValue: Date())
         ]
         return entity
     }
@@ -51,13 +51,13 @@ enum CoreDataModelFactory {
         entity.name = "Merchant"
         entity.managedObjectClassName = "NSManagedObject"
         entity.properties = [
-            attribute(name: "id", type: .UUIDAttributeType, isOptional: false),
-            attribute(name: "rawName", type: .stringAttributeType, isOptional: false),
-            attribute(name: "normalizedName", type: .stringAttributeType, isOptional: false),
+            attribute(name: "id", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
+            attribute(name: "rawName", type: .stringAttributeType, isOptional: false, defaultValue: ""),
+            attribute(name: "normalizedName", type: .stringAttributeType, isOptional: false, defaultValue: ""),
             attribute(name: "brand", type: .stringAttributeType, isOptional: true),
             attribute(name: "category", type: .stringAttributeType, isOptional: true),
-            attribute(name: "confidence", type: .doubleAttributeType, isOptional: false),
-            attribute(name: "createdAt", type: .dateAttributeType, isOptional: false)
+            attribute(name: "confidence", type: .doubleAttributeType, isOptional: false, defaultValue: 0.0),
+            attribute(name: "createdAt", type: .dateAttributeType, isOptional: false, defaultValue: Date())
         ]
         return entity
     }
@@ -67,10 +67,10 @@ enum CoreDataModelFactory {
         entity.name = "Category"
         entity.managedObjectClassName = "NSManagedObject"
         entity.properties = [
-            attribute(name: "id", type: .UUIDAttributeType, isOptional: false),
-            attribute(name: "name", type: .stringAttributeType, isOptional: false),
-            attribute(name: "icon", type: .stringAttributeType, isOptional: false),
-            attribute(name: "type", type: .stringAttributeType, isOptional: false)
+            attribute(name: "id", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
+            attribute(name: "name", type: .stringAttributeType, isOptional: false, defaultValue: ""),
+            attribute(name: "icon", type: .stringAttributeType, isOptional: false, defaultValue: "questionmark.circle"),
+            attribute(name: "type", type: .stringAttributeType, isOptional: false, defaultValue: "expense")
         ]
         return entity
     }
@@ -78,12 +78,14 @@ enum CoreDataModelFactory {
     private static func attribute(
         name: String,
         type: NSAttributeType,
-        isOptional: Bool
+        isOptional: Bool,
+        defaultValue: Any? = nil
     ) -> NSAttributeDescription {
         let attribute = NSAttributeDescription()
         attribute.name = name
         attribute.attributeType = type
         attribute.isOptional = isOptional
+        attribute.defaultValue = defaultValue
         return attribute
     }
 }
