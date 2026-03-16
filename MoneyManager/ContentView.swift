@@ -9,13 +9,16 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            List {
+                Section("Milestone 0") {
+                    Label("Project structure scaffolded", systemImage: "checkmark.circle.fill")
+                    Label("Core Data + CloudKit container configured", systemImage: "checkmark.circle.fill")
+                    Label("Base entities added: Account, Transaction, Merchant, Category", systemImage: "checkmark.circle.fill")
+                }
+            }
+            .navigationTitle("MoneyManager")
         }
-        .padding()
     }
 }
 
