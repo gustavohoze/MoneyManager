@@ -1,10 +1,5 @@
 import Foundation
 
-enum CategoryBudgetSource: String, Codable {
-    case defaultMonthly
-    case specificMonth
-}
-
 struct ResolvedCategoryBudget: Equatable {
     let category: String
     let amount: Double

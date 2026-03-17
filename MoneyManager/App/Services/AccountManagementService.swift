@@ -8,17 +8,6 @@ struct PaymentMethodListItem: Identifiable, Equatable {
     let currency: String
 }
 
-enum PaymentMethodManagementError: LocalizedError, Equatable {
-    case paymentMethodInUse
-
-    var errorDescription: String? {
-        switch self {
-        case .paymentMethodInUse:
-            return "This payment method is used by transactions and cannot be deleted"
-        }
-    }
-}
-
 protocol PaymentMethodManaging {
     func loadPaymentMethods() throws -> [PaymentMethodListItem]
     func createPaymentMethod(name: String, type: String, currency: String) throws

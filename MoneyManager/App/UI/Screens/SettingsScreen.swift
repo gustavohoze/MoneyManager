@@ -11,15 +11,6 @@ struct SettingsScreen: View {
         FinanceTheme.palette(for: colorScheme)
     }
 
-    enum SettingsSection: Hashable {
-        case accountsAndIncome
-        case budgets
-        case categories
-        case notifications
-        case dataSyncPrivacy
-        case advanced
-    }
-
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {

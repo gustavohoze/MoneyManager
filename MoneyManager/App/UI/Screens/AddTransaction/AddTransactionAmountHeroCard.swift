@@ -7,13 +7,30 @@ struct AddTransactionAmountHeroCard: View {
     var palette: FinanceTheme.Palette
     var onAmountChange: (String) -> Void
 
+    private var isAmountFocused: Bool {
+        focusedField.wrappedValue == .amount
+    }
+
     var body: some View {
         VStack(spacing: 12) {
-            Text(String(localized: "Amount"))
-                .font(.system(.caption, design: .rounded).weight(.semibold))
-                .foregroundStyle(.white)
-                .textCase(.uppercase)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 8) {
+                Text(String(localized: "Amount"))
+                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white)
+                    .textCase(.uppercase)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if isAmountFocused {
+                    Button(String(localized: "Done")) {
+                        focusedField.wrappedValue = nil
+                    }
+                    .font(.system(.caption, design: .rounded).weight(.bold))
+                    .foregroundStyle(palette.heroEnd)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.92), in: Capsule())
+                }
+            }
 
             HStack(alignment: .center, spacing: 8) {
                 Text("Rp")

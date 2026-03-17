@@ -29,6 +29,10 @@ struct TransactionsTimelineGroupCard: View {
                         }
                     } label: {
                         HStack {
+                            Image(systemName: sectionIcon(for: group))
+                                .font(.system(.caption, design: .rounded).weight(.bold))
+                                .foregroundStyle(sectionColor(for: group))
+
                             Text(group.title)
                                 .font(.system(.subheadline, design: .rounded).weight(.bold))
                                 .foregroundStyle(palette.ink)
@@ -93,6 +97,19 @@ struct TransactionsTimelineGroupCard: View {
             return .indigo
         default:
             return palette.accent
+        }
+    }
+
+    private func sectionIcon(for group: TransactionTimeGroupPresentation) -> String {
+        switch group.title.lowercased() {
+        case "morning":
+            return "sun.max.fill"
+        case "afternoon":
+            return "sun.haze.fill"
+        case "evening", "night":
+            return "moon.stars.fill"
+        default:
+            return "clock.fill"
         }
     }
 }

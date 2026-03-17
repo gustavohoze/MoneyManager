@@ -89,6 +89,61 @@ struct RepositoryTests {
         #expect(categories.count == 1)
     }
 
+    @Test("Test: deduplicate categories and remap transactions")
+    func deduplicateCategories_remapsTransactionsToCanonicalCategory() throws {
+        // Objective: Ensure duplicate categories are merged and existing transactions keep valid category references.
+        // Given: Two Category rows with equivalent names and one transaction linked to the duplicate category.
+        // When: Categories are fetched through the repository.
+        // Then: Only one category remains for that name and the transaction points to the kept category ID.
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+        let categoryRepo = CoreDataCategoryRepository(context: context)
+        let accountRepo = CoreDataPaymentMethodRepository(context: context)
+        let transactionRepo = CoreDataTransactionRepository(context: context)
+
+        let canonicalID = UUID()
+        let duplicateID = UUID()
+
+        let canonical = NSManagedObject(entity: try #require(NSEntityDescription.entity(forEntityName: "Category", in: context)), insertInto: context)
+        canonical.setValue(canonicalID, forKey: "id")
+        canonical.setValue("Food", forKey: "name")
+        canonical.setValue("fork.knife", forKey: "icon")
+        canonical.setValue("expense", forKey: "type")
+
+        let duplicate = NSManagedObject(entity: try #require(NSEntityDescription.entity(forEntityName: "Category", in: context)), insertInto: context)
+        duplicate.setValue(duplicateID, forKey: "id")
+        duplicate.setValue(" food ", forKey: "name")
+        duplicate.setValue("fork.knife", forKey: "icon")
+        duplicate.setValue("expense", forKey: "type")
+
+        try context.save()
+
+        let paymentMethodID = try accountRepo.ensureDefaultPaymentMethod()
+        let transactionID = try transactionRepo.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 42,
+            currency: "USD",
+            date: Date(),
+            merchantRaw: "Cafe",
+            merchantNormalized: "Cafe",
+            categoryID: duplicateID,
+            source: "manual",
+            note: nil
+        )
+
+        let categories = try categoryRepo.fetchCategories()
+        let foodCategories = categories.filter {
+            (($0.value(forKey: "name") as? String)?.lowercased() == "food")
+        }
+        let resolvedFoodID = foodCategories.first?.value(forKey: "id") as? UUID
+        let transaction = try transactionRepo.fetchTransaction(id: transactionID)
+        let transactionCategoryID = transaction.value(forKey: "categoryID") as? UUID
+
+        #expect(foodCategories.count == 1)
+        #expect(resolvedFoodID != nil)
+        #expect(transactionCategoryID == resolvedFoodID)
+    }
+
     @Test("Test: validates transaction source")
     func createTransaction_invalidSource_throwsError() throws {
         // Objective: Enforce allowed transaction source values.

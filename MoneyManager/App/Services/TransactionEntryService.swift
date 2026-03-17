@@ -12,17 +12,6 @@ protocol TransactionEntrySaving {
     ) throws -> TransactionEntryResult
 }
 
-enum TransactionEntryError: LocalizedError, Equatable {
-    case invalidAmount
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidAmount:
-            return "Transaction amount must be greater than zero"
-        }
-    }
-}
-
 struct TransactionEntryResult {
     let transactionID: UUID
     let duplicateDetected: Bool

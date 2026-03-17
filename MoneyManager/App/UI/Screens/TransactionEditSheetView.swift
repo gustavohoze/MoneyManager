@@ -27,17 +27,21 @@ struct TransactionEditSheetView: View {
                         palette: palette
                     )
 
-                    TransactionEditCategoryField(
-                        selectedID: $viewModel.editSelectedCategoryID,
-                        options: state.options.categories,
-                        palette: palette
-                    )
+                    HStack(spacing: 12) {
+                        TransactionEditCategoryField(
+                            selectedID: $viewModel.editSelectedCategoryID,
+                            options: state.options.categories,
+                            palette: palette
+                        )
+                        .frame(maxWidth: .infinity)
 
-                    TransactionEditAccountField(
-                        selectedID: $viewModel.editSelectedAccountID,
-                        options: state.options.accounts,
-                        palette: palette
-                    )
+                        TransactionEditAccountField(
+                            selectedID: $viewModel.editSelectedAccountID,
+                            options: state.options.accounts,
+                            palette: palette
+                        )
+                        .frame(maxWidth: .infinity)
+                    }
 
                     TransactionEditDateField(
                         value: $viewModel.editDate,

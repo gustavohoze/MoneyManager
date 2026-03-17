@@ -5,6 +5,7 @@ import Combine
 
 enum CloudKitUpgradeRequestOutcome {
     case alreadyUsingCloudKit
+    case activatedInApp
     case syncDisabled
     case noICloudAccount
     case queuedForNextLaunch
@@ -13,6 +14,8 @@ enum CloudKitUpgradeRequestOutcome {
         switch self {
         case .alreadyUsingCloudKit:
             return "CloudKit sync is already active."
+        case .activatedInApp:
+            return "CloudKit sync was activated without restarting."
         case .syncDisabled:
             return "CloudKit sync is disabled in app configuration."
         case .noICloudAccount:
@@ -43,13 +46,26 @@ final class PersistenceStoreManager: ObservableObject {
             return .syncDisabled
         }
 
-        guard hasLikelyICloudAccount() else {
-            return .noICloudAccount
-        }
-
         guard controller.activeStoreMode != .cloudKitSQLite else {
             requiresAppRestartForCloudKitUpgrade = false
             return .alreadyUsingCloudKit
+        }
+
+        if controller.container.viewContext.hasChanges {
+            do {
+                try controller.container.viewContext.save()
+            } catch {
+                #if DEBUG
+                Self.logger.error("Failed to save pending changes before CloudKit upgrade attempt: \(error.localizedDescription, privacy: .public)")
+                #endif
+            }
+        }
+
+        let refreshedController = PersistenceController()
+        if refreshedController.activeStoreMode == .cloudKitSQLite {
+            controller = refreshedController
+            requiresAppRestartForCloudKitUpgrade = false
+            return .activatedInApp
         }
 
         markUpgradeRequiresRestart()
@@ -63,7 +79,4 @@ final class PersistenceStoreManager: ObservableObject {
         #endif
     }
 
-    private func hasLikelyICloudAccount() -> Bool {
-        FileManager.default.ubiquityIdentityToken != nil
-    }
 }

@@ -3,26 +3,20 @@ import CoreData
 import Combine
 
 struct MilestoneOneRootView: View {
-    private enum Tab: Hashable {
-        case dashboard
-        case transactions
-        case add
-        case settings
-    }
-
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.colorScheme) private var colorScheme
 
     @StateObject private var dashboardViewModel: DashboardViewModel
     @StateObject private var transactionListViewModel: TransactionListViewModel
     @StateObject private var addTransactionViewModel: AddTransactionViewModel
+    @StateObject private var savePlanningViewModel: SavePlanningViewModel
     @StateObject private var settingsViewModel: SettingsViewModel
     @StateObject private var rootViewModel: MilestoneOneRootViewModel
 
     private let startupSeedingService: StartupSeedingService
     private let context: NSManagedObjectContext
 
-    @State private var selectedTab: Tab = .dashboard
+    @State private var selectedTab: MilestoneOneTab = .dashboard
 
     init(context: NSManagedObjectContext) {
         let accountRepository = CoreDataPaymentMethodRepository(context: context)
@@ -70,6 +64,10 @@ struct MilestoneOneRootView: View {
             paymentMethodRepository: accountRepository,
             transactionRepository: transactionRepository,
             analytics: analytics
+        )
+
+        let savingPlanService = SavingPlanService(
+            repository: CoreDataSavingPlanRepository(context: context)
         )
 
         let dummyTransactionCRUDService = DummyTransactionCRUDService(
@@ -130,6 +128,7 @@ struct MilestoneOneRootView: View {
                 optionsProvider: formOptionsService
             )
         )
+        _savePlanningViewModel = StateObject(wrappedValue: SavePlanningViewModel(planManager: savingPlanService))
         _rootViewModel = StateObject(wrappedValue: MilestoneOneRootViewModel())
 
         startupSeedingService = StartupSeedingService(
@@ -150,25 +149,31 @@ struct MilestoneOneRootView: View {
                 .tabItem {
                     Label(String(localized: "Dashboard"), systemImage: "chart.pie.fill")
                 }
-                .tag(Tab.dashboard)
+                .tag(MilestoneOneTab.dashboard)
 
             TransactionListScreen(viewModel: transactionListViewModel)
                 .tabItem {
                     Label(String(localized: "Transactions"), systemImage: "list.bullet.rectangle")
                 }
-                .tag(Tab.transactions)
+                .tag(MilestoneOneTab.transactions)
 
             AddTransactionScreen(viewModel: addTransactionViewModel)
                 .tabItem {
                     Label(String(localized: "Add"), systemImage: "plus.circle.fill")
                 }
-                .tag(Tab.add)
+                .tag(MilestoneOneTab.add)
+
+//            SaveScreen(viewModel: savePlanningViewModel)
+//                .tabItem {
+//                    Label(String(localized: "Save"), systemImage: "banknote.fill")
+//                }
+//                .tag(MilestoneOneTab.save)
 
             SettingsScreen(viewModel: settingsViewModel)
                 .tabItem {
                     Label(String(localized: "Settings"), systemImage: "gearshape.fill")
                 }
-                .tag(Tab.settings)
+                .tag(MilestoneOneTab.settings)
         }
         .tint(FinanceTheme.palette(for: colorScheme).accent)
         .sheet(item: $transactionListViewModel.editState) { state in
@@ -198,6 +203,7 @@ struct MilestoneOneRootView: View {
             addTransactionViewModel.loadOptions()
             dashboardViewModel.load()
             transactionListViewModel.load()
+            savePlanningViewModel.load()
         }
         .onReceive(
             NotificationCenter.default
@@ -213,7 +219,12 @@ struct MilestoneOneRootView: View {
                 transactionListViewModel.load()
             }
 
-            if rootViewModel.includesEntity(named: "PaymentMethod", in: notification)
+            if rootViewModel.includesEntity(named: "SavingPlan", in: notification) {
+                savePlanningViewModel.load()
+            }
+
+            if rootViewModel.includesEntity(named: "Account", in: notification)
+                || rootViewModel.includesEntity(named: "PaymentMethod", in: notification)
                 || rootViewModel.includesEntity(named: "Category", in: notification)
             {
                 addTransactionViewModel.loadOptions()
@@ -232,6 +243,7 @@ struct MilestoneOneRootView: View {
             addTransactionViewModel.loadOptions()
             dashboardViewModel.load()
             transactionListViewModel.load()
+            savePlanningViewModel.load()
         }
         .onReceive(
             NotificationCenter.default
@@ -249,6 +261,7 @@ struct MilestoneOneRootView: View {
             addTransactionViewModel.loadOptions()
             dashboardViewModel.load()
             transactionListViewModel.load()
+            savePlanningViewModel.load()
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard rootViewModel.hasLoaded, newPhase == .active else {
@@ -259,6 +272,7 @@ struct MilestoneOneRootView: View {
             addTransactionViewModel.loadOptions()
             dashboardViewModel.load()
             transactionListViewModel.load()
+            savePlanningViewModel.load()
         }
     }
 }

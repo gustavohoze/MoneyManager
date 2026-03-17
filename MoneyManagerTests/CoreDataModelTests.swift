@@ -5,24 +5,24 @@ import Testing
 struct CoreDataModelTests {
     @Test("Test: Entity existence")
     func entityExistence_containsExpectedEntities() {
-        // Objective: Verify Milestone 0 model defines exactly the required entities.
+        // Objective: Verify the model defines exactly the required entities.
         // Given: A freshly generated managed object model.
         // When: Entity names are collected.
-        // Then: Names exactly match PaymentMethod, Transaction, Merchant, and Category.
+        // Then: Names exactly match Account, Transaction, Merchant, Category, and SavingPlan.
         let model = CoreDataModelFactory.makeModel()
         let names = Set(model.entities.compactMap(\.name))
 
-        #expect(names == ["PaymentMethod", "Transaction", "Merchant", "Category"])
+        #expect(names == ["Account", "Transaction", "Merchant", "Category", "SavingPlan"])
     }
 
     @Test("Test: Field validation - PaymentMethod")
     func fieldValidation_account_matchesExpectedFields() {
         // Objective: Validate PaymentMethod schema shape and attribute types.
-        // Given: The PaymentMethod entity from the generated model.
+        // Given: The Account entity used by the PaymentMethod domain.
         // When: Attribute count and type metadata are inspected.
-        // Then: PaymentMethod has 5 expected fields with correct types.
+        // Then: Account has 5 expected fields with correct types.
         let model = CoreDataModelFactory.makeModel()
-        let account = model.entitiesByName["PaymentMethod"]
+        let account = model.entitiesByName["Account"]
 
         #expect(account != nil)
         #expect(account?.attributesByName.count == 5)
@@ -61,5 +61,25 @@ struct CoreDataModelTests {
         #expect(merchant?.attributesByName["confidence"]?.attributeType == .doubleAttributeType)
         #expect(merchant?.attributesByName["usageCount"]?.attributeType == .integer64AttributeType)
         #expect(merchant?.attributesByName["lastUsedDate"]?.attributeType == .dateAttributeType)
+    }
+
+    @Test("Test: Field validation - SavingPlan")
+    func fieldValidation_savingPlan_matchesExpectedFields() {
+        // Objective: Validate SavingPlan schema key fields and types.
+        // Given: The SavingPlan entity from the generated model.
+        // When: Attribute count and selected attributes are verified.
+        // Then: SavingPlan contains 8 attributes and expected types.
+        let model = CoreDataModelFactory.makeModel()
+        let savingPlan = model.entitiesByName["SavingPlan"]
+
+        #expect(savingPlan != nil)
+        #expect(savingPlan?.attributesByName.count == 8)
+        #expect(savingPlan?.attributesByName["goalType"]?.attributeType == .stringAttributeType)
+        #expect(savingPlan?.attributesByName["goalTitle"]?.attributeType == .stringAttributeType)
+        #expect(savingPlan?.attributesByName["targetAmount"]?.attributeType == .doubleAttributeType)
+        #expect(savingPlan?.attributesByName["currentSavings"]?.attributeType == .doubleAttributeType)
+        #expect(savingPlan?.attributesByName["timeframeMonths"]?.attributeType == .integer64AttributeType)
+        #expect(savingPlan?.attributesByName["plannedMonthlyDeposit"]?.attributeType == .doubleAttributeType)
+        #expect(savingPlan?.attributesByName["updatedAt"]?.attributeType == .dateAttributeType)
     }
 }

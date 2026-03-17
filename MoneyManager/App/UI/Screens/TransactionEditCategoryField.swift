@@ -16,6 +16,7 @@ struct TransactionEditCategoryField: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .financeCard(palette: palette)
     }
 }

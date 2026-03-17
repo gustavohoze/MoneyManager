@@ -102,6 +102,15 @@ struct SettingsDataSyncPrivacyDetailPage: View {
                     .foregroundStyle(palette.secondaryInk)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                if let error = persistenceStoreManager.controller.storeLoadErrorDescription,
+                   !error.isEmpty {
+                    Text(String(localized: "Last store error: \(error)"))
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 Divider()
                     .padding(.vertical, 4)
 

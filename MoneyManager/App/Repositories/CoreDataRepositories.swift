@@ -20,6 +20,7 @@ enum CoreDataRepositoryError: LocalizedError {
 
 struct CoreDataPaymentMethodRepository: PaymentMethodRepository {
     private static let allowedTypes = Set(["cash", "bank", "wallet", "credit"])
+    fileprivate static let paymentMethodEntityName = "Account"
 
     private let context: NSManagedObjectContext
 
@@ -44,7 +45,7 @@ struct CoreDataPaymentMethodRepository: PaymentMethodRepository {
             throw CoreDataRepositoryError.invalidValue(field: "account.type", value: type)
         }
 
-        let request = NSFetchRequest<NSManagedObject>(entityName: "PaymentMethod")
+        let request = NSFetchRequest<NSManagedObject>(entityName: Self.paymentMethodEntityName)
         request.predicate = NSPredicate(format: "name =[c] %@", trimmedName)
         request.fetchLimit = 1
 
@@ -56,7 +57,7 @@ struct CoreDataPaymentMethodRepository: PaymentMethodRepository {
             account = existing
             id = existingID
         } else {
-            account = NSManagedObject(entity: try entity(named: "PaymentMethod"), insertInto: context)
+            account = NSManagedObject(entity: try entity(named: Self.paymentMethodEntityName), insertInto: context)
             id = UUID()
             account.setValue(id, forKey: "id")
             account.setValue(Date(), forKey: "createdAt")
@@ -71,12 +72,12 @@ struct CoreDataPaymentMethodRepository: PaymentMethodRepository {
     }
 
     func fetchPaymentMethods() throws -> [NSManagedObject] {
-        let request = NSFetchRequest<NSManagedObject>(entityName: "PaymentMethod")
+        let request = NSFetchRequest<NSManagedObject>(entityName: Self.paymentMethodEntityName)
         return try context.fetch(request)
     }
 
     func fetchPaymentMethod(id: UUID) throws -> NSManagedObject {
-        let request = NSFetchRequest<NSManagedObject>(entityName: "PaymentMethod")
+        let request = NSFetchRequest<NSManagedObject>(entityName: Self.paymentMethodEntityName)
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         request.fetchLimit = 1
 
@@ -100,7 +101,7 @@ struct CoreDataPaymentMethodRepository: PaymentMethodRepository {
             throw CoreDataRepositoryError.invalidValue(field: "account.type", value: type)
         }
 
-        let duplicateNameRequest = NSFetchRequest<NSManagedObject>(entityName: "PaymentMethod")
+        let duplicateNameRequest = NSFetchRequest<NSManagedObject>(entityName: Self.paymentMethodEntityName)
         duplicateNameRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
             NSPredicate(format: "name =[c] %@", trimmedName),
             NSPredicate(format: "id != %@", id as CVarArg)
@@ -185,7 +186,7 @@ struct CoreDataTransactionRepository: TransactionRepository {
             throw CoreDataRepositoryError.invalidValue(field: "transaction.source", value: source)
         }
 
-        guard try entityExists(named: "PaymentMethod", id: paymentMethodID) else {
+        guard try entityExists(named: CoreDataPaymentMethodRepository.paymentMethodEntityName, id: paymentMethodID) else {
             throw CoreDataRepositoryError.missingReference(entity: "PaymentMethod", id: paymentMethodID)
         }
 
@@ -292,7 +293,7 @@ struct CoreDataTransactionRepository: TransactionRepository {
             throw CoreDataRepositoryError.invalidValue(field: "transaction.amount", value: "\(amount)")
         }
 
-        guard try entityExists(named: "PaymentMethod", id: paymentMethodID) else {
+        guard try entityExists(named: CoreDataPaymentMethodRepository.paymentMethodEntityName, id: paymentMethodID) else {
             throw CoreDataRepositoryError.missingReference(entity: "PaymentMethod", id: paymentMethodID)
         }
 
@@ -515,10 +516,15 @@ struct CoreDataCategoryRepository: CategoryRepository {
 
     func seedInitialCategories() throws -> Int {
         let existing = try fetchCategories()
-        let existingNames = Set(existing.compactMap { $0.value(forKey: "name") as? String })
+        let existingNames: Set<String> = Set(existing.compactMap { category in
+            guard let name = category.value(forKey: "name") as? String else {
+                return nil
+            }
+            return normalizedLookupKey(for: name)
+        })
 
         var insertedCount = 0
-        for category in defaults where !existingNames.contains(category.name) {
+        for category in defaults where !existingNames.contains(normalizedLookupKey(for: category.name)) {
             _ = try upsertCategory(name: category.name, icon: category.icon, type: category.type)
             insertedCount += 1
         }
@@ -527,6 +533,8 @@ struct CoreDataCategoryRepository: CategoryRepository {
     }
 
     func upsertCategory(name: String, icon: String, type: String) throws -> UUID {
+        try deduplicateCategoriesIfNeeded()
+
         let trimmedName = normalizedName(name)
         let normalizedType = type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
@@ -564,9 +572,71 @@ struct CoreDataCategoryRepository: CategoryRepository {
     }
 
     func fetchCategories() throws -> [NSManagedObject] {
+        try deduplicateCategoriesIfNeeded()
+
         let request = NSFetchRequest<NSManagedObject>(entityName: "Category")
         request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         return try context.fetch(request)
+    }
+
+    private func deduplicateCategoriesIfNeeded() throws {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Category")
+        request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        let categories = try context.fetch(request)
+
+        var canonicalByName: [String: NSManagedObject] = [:]
+        var duplicates: [(canonical: NSManagedObject, duplicate: NSManagedObject)] = []
+
+        for category in categories {
+            let rawName = (category.value(forKey: "name") as? String) ?? ""
+            let normalized = normalizedName(rawName)
+
+            if rawName != normalized {
+                category.setValue(normalized, forKey: "name")
+            }
+
+            let lookupKey = normalizedLookupKey(for: normalized)
+            guard !lookupKey.isEmpty else {
+                continue
+            }
+
+            if let canonical = canonicalByName[lookupKey] {
+                duplicates.append((canonical: canonical, duplicate: category))
+            } else {
+                canonicalByName[lookupKey] = category
+            }
+        }
+
+        guard !duplicates.isEmpty else {
+            if context.hasChanges {
+                try context.save()
+            }
+            return
+        }
+
+        for pair in duplicates {
+            guard let canonicalID = pair.canonical.value(forKey: "id") as? UUID,
+                  let duplicateID = pair.duplicate.value(forKey: "id") as? UUID
+            else {
+                context.delete(pair.duplicate)
+                continue
+            }
+
+            try remapTransactions(fromCategoryID: duplicateID, toCategoryID: canonicalID)
+            context.delete(pair.duplicate)
+        }
+
+        try context.save()
+    }
+
+    private func remapTransactions(fromCategoryID oldID: UUID, toCategoryID newID: UUID) throws {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+        request.predicate = NSPredicate(format: "categoryID == %@", oldID as CVarArg)
+        let transactions = try context.fetch(request)
+
+        for transaction in transactions {
+            transaction.setValue(newID, forKey: "categoryID")
+        }
     }
 
     private func entity(named name: String) throws -> NSEntityDescription {
@@ -581,5 +651,92 @@ struct CoreDataCategoryRepository: CategoryRepository {
             .components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }
             .joined(separator: " ")
+    }
+
+    private func normalizedLookupKey(for value: String) -> String {
+        normalizedName(value).lowercased()
+    }
+}
+
+struct CoreDataSavingPlanRepository: SavingPlanRepository {
+    private let context: NSManagedObjectContext
+
+    init(context: NSManagedObjectContext) {
+        self.context = context
+    }
+
+    func saveSavingPlan(
+        goalType: String,
+        goalTitle: String,
+        targetAmount: Double,
+        currentSavings: Double,
+        timeframeMonths: Int,
+        plannedMonthlyDeposit: Double,
+        updatedAt: Date
+    ) throws -> UUID {
+        let trimmedType = goalType.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let trimmedTitle = goalTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedType.isEmpty else {
+            throw CoreDataRepositoryError.invalidValue(field: "savingPlan.goalType", value: goalType)
+        }
+
+        guard !trimmedTitle.isEmpty else {
+            throw CoreDataRepositoryError.invalidValue(field: "savingPlan.goalTitle", value: goalTitle)
+        }
+
+        guard targetAmount > 0 else {
+            throw CoreDataRepositoryError.invalidValue(field: "savingPlan.targetAmount", value: "\(targetAmount)")
+        }
+
+        guard currentSavings >= 0 else {
+            throw CoreDataRepositoryError.invalidValue(field: "savingPlan.currentSavings", value: "\(currentSavings)")
+        }
+
+        guard timeframeMonths > 0 else {
+            throw CoreDataRepositoryError.invalidValue(field: "savingPlan.timeframeMonths", value: "\(timeframeMonths)")
+        }
+
+        guard plannedMonthlyDeposit >= 0 else {
+            throw CoreDataRepositoryError.invalidValue(field: "savingPlan.plannedMonthlyDeposit", value: "\(plannedMonthlyDeposit)")
+        }
+
+        let plan: NSManagedObject
+        let id: UUID
+
+        if let existing = try fetchSavingPlan() {
+            plan = existing
+            id = (existing.value(forKey: "id") as? UUID) ?? UUID()
+            plan.setValue(id, forKey: "id")
+        } else {
+            plan = NSManagedObject(entity: try entity(named: "SavingPlan"), insertInto: context)
+            id = UUID()
+            plan.setValue(id, forKey: "id")
+        }
+
+        plan.setValue(trimmedType, forKey: "goalType")
+        plan.setValue(trimmedTitle, forKey: "goalTitle")
+        plan.setValue(targetAmount, forKey: "targetAmount")
+        plan.setValue(currentSavings, forKey: "currentSavings")
+        plan.setValue(Int64(timeframeMonths), forKey: "timeframeMonths")
+        plan.setValue(plannedMonthlyDeposit, forKey: "plannedMonthlyDeposit")
+        plan.setValue(updatedAt, forKey: "updatedAt")
+
+        try context.save()
+        return id
+    }
+
+    func fetchSavingPlan() throws -> NSManagedObject? {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "SavingPlan")
+        request.sortDescriptors = [NSSortDescriptor(key: "updatedAt", ascending: false)]
+        request.fetchLimit = 1
+        return try context.fetch(request).first
+    }
+
+    private func entity(named name: String) throws -> NSEntityDescription {
+        guard let entity = NSEntityDescription.entity(forEntityName: name, in: context) else {
+            throw CoreDataRepositoryError.missingEntity(name)
+        }
+        return entity
     }
 }

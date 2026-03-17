@@ -7,15 +7,16 @@ enum CoreDataModelFactory {
             makeAccountEntity(),
             makeTransactionEntity(),
             makeMerchantEntity(),
-            makeCategoryEntity()
+            makeCategoryEntity(),
+            makeSavingPlanEntity()
         ]
         return model
     }
 
     private static func makeAccountEntity() -> NSEntityDescription {
         let entity = NSEntityDescription()
-        entity.name = "PaymentMethod"
-        entity.renamingIdentifier = "Account"
+        // Keep CloudKit schema-compatible entity name.
+        entity.name = "Account"
         entity.managedObjectClassName = "NSManagedObject"
         entity.properties = [
             attribute(name: "id", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
@@ -74,6 +75,23 @@ enum CoreDataModelFactory {
             attribute(name: "name", type: .stringAttributeType, isOptional: false, defaultValue: ""),
             attribute(name: "icon", type: .stringAttributeType, isOptional: false, defaultValue: "questionmark.circle"),
             attribute(name: "type", type: .stringAttributeType, isOptional: false, defaultValue: "expense")
+        ]
+        return entity
+    }
+
+    private static func makeSavingPlanEntity() -> NSEntityDescription {
+        let entity = NSEntityDescription()
+        entity.name = "SavingPlan"
+        entity.managedObjectClassName = "NSManagedObject"
+        entity.properties = [
+            attribute(name: "id", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
+            attribute(name: "goalType", type: .stringAttributeType, isOptional: false, defaultValue: "vacation"),
+            attribute(name: "goalTitle", type: .stringAttributeType, isOptional: false, defaultValue: "Summer Vacation"),
+            attribute(name: "targetAmount", type: .doubleAttributeType, isOptional: false, defaultValue: 5000.0),
+            attribute(name: "currentSavings", type: .doubleAttributeType, isOptional: false, defaultValue: 750.0),
+            attribute(name: "timeframeMonths", type: .integer64AttributeType, isOptional: false, defaultValue: 12),
+            attribute(name: "plannedMonthlyDeposit", type: .doubleAttributeType, isOptional: false, defaultValue: 350.0),
+            attribute(name: "updatedAt", type: .dateAttributeType, isOptional: false, defaultValue: Date())
         ]
         return entity
     }

@@ -533,7 +533,10 @@ final class TransactionListViewModel: ObservableObject {
         let monthStart = selectedMonthStartDate()
         let resolvedBudgets = budgetProvider.resolvedBudgets(for: monthStart)
         let itemIconByCategory = iconByCategoryForItems()
-        let optionIconByCategory = Dictionary(uniqueKeysWithValues: availableCategories.map { ($0.name, $0.icon) })
+        let optionIconByCategory = Dictionary(
+            availableCategories.map { ($0.name, $0.icon) },
+            uniquingKeysWith: { first, _ in first }
+        )
         budgetSummary = resolvedBudgets.map { budget in
             let spent = monthItems
                 .filter { $0.category == budget.category }

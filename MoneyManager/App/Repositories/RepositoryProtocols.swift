@@ -89,3 +89,17 @@ protocol CategoryRepository {
     func upsertCategory(name: String, icon: String, type: String) throws -> UUID
     func fetchCategories() throws -> [NSManagedObject]
 }
+
+protocol SavingPlanRepository {
+    @discardableResult
+    func saveSavingPlan(
+        goalType: String,
+        goalTitle: String,
+        targetAmount: Double,
+        currentSavings: Double,
+        timeframeMonths: Int,
+        plannedMonthlyDeposit: Double,
+        updatedAt: Date
+    ) throws -> UUID
+    func fetchSavingPlan() throws -> NSManagedObject?
+}
