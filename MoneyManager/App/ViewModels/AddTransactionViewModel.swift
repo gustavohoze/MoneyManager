@@ -23,10 +23,14 @@ final class AddTransactionViewModel: ObservableObject {
     @Published var amountText = ""
     @Published var merchantRaw = ""
     @Published var selectedCategoryID: UUID?
-    @Published var selectedAccountID: UUID?
+    @Published var selectedAccountID: UUID? {
+        didSet {
+            syncCurrencyWithSelectedAccount()
+        }
+    }
     @Published var selectedDate = Date()
     @Published var note = ""
-    @Published var currency = "IDR"
+    @Published var currency = AppCurrency.currentCode
 
     // MARK: - Options
     @Published private(set) var accountOptions: [TransactionFormAccountOption] = []
@@ -40,8 +44,6 @@ final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Milestone 2 Features
     @Published private(set) var merchantSuggestions: [MerchantSuggestion] = []
-    @Published private(set) var undoMessage: String?
-    @Published private(set) var canUndo = false
     @Published private(set) var saveCooldown = false
 
     // MARK: - Private Services
@@ -51,11 +53,7 @@ final class AddTransactionViewModel: ObservableObject {
     private let merchantSuggestionProvider: MerchantSuggestionProviding?
     private let accountAutoSelection: AccountAutoSelectionProviding?
     private let errorPrevention: TransactionErrorPreventionProviding?
-    private let undoService: TransactionUndoProviding?
     private let merchantMemoryRecorder: MerchantMemoryRecording?
-
-    private var undoTimer: Timer?
-    private var undoTimeRemaining = 0
 
     init(
         transactionEntryService: TransactionEntrySaving,
@@ -64,7 +62,6 @@ final class AddTransactionViewModel: ObservableObject {
         merchantSuggestionProvider: MerchantSuggestionProviding? = nil,
         accountAutoSelection: AccountAutoSelectionProviding? = nil,
         errorPrevention: TransactionErrorPreventionProviding? = nil,
-        undoService: TransactionUndoProviding? = nil,
         merchantMemoryRecorder: MerchantMemoryRecording? = nil
     ) {
         self.transactionEntryService = transactionEntryService
@@ -73,7 +70,6 @@ final class AddTransactionViewModel: ObservableObject {
         self.merchantSuggestionProvider = merchantSuggestionProvider
         self.accountAutoSelection = accountAutoSelection
         self.errorPrevention = errorPrevention
-        self.undoService = undoService
         self.merchantMemoryRecorder = merchantMemoryRecorder
     }
 
@@ -129,6 +125,8 @@ final class AddTransactionViewModel: ObservableObject {
                     ?? options.categories.first?.id
             }
 
+            syncCurrencyWithSelectedAccount()
+
             // Load initial merchant suggestions
             updateMerchantSuggestions(for: "")
 
@@ -140,6 +138,16 @@ final class AddTransactionViewModel: ObservableObject {
             categoryOptions = []
             self.error = .saveFailed
         }
+    }
+
+    private func syncCurrencyWithSelectedAccount() {
+        guard let selectedAccountID,
+              let account = accountOptions.first(where: { $0.id == selectedAccountID })
+        else {
+            return
+        }
+
+        currency = account.currency
     }
 
     // MARK: - Error Prevention
@@ -183,6 +191,18 @@ final class AddTransactionViewModel: ObservableObject {
         save()
     }
 
+    var canSaveForm: Bool {
+        guard selectedAccountID != nil else {
+            return false
+        }
+
+        guard let amount = Double(amountText.filter { $0.isNumber }), amount > 0 else {
+            return false
+        }
+
+        return !isSaving
+    }
+
     func selectedAccountName(
         from accounts: [TransactionFormAccountOption],
         selectedAccountID: UUID?
@@ -200,7 +220,7 @@ final class AddTransactionViewModel: ObservableObject {
     func errorMessage(for error: AddTransactionViewModelError) -> String {
         switch error {
         case .missingAccount:
-            return String(localized: "Please select an account")
+            return String(localized: "Please select a payment method")
         case .invalidAmount:
             return String(localized: "Amount must be greater than zero")
         case .saveFailed:
@@ -248,27 +268,9 @@ final class AddTransactionViewModel: ObservableObject {
                 try merchantMemoryRecorder?.recordCategoryMapping(merchantRaw: merchantRaw, categoryID: categoryID)
             }
 
-            // Record for undo
-            let undoableTransaction = UndoableTransaction(
-                id: result.transactionID,
-                paymentMethodID: paymentMethodID,
-                amount: amount,
-                currency: currency,
-                date: selectedDate,
-                merchantRaw: merchantRaw,
-                categoryID: selectedCategoryID,
-                note: note.isEmpty ? nil : note,
-                timestampCreated: Date()
-            )
-            undoService?.recordTransaction(undoableTransaction)
-            canUndo = undoService?.canUndo ?? false
-
             duplicateWarning = result.duplicateDetected
             lastSavedTransactionID = result.transactionID
             error = nil
-
-            // Show undo message
-            showUndoMessage()
 
             // Clear form
             resetForm()
@@ -282,42 +284,6 @@ final class AddTransactionViewModel: ObservableObject {
         }
     }
 
-    func undoLastTransaction() {
-        guard let transaction = undoService?.undoLastTransaction() else {
-            return
-        }
-
-        // Delete the transaction
-        Task {
-            do {
-                // This requires extending transactionEntryService with an undo method
-                // For now, we'll just update UI state
-                canUndo = undoService?.canUndo ?? false
-                undoMessage = String(localized: "Transaction undone")
-                startUndoCountdown()
-            }
-        }
-    }
-
-    private func showUndoMessage() {
-        undoMessage = String(localized: "Expense saved")
-        startUndoCountdown()
-    }
-
-    private func startUndoCountdown() {
-        undoTimer?.invalidate()
-        undoTimeRemaining = 5
-
-        undoTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.undoTimeRemaining -= 1
-            if self?.undoTimeRemaining ?? 0 <= 0 {
-                self?.undoTimer?.invalidate()
-                self?.undoMessage = nil
-                self?.undoTimer = nil
-            }
-        }
-    }
-
     private func resetForm() {
         amountText = ""
         merchantRaw = ""
@@ -327,5 +293,46 @@ final class AddTransactionViewModel: ObservableObject {
         
         // Keep category selection for next entry if desired
         // selectedCategoryID remains
+    }
+
+    // MARK: - Layout Helpers (for Views)
+    
+    var amountFieldFontSize: Double {
+        let count = amountText.count
+        if count > 12 {
+            return 32
+        } else if count > 9 {
+            return 40
+        } else if count > 6 {
+            return 48
+        } else {
+            return 56
+        }
+    }
+
+    var shouldShowDetailsSection: Bool {
+        !categoryOptions.isEmpty || !accountOptions.isEmpty
+    }
+
+    var shouldShowErrorSection: Bool {
+        if let error = error {
+            return !error.isAmountWarning
+        }
+        return false
+    }
+
+    var selectedCategoryOption: TransactionFormCategoryOption? {
+        categoryOptions.first(where: { $0.id == selectedCategoryID })
+    }
+
+    var selectedAccountOption: TransactionFormAccountOption? {
+        accountOptions.first(where: { $0.id == selectedAccountID })
+    }
+}
+
+private extension AddTransactionViewModelError {
+    var isAmountWarning: Bool {
+        if case .amountTooLarge = self { return true }
+        return false
     }
 }

@@ -4,41 +4,41 @@ import CoreData
 @testable import MoneyManager
 
 @MainActor
-struct AccountManagementServiceTests {
-    @Test("Test: create account tracks analytics")
-    func createAccount_tracksAccountCreatedEvent() throws {
+struct PaymentMethodManagementServiceTests {
+    @Test("Test: create payment method tracks analytics")
+    func createPaymentMethod_tracksAccountCreatedEvent() throws {
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
-        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let paymentMethodRepository = CoreDataPaymentMethodRepository(context: context)
         let transactionRepository = CoreDataTransactionRepository(context: context)
         let analytics = InMemoryAnalyticsService()
 
-        let service = AccountManagementService(
-            accountRepository: accountRepository,
+        let service = PaymentMethodManagementService(
+            paymentMethodRepository: paymentMethodRepository,
             transactionRepository: transactionRepository,
             analytics: analytics
         )
 
-        try service.createAccount(name: "Travel Card", type: "credit", currency: "IDR")
+        try service.createPaymentMethod(name: "Travel Card", type: "credit", currency: "IDR")
 
-        let accounts = try service.loadAccounts()
-        #expect(accounts.contains { $0.name == "Travel Card" })
+        let paymentMethods = try service.loadPaymentMethods()
+        #expect(paymentMethods.contains { $0.name == "Travel Card" })
         #expect(analytics.allEvents().contains(.accountCreated))
     }
 
-    @Test("Test: delete account in use is blocked")
-    func deleteAccount_withTransactions_throwsAccountInUse() throws {
+    @Test("Test: delete payment method in use is blocked")
+    func deletePaymentMethod_withTransactions_throwsPaymentMethodInUse() throws {
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
-        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let paymentMethodRepository = CoreDataPaymentMethodRepository(context: context)
         let transactionRepository = CoreDataTransactionRepository(context: context)
 
-        let service = AccountManagementService(
-            accountRepository: accountRepository,
+        let service = PaymentMethodManagementService(
+            paymentMethodRepository: paymentMethodRepository,
             transactionRepository: transactionRepository
         )
 
-        let paymentMethodID = try accountRepository.upsertPaymentMethod(name: "Wallet", type: "wallet", currency: "IDR")
+        let paymentMethodID = try paymentMethodRepository.upsertPaymentMethod(name: "Wallet", type: "wallet", currency: "IDR")
         _ = try transactionRepository.createTransaction(
             paymentMethodID: paymentMethodID,
             amount: 50_000,
@@ -51,28 +51,28 @@ struct AccountManagementServiceTests {
             note: nil
         )
 
-        #expect(throws: AccountManagementError.self) {
+        #expect(throws: PaymentMethodManagementError.self) {
             try service.deletePaymentMethod(id: paymentMethodID)
         }
     }
 
-    @Test("Test: update account changes persisted values")
-    func updateAccount_updatesNameTypeAndCurrency() throws {
+    @Test("Test: update payment method changes persisted values")
+    func updatePaymentMethod_updatesNameTypeAndCurrency() throws {
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
-        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let paymentMethodRepository = CoreDataPaymentMethodRepository(context: context)
         let transactionRepository = CoreDataTransactionRepository(context: context)
 
-        let service = AccountManagementService(
-            accountRepository: accountRepository,
+        let service = PaymentMethodManagementService(
+            paymentMethodRepository: paymentMethodRepository,
             transactionRepository: transactionRepository
         )
 
-        let paymentMethodID = try accountRepository.upsertPaymentMethod(name: "Cash", type: "cash", currency: "IDR")
+        let paymentMethodID = try paymentMethodRepository.upsertPaymentMethod(name: "Cash", type: "cash", currency: "IDR")
 
         try service.updatePaymentMethod(id: paymentMethodID, name: "Main Bank", type: "bank", currency: "usd")
 
-        let updated = try accountRepository.fetchPaymentMethod(id: paymentMethodID)
+        let updated = try paymentMethodRepository.fetchPaymentMethod(id: paymentMethodID)
         #expect((updated.value(forKey: "name") as? String) == "Main Bank")
         #expect((updated.value(forKey: "type") as? String) == "bank")
         #expect((updated.value(forKey: "currency") as? String) == "USD")

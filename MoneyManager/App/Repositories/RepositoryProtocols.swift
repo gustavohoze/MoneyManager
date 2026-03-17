@@ -16,9 +16,11 @@ protocol TransactionRepository {
         note: String?
     ) throws -> UUID
     func fetchTransactions() throws -> [NSManagedObject]
+    func fetchRecentTransactions(limit: Int) throws -> [NSManagedObject]
     func fetchTransaction(id: UUID) throws -> NSManagedObject
     func fetchTransactions(paymentMethodID: UUID) throws -> [NSManagedObject]
     func fetchTransactions(from startDate: Date, to endDate: Date) throws -> [NSManagedObject]
+    func fetchTransactions(from startDate: Date, to endDate: Date, limit: Int?) throws -> [NSManagedObject]
     func updateTransaction(
         id: UUID,
         paymentMethodID: UUID,
@@ -38,6 +40,21 @@ protocol TransactionRepository {
         merchantNormalized: String?
     ) throws -> Bool
     func fetchDistinctMerchantRawNames(prefix: String, limit: Int) throws -> [String]
+}
+
+extension TransactionRepository {
+    func fetchRecentTransactions(limit: Int) throws -> [NSManagedObject] {
+        let normalizedLimit = max(1, limit)
+        return Array(try fetchTransactions().prefix(normalizedLimit))
+    }
+
+    func fetchTransactions(from startDate: Date, to endDate: Date, limit: Int? = nil) throws -> [NSManagedObject] {
+        let values = try fetchTransactions(from: startDate, to: endDate)
+        guard let limit else {
+            return values
+        }
+        return Array(values.prefix(max(0, limit)))
+    }
 }
 
 protocol PaymentMethodRepository {

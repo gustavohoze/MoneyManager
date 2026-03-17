@@ -1,48 +1,48 @@
 import Foundation
 import CoreData
 
-struct AccountListItem: Identifiable, Equatable {
+struct PaymentMethodListItem: Identifiable, Equatable {
     let id: UUID
     let name: String
     let type: String
     let currency: String
 }
 
-enum AccountManagementError: LocalizedError, Equatable {
-    case accountInUse
+enum PaymentMethodManagementError: LocalizedError, Equatable {
+    case paymentMethodInUse
 
     var errorDescription: String? {
         switch self {
-        case .accountInUse:
-            return "This account is used by transactions and cannot be deleted"
+        case .paymentMethodInUse:
+            return "This payment method is used by transactions and cannot be deleted"
         }
     }
 }
 
-protocol AccountManaging {
-    func loadAccounts() throws -> [AccountListItem]
-    func createAccount(name: String, type: String, currency: String) throws
+protocol PaymentMethodManaging {
+    func loadPaymentMethods() throws -> [PaymentMethodListItem]
+    func createPaymentMethod(name: String, type: String, currency: String) throws
     func updatePaymentMethod(id: UUID, name: String, type: String, currency: String) throws
     func deletePaymentMethod(id: UUID) throws
 }
 
-struct AccountManagementService: AccountManaging {
-    private let accountRepository: PaymentMethodRepository
+struct PaymentMethodManagementService: PaymentMethodManaging {
+    private let paymentMethodRepository: PaymentMethodRepository
     private let transactionRepository: TransactionRepository
     private let analytics: AnalyticsTracking?
 
     init(
-        accountRepository: PaymentMethodRepository,
+        paymentMethodRepository: PaymentMethodRepository,
         transactionRepository: TransactionRepository,
         analytics: AnalyticsTracking? = nil
     ) {
-        self.accountRepository = accountRepository
+        self.paymentMethodRepository = paymentMethodRepository
         self.transactionRepository = transactionRepository
         self.analytics = analytics
     }
 
-    func loadAccounts() throws -> [AccountListItem] {
-        try accountRepository.fetchPaymentMethods()
+    func loadPaymentMethods() throws -> [PaymentMethodListItem] {
+        try paymentMethodRepository.fetchPaymentMethods()
             .compactMap { object in
                 guard
                     let id = object.value(forKey: "id") as? UUID,
@@ -53,28 +53,28 @@ struct AccountManagementService: AccountManaging {
                     return nil
                 }
 
-                return AccountListItem(id: id, name: name, type: type, currency: currency)
+                return PaymentMethodListItem(id: id, name: name, type: type, currency: currency)
             }
             .sorted { lhs, rhs in
                 lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
             }
     }
 
-    func createAccount(name: String, type: String, currency: String) throws {
-        _ = try accountRepository.upsertPaymentMethod(name: name, type: type, currency: currency)
+    func createPaymentMethod(name: String, type: String, currency: String) throws {
+        _ = try paymentMethodRepository.upsertPaymentMethod(name: name, type: type, currency: AppCurrency.currentCode)
         analytics?.track(.accountCreated)
     }
 
     func updatePaymentMethod(id: UUID, name: String, type: String, currency: String) throws {
-        try accountRepository.updatePaymentMethod(id: id, name: name, type: type, currency: currency)
+        try paymentMethodRepository.updatePaymentMethod(id: id, name: name, type: type, currency: AppCurrency.currentCode)
     }
 
     func deletePaymentMethod(id: UUID) throws {
         let hasTransactions = try !transactionRepository.fetchTransactions(paymentMethodID: id).isEmpty
         if hasTransactions {
-            throw AccountManagementError.accountInUse
+            throw PaymentMethodManagementError.paymentMethodInUse
         }
 
-        try accountRepository.deletePaymentMethod(id: id)
+        try paymentMethodRepository.deletePaymentMethod(id: id)
     }
 }

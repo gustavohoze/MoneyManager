@@ -222,6 +222,16 @@ struct CoreDataTransactionRepository: TransactionRepository {
         return try context.fetch(request)
     }
 
+    func fetchRecentTransactions(limit: Int) throws -> [NSManagedObject] {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "date", ascending: false),
+            NSSortDescriptor(key: "createdAt", ascending: false)
+        ]
+        request.fetchLimit = max(1, limit)
+        return try context.fetch(request)
+    }
+
     func fetchTransaction(id: UUID) throws -> NSManagedObject {
         let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
@@ -251,6 +261,19 @@ struct CoreDataTransactionRepository: TransactionRepository {
             NSSortDescriptor(key: "date", ascending: false),
             NSSortDescriptor(key: "createdAt", ascending: false)
         ]
+        return try context.fetch(request)
+    }
+
+    func fetchTransactions(from startDate: Date, to endDate: Date, limit: Int?) throws -> [NSManagedObject] {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+        request.predicate = NSPredicate(format: "date >= %@ AND date <= %@", startDate as NSDate, endDate as NSDate)
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "date", ascending: false),
+            NSSortDescriptor(key: "createdAt", ascending: false)
+        ]
+        if let limit {
+            request.fetchLimit = max(1, limit)
+        }
         return try context.fetch(request)
     }
 

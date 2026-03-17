@@ -54,7 +54,7 @@ App
 │
 ├── Repositories
 │   ├── TransactionRepository
-│   ├── AccountRepository
+│   ├── PaymentMethodRepository
 │   ├── MerchantRepository
 │   └── CategoryRepository
 │
@@ -114,7 +114,7 @@ These must be stable because changing schema later is painful.
 
 ---
 
-## Entity: Account
+## Entity: PaymentMethod
 
 Represents money containers.
 
@@ -156,7 +156,7 @@ Fields:
 
 ```
 id (UUID)
-accountID (UUID)
+PaymentMethodID (UUID)
 amount (Double)
 currency (String)
 date (Date)
@@ -269,7 +269,7 @@ detectDuplicate()
 Example:
 
 ```
-fetchTransactions(accountID)
+fetchTransactions(PaymentMethodID)
 fetchTransactions(dateRange)
 ```
 
@@ -383,7 +383,7 @@ JSON
 Example CSV:
 
 ```
-date,merchant,amount,category,account
+date,merchant,amount,category,PaymentMethod
 2026-03-15,Starbucks,45000,Food,BCA
 ```
 
@@ -530,7 +530,7 @@ Merchant
 Amount
 Category
 Date
-Account
+PaymentMethod
 ```
 
 Sorting:
@@ -565,7 +565,7 @@ Required fields:
 Amount
 Merchant
 Category
-Account
+PaymentMethod
 Date
 ```
 
@@ -619,7 +619,7 @@ Users must be able to:
 Edit transaction
 Delete transaction
 Change category
-Change account
+Change PaymentMethod
 ```
 
 Editing should update Core Data and sync to CloudKit.
@@ -650,9 +650,9 @@ Do not block saving.
 
 ---
 
-# 1.9 Default accounts
+# 1.9 Default PaymentMethods
 
-Seed default accounts when the app launches first time.
+Seed default PaymentMethods when the app launches first time.
 
 Example:
 
@@ -678,7 +678,7 @@ transaction_created
 transaction_deleted
 transaction_edited
 category_changed
-account_created
+PaymentMethod_created
 ```
 
 Important metric:
@@ -750,7 +750,7 @@ Example CSV row:
 
 Milestone 1 is complete when:
 
-✔ User can create accounts
+✔ User can create PaymentMethods
 ✔ User can manually log transactions
 ✔ Transaction list updates instantly
 ✔ Dashboard shows spending summary
@@ -857,7 +857,7 @@ Fields:
 Amount
 Merchant
 Category (auto)
-Account
+PaymentMethod
 ```
 
 Important rules:
@@ -939,7 +939,7 @@ Parameters:
 amount
 merchant
 category
-account
+PaymentMethod
 date
 ```
 
@@ -1014,7 +1014,7 @@ Shortcut parameters:
 Amount
 Merchant
 Category
-Account
+PaymentMethod
 ```
 
 Advanced users can automate expenses.
@@ -1488,7 +1488,7 @@ Preview fields:
 Merchant
 Amount
 Date
-Account
+PaymentMethod
 Category
 ```
 

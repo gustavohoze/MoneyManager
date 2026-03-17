@@ -31,7 +31,7 @@ UI Layer
 ├── Repositories
 │   ├── TransactionRepository
 │   ├── MerchantRepository
-│   ├── AccountRepository
+│   ├── PaymentMethodRepository
 │   └── CategoryRepository
 │
 ├── Persistence
@@ -78,7 +78,7 @@ Expected result:
 
 ```
 Default categories created
-Default accounts created
+Default PaymentMethods created
 Database initialized
 ```
 

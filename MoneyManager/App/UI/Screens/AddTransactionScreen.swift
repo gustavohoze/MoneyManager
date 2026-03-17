@@ -3,110 +3,116 @@ import SwiftUI
 struct AddTransactionScreen: View {
     @ObservedObject var viewModel: AddTransactionViewModel
     @FocusState private var focusedField: AddTransactionFormField?
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var palette: FinanceTheme.Palette {
+        FinanceTheme.palette(for: colorScheme)
+    }
 
     var body: some View {
         NavigationStack {
-            Form {
-                AddTransactionAmountSection(
-                    amountText: $viewModel.amountText,
-                    focusedField: $focusedField,
-                    onAmountTextChange: { viewModel.didChangeAmountText($0) }
-                )
+            ZStack {
+                FinanceTheme.pageBackground(for: colorScheme)
+                    .ignoresSafeArea()
 
-                AddTransactionMerchantSection(
-                    merchantText: $viewModel.merchantRaw,
-                    suggestions: viewModel.merchantSuggestions,
-                    focusedField: $focusedField,
-                    onSelectSuggestion: { viewModel.selectMerchantSuggestion($0) },
-                    onMerchantChange: { viewModel.updateMerchantSuggestions(for: $0) }
-                )
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // Hero amount card
+                        AddTransactionAmountHeroCard(
+                            amountText: $viewModel.amountText,
+                            fontSize: viewModel.amountFieldFontSize,
+                            focusedField: $focusedField,
+                            palette: palette,
+                            onAmountChange: viewModel.didChangeAmountText
+                        )
 
-                if !viewModel.categoryOptions.isEmpty || !viewModel.accountOptions.isEmpty {
-                    AddTransactionCategoryAccountRow(
-                        categories: viewModel.categoryOptions,
-                        accounts: viewModel.accountOptions,
-                        selectedCategoryID: viewModel.selectedCategoryID,
-                        selectedAccountID: viewModel.selectedAccountID,
-                        onSelectCategory: { viewModel.selectedCategoryID = $0 },
-                        onSelectAccount: { viewModel.selectedAccountID = $0 }
-                    )
-                }
+                        // Merchant section
+                        AddTransactionSectionLabel(text: String(localized: "Merchant"), palette: palette)
 
-                AddTransactionDetailsSection(
-                    selectedDate: $viewModel.selectedDate,
-                    note: $viewModel.note,
-                    focusedField: $focusedField
-                )
+                        AddTransactionMerchantInputCard(
+                            merchantText: $viewModel.merchantRaw,
+                            suggestions: viewModel.merchantSuggestions,
+                            palette: palette,
+                            onMerchantChange: viewModel.updateMerchantSuggestions,
+                            onSelectSuggestion: viewModel.selectMerchantSuggestion
+                        )
 
-                AddTransactionSaveSection(
-                    amountText: viewModel.amountText,
-                    isSaving: viewModel.isSaving,
-                    onSave: {
-                        focusedField = nil
-                        viewModel.saveFromForm()
-                    }
-                )
+                        // Details section (Category & Account)
+                        if viewModel.shouldShowDetailsSection {
+                            AddTransactionSectionLabel(text: String(localized: "Details"), palette: palette)
 
-                if let error = viewModel.error, !error.isAmountWarning {
-                    Section {
-                        AddTransactionErrorRow(message: viewModel.errorMessage(for: error))
-                    }
-                }
-            }
-            .overlay(alignment: .bottom) {
-                if let undoMessage = viewModel.undoMessage {
-                    HStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                            .imageScale(.large)
+                            HStack(spacing: 12) {
+                                if !viewModel.categoryOptions.isEmpty {
+                                    AddTransactionCategoryPickerCard(
+                                        selectedCategory: viewModel.selectedCategoryOption,
+                                        categories: viewModel.categoryOptions,
+                                        palette: palette,
+                                        onSelect: { viewModel.selectedCategoryID = $0 }
+                                    )
+                                }
 
-                        Text(undoMessage)
-                            .font(.subheadline.weight(.medium))
-                            .lineLimit(2)
-
-                        Spacer(minLength: 8)
-
-                        if viewModel.canUndo {
-                            Button("Undo") {
-                                viewModel.undoLastTransaction()
+                                if !viewModel.accountOptions.isEmpty {
+                                    AddTransactionAccountPickerCard(
+                                        selectedAccount: viewModel.selectedAccountOption,
+                                        accounts: viewModel.accountOptions,
+                                        palette: palette,
+                                        onSelect: { viewModel.selectedAccountID = $0 }
+                                    )
+                                }
                             }
-                            .font(.subheadline.weight(.semibold))
                         }
 
-                        if viewModel.duplicateWarning {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundStyle(.orange)
-                                .imageScale(.medium)
+                        // Metadata section (Date & Note)
+                        AddTransactionSectionLabel(text: String(localized: "Transaction Info"), palette: palette)
+
+                        AddTransactionMetadataCard(
+                            selectedDate: $viewModel.selectedDate,
+                            note: $viewModel.note,
+                            palette: palette
+                        )
+
+                        // Error display
+                        if viewModel.shouldShowErrorSection,
+                           let error = viewModel.error {
+                            AddTransactionErrorCard(
+                                error: error,
+                                errorMessage: viewModel.errorMessage(for: error),
+                                palette: palette
+                            )
                         }
+
+                        // Save button
+                        AddTransactionSaveButtonCard(
+                            isSaving: viewModel.isSaving,
+                            isEnabled: viewModel.canSaveForm,
+                            palette: palette,
+                            onSave: {
+                                focusedField = nil
+                                viewModel.saveFromForm()
+                            }
+                        )
+
+                        Spacer(minLength: 20)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(16)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    focusedField = nil
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: viewModel.undoMessage)
-            .navigationTitle("New Expense")
+            .navigationTitle(String(localized: "New Expense"))
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { viewModel.loadOptions() }
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Done") { focusedField = nil }
+                    Button(String(localized: "Done")) {
+                        focusedField = nil
+                    }
                 }
             }
+            .onAppear { viewModel.loadOptions() }
         }
-    }
-}
-
-private extension AddTransactionViewModelError {
-    var isAmountWarning: Bool {
-        if case .amountTooLarge = self { return true }
-        return false
     }
 }
 

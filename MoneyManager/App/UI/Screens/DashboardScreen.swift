@@ -45,7 +45,7 @@ struct DashboardScreen: View {
                         viewModel: viewModel,
                         palette: palette,
                         onSelectTransaction: onSelectTransaction
-                    )
+                    ).frame(maxWidth: .infinity)
 
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)

@@ -77,7 +77,7 @@ struct AccountChipSelectorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "PaymentMethod"))
+            Text(String(localized: "Payment Method"))
                 .font(.system(.caption, design: .rounded).weight(.semibold))
                 .foregroundStyle(palette.secondaryInk)
                 .padding(.horizontal, 4)

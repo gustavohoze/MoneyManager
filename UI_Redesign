@@ -892,6 +892,413 @@ So this milestone restructures Settings into **Financial Configuration + System 
 
 ---
 
+Now we move to the **Transactions screen**, which is actually the **most frequently opened screen in a finance app**. Not Add. Not Dashboard. **Transactions.**
+
+Right now your screen is basically **a scrolling receipt history**.
+That’s not a product. That’s a **log file**.
+
+The inspiration you showed (calendar timeline) is extremely important because it introduces **temporal context** — something your current design completely lacks.
+
+Without time context, users cannot answer:
+
+* *When did my money disappear?*
+* *Why did I spend so much that day?*
+* *What pattern do I repeat every week?*
+
+So the milestone focuses on **time-based financial awareness**.
+
+---
+
+# Milestone 3 — Time-Aware Transaction History
+
+Screen: **Transactions**
+
+Goal:
+Transform the transactions screen from **a static list** into **a timeline of spending behavior**.
+
+Users should instantly understand:
+
+```text
+what I spent
+when I spent it
+why that day was expensive
+```
+
+---
+
+# Task 1 — Introduce Calendar Navigation Layer
+
+## Problem
+
+Your current structure:
+
+```
+Today
+Transaction list
+```
+
+This forces users to **scroll endlessly to navigate time**.
+
+That is terrible UX for financial history.
+
+---
+
+## Component: Horizontal Calendar Navigator
+
+Place a **scrollable week calendar** under the page title.
+
+Structure:
+
+```
+Transactions
+
+M   T   W   T   F   S   S
+17  18  19  20  21  22  23
+```
+
+Selected day highlighted.
+
+Example:
+
+```
+18
+```
+
+---
+
+## Interaction
+
+Tap date → filters transactions.
+
+Swipe horizontally → change week.
+
+---
+
+## Data Model
+
+```
+transactionDate
+dailyTotal
+transactionCount
+```
+
+---
+
+# Task 2 — Daily Spending Indicator (Critical)
+
+The calendar must **show spending intensity**.
+
+Otherwise it’s decorative.
+
+---
+
+## Component: Spending Heat Indicator
+
+Each date displays a **dot size or intensity** based on spending.
+
+Example:
+
+```
+17 •
+18 •••
+19 ••
+20 ••••
+21 •
+```
+
+Meaning:
+
+```
+• small spend
+•• medium
+••• high
+```
+
+---
+
+## Why This Matters
+
+User immediately sees:
+
+```
+which day I overspent
+which day was normal
+```
+
+This creates **behavior awareness**.
+
+---
+
+# Task 3 — Daily Summary Header
+
+When a day is selected, show summary before the list.
+
+Example:
+
+```
+Tuesday · 17 March
+
+Total spent
+Rp 18.200
+
+Transactions
+5
+```
+
+---
+
+## Optional Insight
+
+Add pattern detection:
+
+```
+You usually spend 40% more on Tuesdays.
+```
+
+---
+
+# Task 4 — Transaction Grouping by Time of Day
+
+Inspired by the reference you shared.
+
+Your list currently shows:
+
+```
+Mkn
+Pakan
+Asd
+```
+
+This lacks **temporal meaning**.
+
+---
+
+## Component: Time-of-Day Groups
+
+Group transactions into:
+
+```
+Morning
+Afternoon
+Evening
+Night
+```
+
+Example layout:
+
+```
+Morning (2)
+
+Coffee
+Rp 15.000
+
+Bus
+Rp 5.000
+
+
+Afternoon (1)
+
+Lunch
+Rp 25.000
+```
+
+---
+
+## Data Logic
+
+```
+06:00–11:59 → Morning
+12:00–16:59 → Afternoon
+17:00–20:59 → Evening
+21:00–05:59 → Night
+```
+
+---
+
+# Task 5 — Daily Running Total
+
+Users want to know **how much they spent that day**.
+
+Add cumulative indicator.
+
+Example:
+
+```
+Morning total
+Rp 20.000
+```
+
+---
+
+# Task 6 — Transaction Row Upgrade
+
+Your current rows show:
+
+```
+name
+amount
+```
+
+That’s **too little information**.
+
+---
+
+## Required Fields
+
+Each row must include:
+
+```
+merchant
+category
+account
+time
+```
+
+---
+
+## Layout
+
+Example:
+
+```
+Warung Makan
+Food • Cash
+12:42 PM
+
+Rp 20.000
+```
+
+---
+
+# Task 7 — Quick Edit Interaction
+
+Users frequently fix category mistakes.
+
+---
+
+## Swipe Actions
+
+Left swipe:
+
+```
+Edit
+Split
+Duplicate
+```
+
+Right swipe:
+
+```
+Delete
+```
+
+---
+
+# Task 8 — Smart Filters
+
+Scrolling through months of transactions is painful.
+
+Add filter row above list.
+
+```
+All | Food | Transport | Shopping
+```
+
+---
+
+## Interaction
+
+Tap category → filter list.
+
+---
+
+# Task 9 — Monthly Spending Context
+
+Add monthly reference indicator above calendar.
+
+Example:
+
+```
+March spending
+Rp 1.240.000
+```
+
+Optional progress bar:
+
+```
+██████░░░░ 60%
+```
+
+---
+
+# Task 10 — Empty Day Feedback
+
+If a day has **no transactions**:
+
+Show encouragement.
+
+```
+No spending today.
+
+Nice job keeping costs down.
+```
+
+---
+
+# Final Layout
+
+```
+Transactions
+
+
+March 2026
+Rp 1.240.000 spent
+
+
+Calendar
+17 18 19 20 21 22 23
+•  ••• •• •••• •  •
+
+
+Tuesday · 17 March
+Rp 18.200 total
+
+
+Morning (2)
+Coffee
+Bus
+
+
+Afternoon (1)
+Lunch
+```
+
+---
+
+# Brutal Truth
+
+Your current screen is **a ledger**.
+
+But humans don't think in ledgers.
+They think in **days and routines**.
+
+When the screen shows:
+
+```
+Morning coffee
+Lunch
+Bus ride
+```
+
+Users suddenly see **their lifestyle pattern**.
+
+That is the moment the app becomes **useful instead of archival**.
+
+---
+
+Next screen should be **Settings**, but that screen currently reveals another deeper product flaw: **the app has no financial system yet (budgets, goals, or automation)**.
+
+
 # Milestone 4 — Financial System Configuration
 
 Screen: **Settings**

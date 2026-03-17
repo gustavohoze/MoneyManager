@@ -3,37 +3,57 @@ import Combine
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
-    @Published private(set) var accounts: [AccountListItem] = []
+    @Published private(set) var paymentMethods: [PaymentMethodListItem] = []
+    @Published private(set) var categories: [TransactionFormCategoryOption] = []
     @Published private(set) var errorMessage: String?
     @Published private(set) var actionMessage: String?
 
-    private let accountManager: AccountManaging
+    private let paymentMethodManager: PaymentMethodManaging
     private let dummyTransactionManager: DummyTransactionDataManaging
+    private let optionsProvider: TransactionFormOptionsProviding
 
     init(
-        accountManager: AccountManaging,
-        dummyTransactionManager: DummyTransactionDataManaging = NoOpDummyTransactionDataManager()
+        paymentMethodManager: PaymentMethodManaging,
+        dummyTransactionManager: DummyTransactionDataManaging = NoOpDummyTransactionDataManager(),
+        optionsProvider: TransactionFormOptionsProviding = NoOpTransactionFormOptionsProvider()
     ) {
-        self.accountManager = accountManager
+        self.paymentMethodManager = paymentMethodManager
         self.dummyTransactionManager = dummyTransactionManager
+        self.optionsProvider = optionsProvider
     }
 
-    func loadAccounts() {
+    func loadSettingsData() {
+        loadPaymentMethods()
+        loadCategories()
+    }
+
+    func loadPaymentMethods() {
         do {
-            accounts = try accountManager.loadAccounts()
+            paymentMethods = try paymentMethodManager.loadPaymentMethods()
             errorMessage = nil
         } catch {
-            accounts = []
+            paymentMethods = []
             errorMessage = error.localizedDescription
         }
     }
 
-    func createAccount(name: String, type: String, currency: String) {
+    func loadCategories() {
         do {
-            try accountManager.createAccount(name: name, type: type, currency: currency)
-            actionMessage = String(localized: "PaymentMethod created.")
+            categories = try optionsProvider.loadOptions().categories
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
             errorMessage = nil
-            loadAccounts()
+        } catch {
+            categories = []
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func createPaymentMethod(name: String, type: String, currency: String) {
+        do {
+            try paymentMethodManager.createPaymentMethod(name: name, type: type, currency: currency)
+            actionMessage = String(localized: "Payment Method created.")
+            errorMessage = nil
+            loadPaymentMethods()
         } catch {
             errorMessage = error.localizedDescription
             actionMessage = nil
@@ -42,10 +62,10 @@ final class SettingsViewModel: ObservableObject {
 
     func updatePaymentMethod(id: UUID, name: String, type: String, currency: String) {
         do {
-            try accountManager.updatePaymentMethod(id: id, name: name, type: type, currency: currency)
-            actionMessage = String(localized: "PaymentMethod updated.")
+            try paymentMethodManager.updatePaymentMethod(id: id, name: name, type: type, currency: currency)
+            actionMessage = String(localized: "Payment Method updated.")
             errorMessage = nil
-            loadAccounts()
+            loadPaymentMethods()
         } catch {
             errorMessage = error.localizedDescription
             actionMessage = nil
@@ -54,21 +74,41 @@ final class SettingsViewModel: ObservableObject {
 
     func deletePaymentMethod(id: UUID) {
         do {
-            try accountManager.deletePaymentMethod(id: id)
-            actionMessage = String(localized: "PaymentMethod deleted.")
+            try paymentMethodManager.deletePaymentMethod(id: id)
+            actionMessage = String(localized: "Payment Method deleted.")
             errorMessage = nil
-            loadAccounts()
+            loadPaymentMethods()
         } catch {
             errorMessage = error.localizedDescription
             actionMessage = nil
         }
     }
 
-    func saveAccount(id: UUID?, name: String, type: String, currency: String) {
+    func savePaymentMethod(id: UUID?, name: String, type: String, currency: String) {
         if let paymentMethodID = id {
             updatePaymentMethod(id: paymentMethodID, name: name, type: type, currency: currency)
         } else {
-            createAccount(name: name, type: type, currency: currency)
+            createPaymentMethod(name: name, type: type, currency: currency)
+        }
+    }
+
+    func syncPaymentMethodsCurrency(to currencyCode: String) {
+        do {
+            let normalizedCurrency = AppCurrency.normalizedCode(currencyCode) ?? AppCurrency.currentCode
+            for paymentMethod in paymentMethods {
+                try paymentMethodManager.updatePaymentMethod(
+                    id: paymentMethod.id,
+                    name: paymentMethod.name,
+                    type: paymentMethod.type,
+                    currency: normalizedCurrency
+                )
+            }
+            actionMessage = "All payment methods now use \(normalizedCurrency)."
+            errorMessage = nil
+            loadPaymentMethods()
+        } catch {
+            errorMessage = error.localizedDescription
+            actionMessage = nil
         }
     }
 
@@ -90,5 +130,11 @@ final class SettingsViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             actionMessage = nil
         }
+    }
+}
+
+private struct NoOpTransactionFormOptionsProvider: TransactionFormOptionsProviding {
+    func loadOptions() throws -> TransactionFormOptions {
+        TransactionFormOptions(accounts: [], categories: [])
     }
 }

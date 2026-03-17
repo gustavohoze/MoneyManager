@@ -3,171 +3,178 @@ import SwiftUI
 struct SettingsScreen: View {
     @EnvironmentObject private var persistenceStoreManager: PersistenceStoreManager
     @Environment(\.colorScheme) private var colorScheme
-    @AppStorage("debug.showMilestoneZeroExamples") private var showMilestoneZeroExamples = false
-    @State private var actionFeedback = ""
+    @State private var path: [SettingsSection] = []
 
     @ObservedObject var viewModel: SettingsViewModel
-
-    @State private var isEditorPresented = false
-    @State private var editorDraft = AccountEditorDraft.createDefault()
-    @State private var accountPendingDeleteID: UUID?
-
-    private let accountTypeOptions = ["cash", "bank", "wallet", "credit"]
 
     private var palette: FinanceTheme.Palette {
         FinanceTheme.palette(for: colorScheme)
     }
 
-    var body: some View {
-        NavigationStack {
-            List {
-                Section(String(localized: "Accounts")) {
-                    Button {
-                        editorDraft = .createDefault()
-                        isEditorPresented = true
-                    } label: {
-                        Label(String(localized: "Add PaymentMethod"), systemImage: "plus")
-                    }
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+    enum SettingsSection: Hashable {
+        case accountsAndIncome
+        case budgets
+        case categories
+        case notifications
+        case dataSyncPrivacy
+        case advanced
+    }
 
-                    if viewModel.accounts.isEmpty {
-                        Text(String(localized: "No accounts yet"))
-                            .foregroundStyle(palette.secondaryInk)
-                    } else {
-                        ForEach(viewModel.accounts) { account in
-                            SettingsAccountRow(
-                                account: account,
-                                palette: palette,
-                                onEdit: {
-                                    editorDraft = AccountEditorDraft(
-                                        paymentMethodID: account.id,
-                                        name: account.name,
-                                        type: account.type,
-                                        currency: account.currency
-                                    )
-                                    isEditorPresented = true
-                                },
-                                onDelete: {
-                                    accountPendingDeleteID = account.id
-                                }
-                            )
+    var body: some View {
+        NavigationStack(path: $path) {
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Top priority row: Payment Methods & Income
+                    SettingsTileButton(
+                        icon: "creditcard.fill",
+                        label: String(localized: "Payment Methods & Income"),
+                        description: "\(viewModel.paymentMethods.count) payment methods",
+                        palette: palette
+                    ) {
+                        path.append(.accountsAndIncome)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    // Second priority row: Budgets & Categories
+                    HStack(spacing: 12) {
+                        SettingsTileButton(
+                            icon: "chart.pie.fill",
+                            label: String(localized: "Budgets"),
+                            description: "Spending limits",
+                            palette: palette
+                        ) {
+                            path.append(.budgets)
+                        }
+
+                        SettingsTileButton(
+                            icon: "square.grid.2x2.fill",
+                            label: String(localized: "Categories"),
+                            description: "\(viewModel.categories.count) categories",
+                            palette: palette
+                        ) {
+                            path.append(.categories)
                         }
                     }
-                }
 
-                Section(String(localized: "Storage")) {
-                    Text(
-                        String(
-                            format: String(localized: "Active store mode: %@"),
-                            persistenceStoreManager.controller.activeStoreMode.rawValue
-                        )
-                    )
-                }
+                    // Third priority row: Notifications & Data/Sync/Privacy
+                    HStack(spacing: 12) {
+                        SettingsTileButton(
+                            icon: "bell.fill",
+                            label: String(localized: "Notifications"),
+                            description: "Alert settings",
+                            palette: palette
+                        ) {
+                            path.append(.notifications)
+                        }
 
-                Section(String(localized: "Sync")) {
-                    Button(String(localized: "Retry CloudKit Store")) {
-                        actionFeedback = persistenceStoreManager.requestCloudKitUpgrade().message
+                        SettingsTileButton(
+                            icon: "lock.circle.fill",
+                            label: String(localized: "Privacy"),
+                            description: "Security & data",
+                            palette: palette
+                        ) {
+                            path.append(.dataSyncPrivacy)
+                        }
                     }
 
-                    if persistenceStoreManager.requiresAppRestartForCloudKitUpgrade {
-                        Text(String(localized: "CloudKit upgrade will be applied on next app launch."))
-                            .font(.footnote)
-                            .foregroundStyle(palette.secondaryInk)
-                    }
+                    // Advanced row
+                    HStack(spacing: 12) {
+                        SettingsTileButton(
+                            icon: "wrench.adjustable.fill",
+                            label: String(localized: "Advanced"),
+                            description: "Debug & testing",
+                            palette: palette
+                        ) {
+                            path.append(.advanced)
+                        }
 
-                    if !actionFeedback.isEmpty {
-                        Text(actionFeedback)
-                            .font(.footnote)
-                            .foregroundStyle(palette.secondaryInk)
-                    }
-                }
-
-                Section(String(localized: "Data Tools")) {
-                    Button {
-                        viewModel.createDummyTransactions()
-                    } label: {
-                        Label(String(localized: "Create Dummy Transactions"), systemImage: "plus.circle")
-                    }
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-                    Button(role: .destructive) {
-                        viewModel.deleteDummyTransactions()
-                    } label: {
-                        Label(String(localized: "Delete Dummy Transactions"), systemImage: "trash")
-                    }
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-                }
-
-                if let actionMessage = viewModel.actionMessage {
-                    Section(String(localized: "Last Action")) {
-                        Text(actionMessage)
-                            .font(.footnote)
-                            .foregroundStyle(palette.secondaryInk)
+                        // Placeholder to keep 2-column layout
+                        Color.clear
+                            .frame(minHeight: 100)
                     }
                 }
-
-                if let errorMessage = viewModel.errorMessage {
-                    Section(String(localized: "Error")) {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                    }
-                }
-
-#if DEBUG
-                Section(String(localized: "Developer")) {
-                    Toggle(String(localized: "Show Milestone 0 Examples"), isOn: $showMilestoneZeroExamples)
-                }
-#endif
+                .padding(16)
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
             .background(FinanceTheme.pageBackground(for: colorScheme))
             .navigationTitle(String(localized: "Settings"))
+            .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(for: SettingsSection.self) { section in
+                switch section {
+                case .accountsAndIncome:
+                    SettingsAccountsAndIncomeDetailPage(
+                        viewModel: viewModel,
+                        palette: palette
+                    )
+                case .budgets:
+                    SettingsBudgetsDetailPage(
+                        viewModel: viewModel,
+                        palette: palette
+                    )
+                case .categories:
+                    SettingsCategoriesDetailPage(
+                        viewModel: viewModel,
+                        palette: palette
+                    )
+                case .notifications:
+                    SettingsNotificationsDetailPage(palette: palette)
+                case .dataSyncPrivacy:
+                    SettingsDataSyncPrivacyDetailPage(palette: palette)
+                case .advanced:
+                    SettingsAdvancedDetailPage(
+                        viewModel: viewModel,
+                        palette: palette
+                    )
+                }
+            }
             .onAppear {
-                viewModel.loadAccounts()
+                viewModel.loadSettingsData()
             }
-            .confirmationDialog(
-                String(localized: "Delete this account?"),
-                isPresented: Binding(
-                    get: { accountPendingDeleteID != nil },
-                    set: { isPresented in
-                        if !isPresented {
-                            accountPendingDeleteID = nil
-                        }
-                    }
-                ),
-                titleVisibility: .visible
-            ) {
-                if let paymentMethodID = accountPendingDeleteID {
-                    Button(String(localized: "Delete"), role: .destructive) {
-                        viewModel.deletePaymentMethod(id: paymentMethodID)
-                        accountPendingDeleteID = nil
-                    }
+        }
+    }
+}
+
+// MARK: - Tile Button Component
+
+struct SettingsTileButton: View {
+    let icon: String
+    let label: String
+    let description: String
+    let palette: FinanceTheme.Palette
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    Image(systemName: icon)
+                        .font(.system(size: 24))
+                        .foregroundStyle(palette.accent)
+                        .frame(width: 36, height: 36)
+                        .background(palette.accentSoft)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(palette.secondaryInk)
                 }
 
-                Button(String(localized: "Cancel"), role: .cancel) {
-                    accountPendingDeleteID = nil
-                }
-            }
-            .sheet(isPresented: $isEditorPresented) {
-                AccountEditorSheet(
-                    draft: $editorDraft,
-                    accountTypeOptions: accountTypeOptions,
-                    onCancel: {
-                        isEditorPresented = false
-                    },
-                    onSave: {
-                        viewModel.saveAccount(
-                            id: editorDraft.paymentMethodID,
-                            name: editorDraft.name,
-                            type: editorDraft.type,
-                            currency: editorDraft.currency
-                        )
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(label)
+                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .foregroundStyle(palette.ink)
 
-                        isEditorPresented = false
-                    }
-                )
+                    Text(description)
+                        .font(.caption)
+                        .foregroundStyle(palette.secondaryInk)
+                }
+
+                Spacer()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: 100)
+            .financeCard(palette: palette)
         }
     }
 }

@@ -79,15 +79,15 @@ struct MilestoneZeroExamplesView: View {
             }
 
             Section(String(localized: "Custom Data Entry")) {
-                TextField(String(localized: "PaymentMethod Name"), text: $viewModel.customAccountName)
+                TextField(String(localized: "Payment Method Name"), text: $viewModel.customAccountName)
 
-                Picker(String(localized: "PaymentMethod Type"), selection: $viewModel.customAccountType) {
+                Picker(String(localized: "Payment Method Type"), selection: $viewModel.customAccountType) {
                     ForEach(viewModel.accountTypeOptions, id: \.self) { option in
                         Text(option)
                     }
                 }
 
-                TextField(String(localized: "PaymentMethod Currency"), text: $viewModel.customAccountCurrency)
+                TextField(String(localized: "Payment Method Currency"), text: $viewModel.customAccountCurrency)
 
                 TextField(String(localized: "Transaction Amount"), text: $viewModel.customTransactionAmount)
                     .keyboardType(.decimalPad)
@@ -209,7 +209,7 @@ struct MilestoneZeroExamplesView: View {
                     .textSelection(.enabled)
 
                 if !viewModel.accountRows.isEmpty {
-                    Text(String(localized: "Accounts"))
+                    Text(String(localized: "Payment Methods"))
                         .font(.subheadline.weight(.semibold))
                     ForEach(Array(viewModel.accountRows.enumerated()), id: \.offset) { _, row in
                         Text(row)

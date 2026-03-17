@@ -3,31 +3,57 @@ import SwiftUI
 struct AccountEditorSheet: View {
     @Binding var draft: AccountEditorDraft
 
-    let accountTypeOptions: [String]
+    let paymentMethodTypeOptions: [String]
     let onCancel: () -> Void
     let onSave: () -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var palette: FinanceTheme.Palette {
+        FinanceTheme.palette(for: colorScheme)
+    }
+
     var body: some View {
         NavigationStack {
-            Form {
-                Section(String(localized: "Name")) {
-                    TextField(String(localized: "PaymentMethod Name"), text: $draft.name)
-                }
+            ScrollView {
+                VStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(String(localized: "Name"))
+                            .font(.system(.caption, design: .rounded).weight(.semibold))
+                            .foregroundStyle(palette.secondaryInk)
 
-                Section(String(localized: "Type")) {
-                    Picker(String(localized: "PaymentMethod Type"), selection: $draft.type) {
-                        ForEach(accountTypeOptions, id: \.self) { type in
-                            Text(type.capitalized).tag(type)
-                        }
+                        TextField(String(localized: "Payment Method Name"), text: $draft.name)
+                            .textFieldStyle(.plain)
                     }
-                }
+                    .financeCard(palette: palette)
 
-                Section(String(localized: "Currency")) {
-                    TextField(String(localized: "Currency"), text: $draft.currency)
-                        .textInputAutocapitalization(.characters)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(String(localized: "Type"))
+                            .font(.system(.caption, design: .rounded).weight(.semibold))
+                            .foregroundStyle(palette.secondaryInk)
+
+                        Picker(String(localized: "Payment Method Type"), selection: $draft.type) {
+                            ForEach(paymentMethodTypeOptions, id: \.self) { type in
+                                Text(type.capitalized).tag(type)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                    .financeCard(palette: palette)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(String(localized: "Currency is controlled by Display Currency in Settings."))
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryInk)
+                    }
+                    .financeCard(palette: palette)
                 }
+                .padding(16)
             }
-            .navigationTitle(draft.paymentMethodID == nil ? String(localized: "Add PaymentMethod") : String(localized: "Edit PaymentMethod"))
+            .scrollDismissesKeyboard(.interactively)
+            .background(FinanceTheme.pageBackground(for: colorScheme).ignoresSafeArea())
+            .navigationTitle(draft.paymentMethodID == nil ? String(localized: "Add Payment Method") : String(localized: "Edit Payment Method"))
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(String(localized: "Cancel"), action: onCancel)

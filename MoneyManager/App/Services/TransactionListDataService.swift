@@ -6,6 +6,7 @@ struct TransactionListItem: Equatable {
     let merchant: String
     let amount: Double
     let category: String
+    let categoryIcon: String
     let account: String
     let date: Date
 }
@@ -16,7 +17,7 @@ struct TransactionListSection: Equatable {
 }
 
 protocol TransactionListDataProviding {
-    func loadSections(asOf date: Date) throws -> [TransactionListSection]
+    func loadItems() throws -> [TransactionListItem]
 }
 
 struct TransactionListDataService: TransactionListDataProviding {
@@ -34,12 +35,23 @@ struct TransactionListDataService: TransactionListDataProviding {
         self.accountRepository = accountRepository
     }
 
-    func loadSections(asOf date: Date = Date()) throws -> [TransactionListSection] {
+    func loadItems() throws -> [TransactionListItem] {
         let transactions = try transactionRepository.fetchTransactions()
         let categories = try categoryRepository.fetchCategories()
-        let accounts = try accountRepository.fetchPaymentMethods()
+        let paymentMethods = try accountRepository.fetchPaymentMethods()
 
-        let categoryByID = categories.reduce(into: [UUID: String]()) { partialResult, object in
+        let categoryByID = categories.reduce(into: [UUID: (name: String, icon: String)]()) { partialResult, object in
+            guard
+                let id = object.value(forKey: "id") as? UUID,
+                let name = object.value(forKey: "name") as? String
+            else {
+                return
+            }
+            let icon = (object.value(forKey: "icon") as? String) ?? "questionmark.circle"
+            partialResult[id] = (name: name, icon: icon)
+        }
+
+        let paymentMethodByID = paymentMethods.reduce(into: [UUID: String]()) { partialResult, object in
             guard
                 let id = object.value(forKey: "id") as? UUID,
                 let name = object.value(forKey: "name") as? String
@@ -49,21 +61,7 @@ struct TransactionListDataService: TransactionListDataProviding {
             partialResult[id] = name
         }
 
-        let accountByID = accounts.reduce(into: [UUID: String]()) { partialResult, object in
-            guard
-                let id = object.value(forKey: "id") as? UUID,
-                let name = object.value(forKey: "name") as? String
-            else {
-                return
-            }
-            partialResult[id] = name
-        }
-
-        var todayItems: [TransactionListItem] = []
-        var yesterdayItems: [TransactionListItem] = []
-        var earlierItems: [TransactionListItem] = []
-
-        let calendar = Calendar(identifier: .iso8601)
+        var items: [TransactionListItem] = []
 
         for object in transactions {
             guard let id = object.value(forKey: "id") as? UUID else {
@@ -77,40 +75,28 @@ struct TransactionListDataService: TransactionListDataProviding {
             let amount = (object.value(forKey: "amount") as? Double) ?? 0
 
             let categoryID = object.value(forKey: "categoryID") as? UUID
-            let categoryName = categoryID.flatMap { categoryByID[$0] } ?? "Uncategorized"
+            let categoryDetails = categoryID.flatMap { categoryByID[$0] }
+            let categoryName = categoryDetails?.name ?? "Uncategorized"
+            let categoryIcon = categoryDetails?.icon ?? "questionmark.circle"
 
             let paymentMethodID = object.value(forKey: "paymentMethodID") as? UUID
-            let accountName = paymentMethodID.flatMap { accountByID[$0] } ?? "Unknown"
+            let paymentMethodName = paymentMethodID.flatMap { paymentMethodByID[$0] } ?? "Unknown"
 
             let item = TransactionListItem(
                 id: id,
                 merchant: merchant,
                 amount: amount,
                 category: categoryName,
-                account: accountName,
+                categoryIcon: categoryIcon,
+                account: paymentMethodName,
                 date: transactionDate
             )
 
-            if calendar.isDate(transactionDate, inSameDayAs: date) {
-                todayItems.append(item)
-            } else if let yesterday = calendar.date(byAdding: .day, value: -1, to: date), calendar.isDate(transactionDate, inSameDayAs: yesterday) {
-                yesterdayItems.append(item)
-            } else {
-                earlierItems.append(item)
-            }
+            items.append(item)
         }
 
-        var sections: [TransactionListSection] = []
-        if !todayItems.isEmpty {
-            sections.append(TransactionListSection(title: "Today", items: todayItems))
+        return items.sorted { lhs, rhs in
+            lhs.date > rhs.date
         }
-        if !yesterdayItems.isEmpty {
-            sections.append(TransactionListSection(title: "Yesterday", items: yesterdayItems))
-        }
-        if !earlierItems.isEmpty {
-            sections.append(TransactionListSection(title: "Earlier", items: earlierItems))
-        }
-
-        return sections
     }
 }

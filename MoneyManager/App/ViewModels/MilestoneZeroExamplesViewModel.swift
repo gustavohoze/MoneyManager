@@ -6,7 +6,7 @@ import Combine
 final class MilestoneZeroExamplesViewModel: ObservableObject {
 
     @Published var persistenceOutput = String(localized: "Tap to inspect Core Data and CloudKit setup.")
-    @Published var entityOutput = String(localized: "Tap to create sample PaymentMethod, Transaction, Merchant, and Category records.")
+    @Published var entityOutput = String(localized: "Tap to create sample Payment Method, Transaction, Merchant, and Category records.")
     @Published var repositoryOutput = String(localized: "Tap to run repository fetch examples.")
     @Published var merchantResolverOutput = String(localized: "Tap to resolve a noisy merchant name.")
     @Published var analyticsOutput = String(localized: "Tap to fire example analytics events.")
@@ -140,7 +140,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
         let trimmedCategoryName = customCategoryName.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedAccountName.isEmpty else {
-            entityOutput = String(localized: "PaymentMethod name is required.")
+            entityOutput = String(localized: "Payment method name is required.")
             return
         }
 
@@ -364,7 +364,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
                 return "\(name) | \(type)"
             }
 
-            dataBrowserOutput = "Loaded: \(accounts.count) accounts, \(transactions.count) transactions, \(merchants.count) merchants, \(categories.count) categories."
+            dataBrowserOutput = "Loaded: \(accounts.count) payment methods, \(transactions.count) transactions, \(merchants.count) merchants, \(categories.count) categories."
         } catch {
             dataBrowserOutput = String(
                 format: String(localized: "Data browser failed: %@"),

@@ -3,7 +3,7 @@ import SwiftUI
 
 extension DashboardViewModel {
     func currencyText(_ value: Double) -> String {
-        value.formatted(.currency(code: "IDR").precision(.fractionLength(0)))
+        AppCurrency.formatted(value)
     }
 
     func relativeTimeText(from date: Date, referenceDate: Date = Date()) -> String {
@@ -47,7 +47,7 @@ extension DashboardViewModel {
 
     var shouldShowCategoryPrompt: Bool {
         guard !categoryRows.isEmpty else { return true }
-        return categoryRows.count == 1 && categoryRows[0].category.caseInsensitiveCompare("Uncategorized") == .orderedSame
+        return categoryRows.count == 1 && categoryRows[0].category.caseInsensitiveCompare(DashboardDomainConstants.uncategorized) == .orderedSame
     }
 
     var derivedAlerts: [DashboardAlert] {
@@ -144,7 +144,7 @@ extension DashboardViewModel {
     }
 
     func uncategorizedCountEstimate(recentCount: Int) -> Int {
-        let uncategorizedRatio = categoryRows.first(where: { $0.category.caseInsensitiveCompare("Uncategorized") == .orderedSame })?.ratio ?? 0
+        let uncategorizedRatio = categoryRows.first(where: { $0.category.caseInsensitiveCompare(DashboardDomainConstants.uncategorized) == .orderedSame })?.ratio ?? 0
         if uncategorizedRatio >= 0.99 {
             return max(3, recentCount)
         }

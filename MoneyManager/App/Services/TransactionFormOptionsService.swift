@@ -5,6 +5,7 @@ struct TransactionFormAccountOption: Identifiable, Equatable {
     let id: UUID
     let name: String
     var icon: String = "creditcard"
+    var currency: String = "IDR"
 }
 
 struct TransactionFormCategoryOption: Identifiable, Equatable {
@@ -41,7 +42,13 @@ struct TransactionFormOptionsService: TransactionFormOptionsProviding {
                     return nil
                 }
                 let type = object.value(forKey: "type") as? String ?? "cash"
-                return TransactionFormAccountOption(id: id, name: name, icon: Self.icon(forPaymentMethodType: type))
+                let currency = (object.value(forKey: "currency") as? String) ?? "IDR"
+                return TransactionFormAccountOption(
+                    id: id,
+                    name: name,
+                    icon: Self.icon(forPaymentMethodType: type),
+                    currency: currency
+                )
             }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 

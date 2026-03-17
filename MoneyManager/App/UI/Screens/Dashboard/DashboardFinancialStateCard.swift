@@ -32,7 +32,7 @@ struct DashboardFinancialStateCard: View {
                 )
             }
 
-            Text(String(localized: "Income in \(viewModel.daysUntilIncome) days"))
+            Text(String(localized: "Next payment in \(viewModel.daysUntilIncome) days"))
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.92))
         }

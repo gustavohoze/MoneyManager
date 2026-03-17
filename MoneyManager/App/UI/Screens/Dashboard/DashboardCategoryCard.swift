@@ -5,6 +5,10 @@ struct DashboardCategoryCard: View {
     @Binding var insightPage: Int
     let palette: FinanceTheme.Palette
 
+    private var hasTransactions: Bool {
+        !viewModel.recentTransactions.isEmpty
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -18,16 +22,21 @@ struct DashboardCategoryCard: View {
             }
 
             if viewModel.shouldShowCategoryPrompt {
-                Text(String(localized: "Categorize transactions to see spending insights."))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(palette.ink)
+                VStack(spacing: 6) {
+                    Text(String(localized: "Categorize transactions to see spending insights."))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(palette.ink)
+                        .multilineTextAlignment(hasTransactions ? .leading : .center)
 
-                Text(
-                    "\(viewModel.uncategorizedCountEstimate(recentCount: viewModel.recentTransactions.count)) "
-                    + String(localized: "transactions need categories.")
-                )
-                .font(.footnote)
-                .foregroundStyle(palette.secondaryInk)
+                    Text(
+                        "\(viewModel.uncategorizedCountEstimate(recentCount: viewModel.recentTransactions.count)) "
+                        + String(localized: "transactions need categories.")
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(palette.secondaryInk)
+                    .multilineTextAlignment(hasTransactions ? .leading : .center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: hasTransactions ? .topLeading : .center)
             } else {
                 ForEach(Array(viewModel.categoryRows.prefix(3).enumerated()), id: \.offset) { _, row in
                     VStack(spacing: 4) {
@@ -56,7 +65,6 @@ struct DashboardCategoryCard: View {
                 }
             }
 
-            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .financeCard(palette: palette)

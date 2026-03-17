@@ -30,11 +30,14 @@ struct MilestoneOneRootView: View {
         let transactionRepository = CoreDataTransactionRepository(context: context)
         let merchantResolver = MerchantResolver()
         let analytics = InMemoryAnalyticsService()
+        let dashboardSettingsProvider = UserDefaultsDashboardSettingsProvider()
+        let dashboardRefreshTrigger = UserDefaultsDashboardRefreshTrigger()
 
         let dashboardService = DashboardDataService(
             transactionRepository: transactionRepository,
             categoryRepository: categoryRepository,
-            accountRepository: accountRepository
+            accountRepository: accountRepository,
+            settingsProvider: dashboardSettingsProvider
         )
 
         let transactionListService = TransactionListDataService(
@@ -63,8 +66,8 @@ struct MilestoneOneRootView: View {
             analytics: analytics
         )
 
-        let accountManagementService = AccountManagementService(
-            accountRepository: accountRepository,
+        let paymentMethodManagementService = PaymentMethodManagementService(
+            paymentMethodRepository: accountRepository,
             transactionRepository: transactionRepository,
             analytics: analytics
         )
@@ -80,6 +83,8 @@ struct MilestoneOneRootView: View {
             categoryRepository: categoryRepository
         )
 
+        let categoryBudgetService = UserDefaultsCategoryBudgetService()
+
         // MARK: - Milestone 2: Frictionless Expense Capture Services
         let accountAutoSelectionService = AccountAutoSelectionService(
             accountRepository: accountRepository,
@@ -90,14 +95,18 @@ struct MilestoneOneRootView: View {
             transactionRepository: transactionRepository
         )
 
-        let undoService = TransactionUndoService()
-
-        _dashboardViewModel = StateObject(wrappedValue: DashboardViewModel(dataProvider: dashboardService))
+        _dashboardViewModel = StateObject(
+            wrappedValue: DashboardViewModel(
+                dataProvider: dashboardService,
+                refreshTrigger: dashboardRefreshTrigger
+            )
+        )
         _transactionListViewModel = StateObject(
             wrappedValue: TransactionListViewModel(
                 dataProvider: transactionListService,
                 mutationService: transactionMutationService,
-                optionsProvider: formOptionsService
+                optionsProvider: formOptionsService,
+                budgetProvider: categoryBudgetService
             )
         )
         let merchantSuggestionService = TransactionMerchantSuggestionService(
@@ -111,14 +120,14 @@ struct MilestoneOneRootView: View {
                 merchantCategorySuggester: merchantMemoryService,
                 merchantSuggestionProvider: merchantSuggestionService,
                 accountAutoSelection: accountAutoSelectionService,
-                undoService: undoService,
                 merchantMemoryRecorder: merchantMemoryService
             )
         )
         _settingsViewModel = StateObject(
             wrappedValue: SettingsViewModel(
-                accountManager: accountManagementService,
-                dummyTransactionManager: dummyTransactionCRUDService
+                paymentMethodManager: paymentMethodManagementService,
+                dummyTransactionManager: dummyTransactionCRUDService,
+                optionsProvider: formOptionsService
             )
         )
         _rootViewModel = StateObject(wrappedValue: MilestoneOneRootViewModel())
@@ -166,7 +175,11 @@ struct MilestoneOneRootView: View {
             TransactionEditSheetView(
                 state: state,
                 onCancel: { transactionListViewModel.cancelEdit() },
-                onSave: { draft in transactionListViewModel.saveEdit(draft: draft) }
+                onSave: { draft in transactionListViewModel.saveEdit(draft: draft) },
+                onDelete: {
+                    transactionListViewModel.cancelEdit()
+                    transactionListViewModel.deleteTransaction(id: state.id)
+                }
             )
         }
         .task {

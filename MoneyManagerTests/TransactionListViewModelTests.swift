@@ -35,7 +35,7 @@ private struct MockTransactionFormOptionsProvider: TransactionFormOptionsProvidi
 struct TransactionListViewModelTests {
     private func fixedNoonReferenceDate() -> Date {
         var calendar = Calendar(identifier: .iso8601)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
+        calendar.timeZone = .current
         let components = DateComponents(
             calendar: calendar,
             timeZone: calendar.timeZone,
@@ -50,9 +50,9 @@ struct TransactionListViewModelTests {
         return calendar.date(from: components) ?? Date(timeIntervalSince1970: 1_742_208_000)
     }
 
-    @Test("Test: sections are grouped by relative day")
-    func load_withMixedDates_groupsTodayYesterdayEarlier() throws {
-        // Objective: Validate required Today/Yesterday/Earlier grouping and newest-first ordering.
+    @Test("Test: timeline groups selected day into time buckets")
+    func load_withMixedDates_buildsWeekAndTimeBucketPresentation() throws {
+        // Objective: Validate milestone 3 presentation for month summary, week strip, and time-of-day grouping.
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
 
@@ -63,11 +63,10 @@ struct TransactionListViewModelTests {
         let paymentMethodID = try accountRepository.upsertPaymentMethod(name: "Cash", type: "cash", currency: "IDR")
         let foodID = try categoryRepository.upsertCategory(name: "Food", icon: "fork.knife", type: "expense")
 
-        let calendar = Calendar(identifier: .iso8601)
         let now = fixedNoonReferenceDate()
-        let todayEarlier = calendar.date(byAdding: .hour, value: -2, to: now) ?? now
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: now) ?? now
-        let earlier = calendar.date(byAdding: .day, value: -4, to: now) ?? now
+        let todayEarlier = Calendar(identifier: .iso8601).date(byAdding: .hour, value: -2, to: now) ?? now
+        let yesterday = Calendar(identifier: .iso8601).date(byAdding: .day, value: -1, to: now) ?? now
+        let earlier = Calendar(identifier: .iso8601).date(byAdding: .day, value: -4, to: now) ?? now
 
         _ = try transactionRepository.createTransaction(
             paymentMethodID: paymentMethodID,
@@ -130,19 +129,17 @@ struct TransactionListViewModelTests {
         viewModel.load(asOf: now)
 
         #expect(viewModel.errorMessage == nil)
-        #expect(viewModel.sections.map(\.title) == ["Today", "Yesterday", "Earlier"])
-        #expect(viewModel.sections[0].items.count == 2)
-        #expect(viewModel.sections[1].items.count == 1)
-        #expect(viewModel.sections[2].items.count == 1)
-
-        // Newest first is required inside each section.
-        #expect(viewModel.sections[0].items[0].merchant == "Tea")
-        #expect(viewModel.sections[0].items[1].merchant == "Coffee")
+        #expect(viewModel.presentation.monthSummary.transactionCountText == "4 transactions")
+        #expect(viewModel.presentation.weekDays.count == 7)
+        #expect(viewModel.presentation.daySummary.transactionCountText == "2 transactions")
+        #expect(viewModel.presentation.groups.map(\.title) == ["Morning", "Afternoon"])
+        #expect(viewModel.presentation.groups[0].items.first?.merchant == "Coffee")
+        #expect(viewModel.presentation.groups[1].items.first?.merchant == "Tea")
     }
 
     @Test("Test: fallback names for missing mappings")
     func load_missingAccountAndCategory_usesFallbackLabels() throws {
-        // Objective: Ensure list still renders when references are unresolved.
+        // Objective: Ensure timeline rows still render when references are unresolved.
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
 
@@ -176,9 +173,10 @@ struct TransactionListViewModelTests {
 
         viewModel.load(asOf: now)
 
-        let item = try #require(viewModel.sections.first?.items.first)
-        #expect(item.category == "Uncategorized")
-        #expect(item.account == "Cash")
+        let group = try #require(viewModel.presentation.groups.first)
+        let item = try #require(group.items.first)
+        #expect(group.title == "Afternoon")
+        #expect(item.metaText == "Uncategorized • Cash")
         #expect(item.merchant == "Unknown")
     }
 
@@ -222,9 +220,67 @@ struct TransactionListViewModelTests {
         viewModel.load(asOf: now)
         viewModel.deleteTransaction(id: id, asOf: now)
 
-        #expect(viewModel.sections.isEmpty)
+        #expect(viewModel.presentation.groups.isEmpty)
+        #expect(viewModel.presentation.emptyStateTitle == "No transactions yet")
         #expect(viewModel.actionMessage == "Transaction deleted.")
         #expect(viewModel.errorMessage == nil)
+    }
+
+    @Test("Test: selecting category filters timeline")
+    func selectCategory_filtersMonthAndDayPresentation() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+
+        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let transactionRepository = CoreDataTransactionRepository(context: context)
+        let categoryRepository = CoreDataCategoryRepository(context: context)
+
+        let now = fixedNoonReferenceDate()
+        let paymentMethodID = try accountRepository.ensureDefaultPaymentMethod()
+        let foodID = try categoryRepository.upsertCategory(name: "Food", icon: "fork.knife", type: "expense")
+        let travelID = try categoryRepository.upsertCategory(name: "Travel", icon: "car.fill", type: "expense")
+
+        _ = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 120,
+            currency: "IDR",
+            date: now,
+            merchantRaw: "Lunch",
+            merchantNormalized: "Lunch",
+            categoryID: foodID,
+            source: "manual",
+            note: nil
+        )
+
+        _ = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 45,
+            currency: "IDR",
+            date: now,
+            merchantRaw: "Taxi",
+            merchantNormalized: "Taxi",
+            categoryID: travelID,
+            source: "manual",
+            note: nil
+        )
+
+        let service = TransactionListDataService(
+            transactionRepository: transactionRepository,
+            categoryRepository: categoryRepository,
+            accountRepository: accountRepository
+        )
+        let viewModel = TransactionListViewModel(
+            dataProvider: service,
+            optionsProvider: MockTransactionFormOptionsProvider()
+        )
+
+        viewModel.load(asOf: now)
+        viewModel.selectCategory("Food")
+
+        #expect(viewModel.presentation.selectedCategory == "Food")
+        #expect(viewModel.presentation.daySummary.transactionCountText == "1 transaction")
+        #expect(viewModel.presentation.groups.count == 1)
+        #expect(viewModel.presentation.groups.first?.items.first?.merchant == "Lunch")
     }
 
     @Test("Test: delete transaction failure shows error")

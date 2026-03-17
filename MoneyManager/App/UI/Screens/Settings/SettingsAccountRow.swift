@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsAccountRow: View {
-    let account: AccountListItem
+    let paymentMethod: PaymentMethodListItem
     let palette: FinanceTheme.Palette
     let onEdit: () -> Void
     let onDelete: () -> Void
@@ -15,10 +15,10 @@ struct SettingsAccountRow: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(account.name)
+                Text(paymentMethod.name)
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(palette.ink)
-                Text("\(account.type.capitalized) • \(account.currency)")
+                Text("\(paymentMethod.type.capitalized) • \(paymentMethod.currency)")
                     .font(.footnote)
                     .foregroundStyle(palette.secondaryInk)
             }

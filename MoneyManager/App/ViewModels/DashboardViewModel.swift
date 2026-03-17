@@ -1,58 +1,78 @@
 import Foundation
 import Combine
 
+struct DashboardViewState: Equatable {
+    var currentBalance: Double = 0
+    var afterBillsBalance: Double = 0
+    var safeDailySpend: Double = 0
+    var daysUntilIncome: Int = 0
+    var weeklySpending: Double = 0
+    var lastWeekSpending: Double = 0
+    var weeklyBudget: Double = 0
+    var weekDailySpending: [Double] = Array(repeating: 0, count: 7)
+    var topSpendingCategory: String = DashboardDomainConstants.uncategorized
+    var categoryBreakdown: [DashboardCategoryBreakdown] = []
+    var alerts: [DashboardAlert] = []
+    var recentTransactions: [DashboardRecentTransaction] = []
+    var errorMessage: String?
+}
+
 @MainActor
 final class DashboardViewModel: ObservableObject {
-    @Published private(set) var currentBalance: Double = 0
-    @Published private(set) var afterBillsBalance: Double = 0
-    @Published private(set) var safeDailySpend: Double = 0
-    @Published private(set) var daysUntilIncome: Int = 0
-    @Published private(set) var weeklySpending: Double = 0
-    @Published private(set) var lastWeekSpending: Double = 0
-    @Published private(set) var weeklyBudget: Double = 0
-    @Published private(set) var weekDailySpending: [Double] = Array(repeating: 0, count: 7)
-    @Published private(set) var topSpendingCategory: String = "Uncategorized"
-    @Published private(set) var categoryBreakdown: [DashboardCategoryBreakdown] = []
-    @Published private(set) var alerts: [DashboardAlert] = []
-    @Published private(set) var recentTransactions: [DashboardRecentTransaction] = []
-    @Published private(set) var errorMessage: String?
+    @Published private(set) var state: DashboardViewState = DashboardViewState()
 
     private let dataProvider: DashboardDataProviding
+    private var cancellables: Set<AnyCancellable> = []
 
-    init(dataProvider: DashboardDataProviding) {
+    init(
+        dataProvider: DashboardDataProviding,
+        refreshTrigger: DashboardRefreshTriggering? = nil
+    ) {
         self.dataProvider = dataProvider
+
+        refreshTrigger?.updates
+            .sink { [weak self] in
+                self?.load()
+            }
+            .store(in: &cancellables)
     }
 
     func load(asOf date: Date = Date()) {
         do {
             let summary = try dataProvider.loadSummary(asOf: date, recentLimit: 3)
-            currentBalance = summary.currentBalance
-            afterBillsBalance = summary.afterBillsBalance
-            safeDailySpend = summary.safeDailySpend
-            daysUntilIncome = summary.daysUntilIncome
-            weeklySpending = summary.weeklySpending
-            lastWeekSpending = summary.lastWeekSpending
-            weeklyBudget = summary.weeklyBudget
-            weekDailySpending = summary.weekDailySpending
-            topSpendingCategory = summary.topSpendingCategory
-            categoryBreakdown = summary.categoryBreakdown
-            alerts = summary.alerts
-            recentTransactions = summary.recentTransactions
-            errorMessage = nil
+            state = DashboardViewState(
+                currentBalance: summary.currentBalance,
+                afterBillsBalance: summary.afterBillsBalance,
+                safeDailySpend: summary.safeDailySpend,
+                daysUntilIncome: summary.daysUntilIncome,
+                weeklySpending: summary.weeklySpending,
+                lastWeekSpending: summary.lastWeekSpending,
+                weeklyBudget: summary.weeklyBudget,
+                weekDailySpending: summary.weekDailySpending,
+                topSpendingCategory: summary.topSpendingCategory,
+                categoryBreakdown: summary.categoryBreakdown,
+                alerts: summary.alerts,
+                recentTransactions: summary.recentTransactions,
+                errorMessage: nil
+            )
         } catch {
-            currentBalance = 0
-            afterBillsBalance = 0
-            safeDailySpend = 0
-            daysUntilIncome = 0
-            weeklySpending = 0
-            lastWeekSpending = 0
-            weeklyBudget = 0
-            weekDailySpending = Array(repeating: 0, count: 7)
-            topSpendingCategory = "Uncategorized"
-            categoryBreakdown = []
-            alerts = []
-            recentTransactions = []
-            errorMessage = error.localizedDescription
+            state = DashboardViewState(errorMessage: error.localizedDescription)
         }
     }
+}
+
+extension DashboardViewModel {
+    var currentBalance: Double { state.currentBalance }
+    var afterBillsBalance: Double { state.afterBillsBalance }
+    var safeDailySpend: Double { state.safeDailySpend }
+    var daysUntilIncome: Int { state.daysUntilIncome }
+    var weeklySpending: Double { state.weeklySpending }
+    var lastWeekSpending: Double { state.lastWeekSpending }
+    var weeklyBudget: Double { state.weeklyBudget }
+    var weekDailySpending: [Double] { state.weekDailySpending }
+    var topSpendingCategory: String { state.topSpendingCategory }
+    var categoryBreakdown: [DashboardCategoryBreakdown] { state.categoryBreakdown }
+    var alerts: [DashboardAlert] { state.alerts }
+    var recentTransactions: [DashboardRecentTransaction] { state.recentTransactions }
+    var errorMessage: String? { state.errorMessage }
 }
