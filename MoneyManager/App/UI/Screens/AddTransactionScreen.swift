@@ -9,7 +9,8 @@ struct AddTransactionScreen: View {
             Form {
                 AddTransactionAmountSection(
                     amountText: $viewModel.amountText,
-                    focusedField: $focusedField
+                    focusedField: $focusedField,
+                    onAmountTextChange: { viewModel.didChangeAmountText($0) }
                 )
 
                 AddTransactionMerchantSection(
@@ -40,12 +41,15 @@ struct AddTransactionScreen: View {
                 AddTransactionSaveSection(
                     amountText: viewModel.amountText,
                     isSaving: viewModel.isSaving,
-                    onSave: save
+                    onSave: {
+                        focusedField = nil
+                        viewModel.saveFromForm()
+                    }
                 )
 
                 if let error = viewModel.error, !error.isAmountWarning {
                     Section {
-                        AddTransactionErrorRow(error: error)
+                        AddTransactionErrorRow(message: viewModel.errorMessage(for: error))
                     }
                 }
             }
@@ -97,11 +101,6 @@ struct AddTransactionScreen: View {
             }
         }
     }
-
-    private func save() {
-        focusedField = nil
-        viewModel.save()
-    }
 }
 
 private extension AddTransactionViewModelError {
@@ -115,43 +114,4 @@ private extension AddTransactionViewModelError {
 
 #Preview {
     AddTransactionScreen(viewModel: .previewInstance)
-}
-
-extension AddTransactionViewModel {
-    static var previewInstance: AddTransactionViewModel {
-        AddTransactionViewModel(
-            transactionEntryService: PreviewTransactionEntrySaving(),
-            optionsProvider: PreviewTransactionFormOptionsProviding()
-        )
-    }
-}
-
-struct PreviewTransactionEntrySaving: TransactionEntrySaving {
-    func saveManualTransaction(
-        paymentMethodID: UUID,
-        amount: Double,
-        currency: String,
-        date: Date,
-        merchantRaw: String?,
-        categoryID: UUID?,
-        note: String?
-    ) throws -> TransactionEntryResult {
-        TransactionEntryResult(transactionID: UUID(), duplicateDetected: false)
-    }
-}
-
-struct PreviewTransactionFormOptionsProviding: TransactionFormOptionsProviding {
-    func loadOptions() throws -> TransactionFormOptions {
-        TransactionFormOptions(
-            accounts: [
-                TransactionFormAccountOption(id: UUID(), name: "Cash"),
-                TransactionFormAccountOption(id: UUID(), name: "Bank")
-            ],
-            categories: [
-                TransactionFormCategoryOption(id: UUID(), name: "Food"),
-                TransactionFormCategoryOption(id: UUID(), name: "Transport"),
-                TransactionFormCategoryOption(id: UUID(), name: "Shopping")
-            ]
-        )
-    }
 }

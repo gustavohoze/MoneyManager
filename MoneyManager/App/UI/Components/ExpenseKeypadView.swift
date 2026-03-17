@@ -1,5 +1,24 @@
 import SwiftUI
 
+private enum ExpenseKeypadInputViewModel {
+    static func appending(_ digit: String, to current: String) -> String {
+        guard current.count < 15 else {
+            return current
+        }
+        return current + digit
+    }
+
+    static func deletingLastCharacter(from current: String) -> String {
+        guard !current.isEmpty else {
+            return current
+        }
+
+        var updated = current
+        updated.removeLast()
+        return updated
+    }
+}
+
 struct ExpenseKeypadView: View {
     @Binding var amountText: String
     
@@ -15,47 +34,34 @@ struct ExpenseKeypadView: View {
             VStack(spacing: 8) {
                 // Row 1: 1 2 3
                 HStack(spacing: 8) {
-                    KeypadButton(label: "1") { appendDigit("1") }
-                    KeypadButton(label: "2") { appendDigit("2") }
-                    KeypadButton(label: "3") { appendDigit("3") }
+                    KeypadButton(label: "1") { amountText = ExpenseKeypadInputViewModel.appending("1", to: amountText) }
+                    KeypadButton(label: "2") { amountText = ExpenseKeypadInputViewModel.appending("2", to: amountText) }
+                    KeypadButton(label: "3") { amountText = ExpenseKeypadInputViewModel.appending("3", to: amountText) }
                 }
                 
                 // Row 2: 4 5 6
                 HStack(spacing: 8) {
-                    KeypadButton(label: "4") { appendDigit("4") }
-                    KeypadButton(label: "5") { appendDigit("5") }
-                    KeypadButton(label: "6") { appendDigit("6") }
+                    KeypadButton(label: "4") { amountText = ExpenseKeypadInputViewModel.appending("4", to: amountText) }
+                    KeypadButton(label: "5") { amountText = ExpenseKeypadInputViewModel.appending("5", to: amountText) }
+                    KeypadButton(label: "6") { amountText = ExpenseKeypadInputViewModel.appending("6", to: amountText) }
                 }
                 
                 // Row 3: 7 8 9
                 HStack(spacing: 8) {
-                    KeypadButton(label: "7") { appendDigit("7") }
-                    KeypadButton(label: "8") { appendDigit("8") }
-                    KeypadButton(label: "9") { appendDigit("9") }
+                    KeypadButton(label: "7") { amountText = ExpenseKeypadInputViewModel.appending("7", to: amountText) }
+                    KeypadButton(label: "8") { amountText = ExpenseKeypadInputViewModel.appending("8", to: amountText) }
+                    KeypadButton(label: "9") { amountText = ExpenseKeypadInputViewModel.appending("9", to: amountText) }
                 }
                 
                 // Row 4: 00 0 ⌫
                 HStack(spacing: 8) {
-                    KeypadButton(label: "00") { appendDigit("00") }
-                    KeypadButton(label: "0") { appendDigit("0") }
-                    KeypadButton(label: "⌫") { deleteLastCharacter() }
+                    KeypadButton(label: "00") { amountText = ExpenseKeypadInputViewModel.appending("00", to: amountText) }
+                    KeypadButton(label: "0") { amountText = ExpenseKeypadInputViewModel.appending("0", to: amountText) }
+                    KeypadButton(label: "⌫") { amountText = ExpenseKeypadInputViewModel.deletingLastCharacter(from: amountText) }
                 }
             }
         }
         .padding(.vertical, 4)
-    }
-    
-    private func appendDigit(_ digit: String) {
-        // Limit to reasonable amount (max 15 digits before decimal)
-        if amountText.count < 15 {
-            amountText.append(digit)
-        }
-    }
-    
-    private func deleteLastCharacter() {
-        if !amountText.isEmpty {
-            amountText.removeLast()
-        }
     }
 }
 

@@ -3,6 +3,7 @@ import SwiftUI
 struct AddTransactionAccountSection: View {
     let accounts: [TransactionFormAccountOption]
     let selectedAccountID: UUID?
+    let selectedAccountName: String
     let onSelect: (UUID) -> Void
 
     var body: some View {
@@ -33,9 +34,5 @@ struct AddTransactionAccountSection: View {
         } header: {
             Text("Payment Method")
         }
-    }
-
-    private var selectedAccountName: String {
-        accounts.first(where: { $0.id == selectedAccountID })?.name ?? "Select Payment Method"
     }
 }

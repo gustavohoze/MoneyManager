@@ -77,4 +77,8 @@ final class TransactionListViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+
+    func currencyText(_ value: Double) -> String {
+        value.formatted(.currency(code: "IDR").precision(.fractionLength(0)))
+    }
 }

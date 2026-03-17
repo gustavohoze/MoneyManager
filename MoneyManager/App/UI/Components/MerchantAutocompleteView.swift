@@ -1,5 +1,21 @@
 import SwiftUI
 
+private enum MerchantSuggestionPresentationViewModel {
+    static func relativeDateText(_ date: Date, now: Date = Date()) -> String {
+        let calendar = Calendar.current
+
+        if calendar.isDateInToday(date) {
+            return String(localized: "Today")
+        }
+        if calendar.isDateInYesterday(date) {
+            return String(localized: "Yesterday")
+        }
+
+        let daysDiff = calendar.dateComponents([.day], from: date, to: now).day ?? 0
+        return String(localized: "\(daysDiff)d ago")
+    }
+}
+
 struct MerchantAutocompleteView: View {
     @Binding var merchantText: String
     let suggestions: [MerchantSuggestion]
@@ -111,7 +127,7 @@ struct QuickMerchantsView: View {
                                         .lineLimit(1)
                                     
                                     if let lastUsed = merchant.lastUsedDate {
-                                        Text(formatRelativeDate(lastUsed))
+                                        Text(MerchantSuggestionPresentationViewModel.relativeDateText(lastUsed))
                                             .font(.system(.caption2, design: .rounded))
                                             .foregroundStyle(palette.secondaryInk)
                                     }
@@ -132,20 +148,6 @@ struct QuickMerchantsView: View {
                     }
                 }
             }
-        }
-    }
-    
-    private func formatRelativeDate(_ date: Date) -> String {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        if calendar.isDateInToday(date) {
-            return String(localized: "Today")
-        } else if calendar.isDateInYesterday(date) {
-            return String(localized: "Yesterday")
-        } else {
-            let daysDiff = calendar.dateComponents([.day], from: date, to: now).day ?? 0
-            return String(localized: "\(daysDiff)d ago")
         }
     }
 }

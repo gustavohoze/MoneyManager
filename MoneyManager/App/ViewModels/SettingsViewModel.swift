@@ -64,6 +64,14 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    func saveAccount(id: UUID?, name: String, type: String, currency: String) {
+        if let paymentMethodID = id {
+            updatePaymentMethod(id: paymentMethodID, name: name, type: type, currency: currency)
+        } else {
+            createAccount(name: name, type: type, currency: currency)
+        }
+    }
+
     func createDummyTransactions() {
         do {
             actionMessage = try dummyTransactionManager.createDummyTransactions()

@@ -10,6 +10,15 @@ enum AddTransactionViewModelError: Error, Equatable {
 
 @MainActor
 final class AddTransactionViewModel: ObservableObject {
+    private static let amountDisplayFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSize = 3
+        formatter.groupingSeparator = ","
+        formatter.maximumFractionDigits = 0
+        return formatter
+    }()
+
     // MARK: - Basic Input
     @Published var amountText = ""
     @Published var merchantRaw = ""
@@ -151,6 +160,53 @@ final class AddTransactionViewModel: ObservableObject {
             } catch {
                 // Silently ignore validation errors
             }
+        }
+    }
+
+    func normalizeAmountInput(_ newValue: String) -> String {
+        let digits = newValue.filter { $0.isNumber }
+        guard let number = Double(digits), number > 0 else {
+            return digits
+        }
+
+        return Self.amountDisplayFormatter.string(from: NSNumber(value: number)) ?? digits
+    }
+
+    func didChangeAmountText(_ newValue: String) {
+        let normalized = normalizeAmountInput(newValue)
+        if normalized != amountText {
+            amountText = normalized
+        }
+    }
+
+    func saveFromForm() {
+        save()
+    }
+
+    func selectedAccountName(
+        from accounts: [TransactionFormAccountOption],
+        selectedAccountID: UUID?
+    ) -> String {
+        accounts.first(where: { $0.id == selectedAccountID })?.name ?? "Select Payment Method"
+    }
+
+    func selectedCategoryName(
+        from categories: [TransactionFormCategoryOption],
+        selectedCategoryID: UUID?
+    ) -> String {
+        categories.first(where: { $0.id == selectedCategoryID })?.name ?? "Select Category"
+    }
+
+    func errorMessage(for error: AddTransactionViewModelError) -> String {
+        switch error {
+        case .missingAccount:
+            return String(localized: "Please select an account")
+        case .invalidAmount:
+            return String(localized: "Amount must be greater than zero")
+        case .saveFailed:
+            return String(localized: "Could not save transaction")
+        case .amountTooLarge:
+            return String(localized: "Amount verification needed")
         }
     }
 

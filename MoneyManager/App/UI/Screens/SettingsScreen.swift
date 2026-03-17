@@ -35,25 +35,10 @@ struct SettingsScreen: View {
                             .foregroundStyle(palette.secondaryInk)
                     } else {
                         ForEach(viewModel.accounts) { account in
-                            HStack(spacing: 12) {
-                                Image(systemName: "wallet.pass")
-                                    .foregroundStyle(palette.accent)
-                                    .frame(width: 30, height: 30)
-                                    .background(palette.accentSoft)
-                                    .clipShape(Circle())
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(account.name)
-                                        .font(.system(.body, design: .rounded).weight(.semibold))
-                                        .foregroundStyle(palette.ink)
-                                    Text("\(account.type.capitalized) • \(account.currency)")
-                                        .font(.footnote)
-                                        .foregroundStyle(palette.secondaryInk)
-                                }
-
-                                Spacer()
-
-                                Button {
+                            SettingsAccountRow(
+                                account: account,
+                                palette: palette,
+                                onEdit: {
                                     editorDraft = AccountEditorDraft(
                                         paymentMethodID: account.id,
                                         name: account.name,
@@ -61,23 +46,11 @@ struct SettingsScreen: View {
                                         currency: account.currency
                                     )
                                     isEditorPresented = true
-                                } label: {
-                                    Image(systemName: "pencil")
-                                        .foregroundStyle(.blue)
-                                }
-                                .buttonStyle(.plain)
-
-                                Button {
+                                },
+                                onDelete: {
                                     accountPendingDeleteID = account.id
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .foregroundStyle(.red)
                                 }
-                                .buttonStyle(.plain)
-                            }
-                            .financeCard(palette: palette)
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
+                            )
                         }
                     }
                 }
@@ -184,76 +157,16 @@ struct SettingsScreen: View {
                         isEditorPresented = false
                     },
                     onSave: {
-                        if let paymentMethodID = editorDraft.paymentMethodID {
-                            viewModel.updatePaymentMethod(
-                                id: paymentMethodID,
-                                name: editorDraft.name,
-                                type: editorDraft.type,
-                                currency: editorDraft.currency
-                            )
-                        } else {
-                            viewModel.createAccount(
-                                name: editorDraft.name,
-                                type: editorDraft.type,
-                                currency: editorDraft.currency
-                            )
-                        }
+                        viewModel.saveAccount(
+                            id: editorDraft.paymentMethodID,
+                            name: editorDraft.name,
+                            type: editorDraft.type,
+                            currency: editorDraft.currency
+                        )
 
                         isEditorPresented = false
                     }
                 )
-            }
-        }
-    }
-}
-
-private struct AccountEditorDraft {
-    let paymentMethodID: UUID?
-    var name: String
-    var type: String
-    var currency: String
-
-    static func createDefault() -> AccountEditorDraft {
-        AccountEditorDraft(paymentMethodID: nil, name: "", type: "cash", currency: "IDR")
-    }
-}
-
-private struct AccountEditorSheet: View {
-    @Binding var draft: AccountEditorDraft
-
-    let accountTypeOptions: [String]
-    let onCancel: () -> Void
-    let onSave: () -> Void
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section(String(localized: "Name")) {
-                    TextField(String(localized: "PaymentMethod Name"), text: $draft.name)
-                }
-
-                Section(String(localized: "Type")) {
-                    Picker(String(localized: "PaymentMethod Type"), selection: $draft.type) {
-                        ForEach(accountTypeOptions, id: \.self) { type in
-                            Text(type.capitalized).tag(type)
-                        }
-                    }
-                }
-
-                Section(String(localized: "Currency")) {
-                    TextField(String(localized: "Currency"), text: $draft.currency)
-                        .textInputAutocapitalization(.characters)
-                }
-            }
-            .navigationTitle(draft.paymentMethodID == nil ? String(localized: "Add PaymentMethod") : String(localized: "Edit PaymentMethod"))
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(String(localized: "Cancel"), action: onCancel)
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(String(localized: "Save"), action: onSave)
-                }
             }
         }
     }

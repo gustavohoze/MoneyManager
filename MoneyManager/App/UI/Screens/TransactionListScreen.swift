@@ -19,43 +19,13 @@ struct TransactionListScreen: View {
                     ForEach(viewModel.sections, id: \.title) { section in
                         Section {
                             ForEach(section.items, id: \.id) { item in
-                                HStack {
-                                    Image(systemName: "creditcard")
-                                        .foregroundStyle(palette.accent)
-                                        .frame(width: 30, height: 30)
-                                        .background(palette.accentSoft)
-                                        .clipShape(Circle())
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(item.merchant)
-                                            .font(.system(.body, design: .rounded).weight(.semibold))
-                                        Text("\(item.category) • \(item.account)")
-                                            .font(.footnote)
-                                            .foregroundStyle(palette.secondaryInk)
-                                    }
-                                    Spacer()
-                                    Text(currencyText(item.amount))
-                                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                        .foregroundStyle(palette.ink)
-
-                                    Image(systemName: "chevron.right")
-                                        .font(.footnote.weight(.semibold))
-                                        .foregroundStyle(palette.secondaryInk)
-                                }
-                                .financeCard(palette: palette)
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(Color.clear)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    viewModel.beginEdit(id: item.id)
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        viewModel.deleteTransaction(id: item.id)
-                                    } label: {
-                                        Label(String(localized: "Delete"), systemImage: "trash")
-                                    }
-                                }
+                                TransactionListRow(
+                                    item: item,
+                                    palette: palette,
+                                    amountText: viewModel.currencyText(item.amount),
+                                    onTap: { viewModel.beginEdit(id: item.id) },
+                                    onDelete: { viewModel.deleteTransaction(id: item.id) }
+                                )
                             }
                         } header: {
                             Text(section.title)
@@ -92,9 +62,5 @@ struct TransactionListScreen: View {
             }
             .animation(.spring(response: 0.36, dampingFraction: 0.82), value: viewModel.sections)
         }
-    }
-
-    private func currencyText(_ value: Double) -> String {
-        value.formatted(.currency(code: "IDR").precision(.fractionLength(0)))
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 struct AddTransactionCategorySection: View {
     let categories: [TransactionFormCategoryOption]
     let selectedCategoryID: UUID?
+    let selectedCategoryName: String
     let onSelect: (UUID) -> Void
 
     var body: some View {
@@ -33,9 +34,5 @@ struct AddTransactionCategorySection: View {
         } header: {
             Text("Category")
         }
-    }
-
-    private var selectedCategoryName: String {
-        categories.first(where: { $0.id == selectedCategoryID })?.name ?? "Select Category"
     }
 }

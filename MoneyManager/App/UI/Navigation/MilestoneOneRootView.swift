@@ -17,11 +17,11 @@ struct MilestoneOneRootView: View {
     @StateObject private var transactionListViewModel: TransactionListViewModel
     @StateObject private var addTransactionViewModel: AddTransactionViewModel
     @StateObject private var settingsViewModel: SettingsViewModel
+    @StateObject private var rootViewModel: MilestoneOneRootViewModel
 
     private let startupSeedingService: StartupSeedingService
     private let context: NSManagedObjectContext
 
-    @State private var hasLoaded = false
     @State private var selectedTab: Tab = .dashboard
 
     init(context: NSManagedObjectContext) {
@@ -121,6 +121,7 @@ struct MilestoneOneRootView: View {
                 dummyTransactionManager: dummyTransactionCRUDService
             )
         )
+        _rootViewModel = StateObject(wrappedValue: MilestoneOneRootViewModel())
 
         startupSeedingService = StartupSeedingService(
             accountRepository: accountRepository,
@@ -169,11 +170,11 @@ struct MilestoneOneRootView: View {
             )
         }
         .task {
-            guard !hasLoaded else {
+            guard !rootViewModel.hasLoaded else {
                 return
             }
 
-            hasLoaded = true
+            rootViewModel.markLoaded()
 
             do {
                 try startupSeedingService.seedMilestoneOneDefaults()
@@ -190,16 +191,18 @@ struct MilestoneOneRootView: View {
                 .publisher(for: .NSManagedObjectContextObjectsDidChange, object: context)
                 .receive(on: RunLoop.main)
         ) { notification in
-            guard hasLoaded else {
+            guard rootViewModel.hasLoaded else {
                 return
             }
 
-            if includesEntity(named: "Transaction", in: notification) {
+            if rootViewModel.includesEntity(named: "Transaction", in: notification) {
                 dashboardViewModel.load()
                 transactionListViewModel.load()
             }
 
-            if includesEntity(named: "PaymentMethod", in: notification) || includesEntity(named: "Category", in: notification) {
+            if rootViewModel.includesEntity(named: "PaymentMethod", in: notification)
+                || rootViewModel.includesEntity(named: "Category", in: notification)
+            {
                 addTransactionViewModel.loadOptions()
             }
         }
@@ -208,7 +211,7 @@ struct MilestoneOneRootView: View {
                 .publisher(for: .NSPersistentStoreRemoteChange)
                 .receive(on: RunLoop.main)
         ) { _ in
-            guard hasLoaded else {
+            guard rootViewModel.hasLoaded else {
                 return
             }
 
@@ -222,11 +225,11 @@ struct MilestoneOneRootView: View {
                 .publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)
                 .receive(on: RunLoop.main)
         ) { notification in
-            guard hasLoaded else {
+            guard rootViewModel.hasLoaded else {
                 return
             }
 
-            guard shouldRefreshForCloudKitEvent(notification) else {
+            guard rootViewModel.shouldRefreshForCloudKitEvent(notification) else {
                 return
             }
 
@@ -235,7 +238,7 @@ struct MilestoneOneRootView: View {
             transactionListViewModel.load()
         }
         .onChange(of: scenePhase) { _, newPhase in
-            guard hasLoaded, newPhase == .active else {
+            guard rootViewModel.hasLoaded, newPhase == .active else {
                 return
             }
 
@@ -244,33 +247,5 @@ struct MilestoneOneRootView: View {
             dashboardViewModel.load()
             transactionListViewModel.load()
         }
-    }
-
-    private func includesEntity(named entityName: String, in notification: Notification) -> Bool {
-        let keys = [NSInsertedObjectsKey, NSUpdatedObjectsKey, NSDeletedObjectsKey]
-
-        for key in keys {
-            guard let objects = notification.userInfo?[key] as? Set<NSManagedObject> else {
-                continue
-            }
-
-            if objects.contains(where: { $0.entity.name == entityName }) {
-                return true
-            }
-        }
-
-        return false
-    }
-
-    private func shouldRefreshForCloudKitEvent(_ notification: Notification) -> Bool {
-        guard
-            let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
-                as? NSPersistentCloudKitContainer.Event,
-            event.endDate != nil
-        else {
-            return false
-        }
-
-        return event.type == .import || event.type == .export
     }
 }

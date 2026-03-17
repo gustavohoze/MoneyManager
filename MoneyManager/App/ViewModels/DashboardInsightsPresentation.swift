@@ -2,6 +2,40 @@ import Foundation
 import SwiftUI
 
 extension DashboardViewModel {
+    func currencyText(_ value: Double) -> String {
+        value.formatted(.currency(code: "IDR").precision(.fractionLength(0)))
+    }
+
+    func relativeTimeText(from date: Date, referenceDate: Date = Date()) -> String {
+        RelativeDateTimeFormatter().localizedString(for: date, relativeTo: referenceDate)
+    }
+
+    func weeklyBarHeight(for amount: Double) -> CGFloat {
+        let maxValue = weekDailySpending.max() ?? 0
+        guard maxValue > 0 else { return 8 }
+        return max(8, CGFloat(amount / maxValue) * 56)
+    }
+
+    func defaultWeeklyDayIndex(referenceDate: Date = Date()) -> Int {
+        let weekday = Calendar.current.component(.weekday, from: referenceDate)
+        switch weekday {
+        case 2...7:
+            return weekday - 2
+        case 1:
+            return 6
+        default:
+            return 0
+        }
+    }
+
+    func weekdayLabel(for index: Int) -> String {
+        let labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        guard (0..<labels.count).contains(index) else {
+            return "-"
+        }
+        return labels[index]
+    }
+
     var weeklyProgress: Double {
         guard weeklyBudget > 0 else { return 0 }
         return min(max(weeklySpending / weeklyBudget, 0), 1)
