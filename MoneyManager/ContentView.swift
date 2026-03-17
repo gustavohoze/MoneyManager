@@ -11,6 +11,8 @@ import CoreData
 struct ContentView: View {
     @EnvironmentObject private var persistenceStoreManager: PersistenceStoreManager
     @AppStorage("debug.showMilestoneZeroExamples") private var showMilestoneZeroExamples = false
+    @AppStorage("onboarding.completed") private var onboardingCompleted = false
+    @AppStorage("onboarding.openAddTransactionAfterCompletion") private var openAddTransactionAfterCompletion = false
 
     @State private var hasCheckedCloudKitOnLaunch = false
     @State private var isShowingCloudKitLaunchPrompt = false
@@ -22,14 +24,27 @@ struct ContentView: View {
                 NavigationStack {
                     MilestoneZeroExamplesView()
                 }
+            } else if !onboardingCompleted {
+                LeanOnboardingFlowView {
+                    onboardingCompleted = true
+                }
             } else {
-                MilestoneOneRootView(context: persistenceStoreManager.viewContext)
+                MilestoneOneRootView(
+                    context: persistenceStoreManager.viewContext,
+                    initialTab: openAddTransactionAfterCompletion ? .add : .dashboard,
+                    autoFocusAddAmountOnLaunch: openAddTransactionAfterCompletion,
+                    onInitialLaunchHandled: {
+                        openAddTransactionAfterCompletion = false
+                    }
+                )
             }
         }
         .environment(\.managedObjectContext, persistenceStoreManager.viewContext)
         .onAppear {
             guard !hasCheckedCloudKitOnLaunch else { return }
             hasCheckedCloudKitOnLaunch = true
+
+            guard onboardingCompleted else { return }
 
             guard CloudKitConstants.isSyncEnabledForCurrentRuntime else { return }
 

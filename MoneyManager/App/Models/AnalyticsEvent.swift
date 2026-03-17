@@ -2,6 +2,8 @@ import Foundation
 
 enum AnalyticsEvent: String, CaseIterable {
     case appOpen = "app_open"
+    case onboardingStarted = "onboarding_started"
+    case onboardingCompleted = "onboarding_completed"
     case sessionStarted = "session_started"
     case sessionEnded = "session_ended"
     case transactionCreated = "transaction_created"

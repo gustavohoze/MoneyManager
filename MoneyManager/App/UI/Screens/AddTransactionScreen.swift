@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddTransactionScreen: View {
     @ObservedObject var viewModel: AddTransactionViewModel
+    var autoFocusAmountOnAppear: Bool = false
     @FocusState private var focusedField: AddTransactionFormField?
     @Environment(\.colorScheme) private var colorScheme
 
@@ -124,7 +125,14 @@ struct AddTransactionScreen: View {
                     }
                 }
             }
-            .onAppear { viewModel.loadOptions() }
+            .onAppear {
+                viewModel.loadOptions()
+                if autoFocusAmountOnAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        focusedField = .amount
+                    }
+                }
+            }
         }
     }
 }

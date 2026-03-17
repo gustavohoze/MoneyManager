@@ -1,18 +1,28 @@
 import SwiftUI
+import UserNotifications
 
 struct SettingsNotificationsDetailPage: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.openURL) private var openURL
     let palette: FinanceTheme.Palette
 
     @AppStorage("settings.notifyDailyWarning") private var notifyDailyWarning = true
     @AppStorage("settings.notifyBudgetExceeded") private var notifyBudgetExceeded = true
     @AppStorage("settings.notifyWeeklySummary") private var notifyWeeklySummary = true
     @AppStorage("settings.notifyUnusualSpending") private var notifyUnusualSpending = true
+    @State private var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
     private let notificationScheduler: NotificationScheduling = LocalNotificationScheduler()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                if notificationAuthorizationStatus != .authorized
+                    && notificationAuthorizationStatus != .provisional
+                    && notificationAuthorizationStatus != .ephemeral
+                {
+                    notificationPermissionCard
+                }
+
                 // Daily warning
                 SettingsNotificationCard(
                     icon: "sunrise.fill",
@@ -67,6 +77,7 @@ struct SettingsNotificationsDetailPage: View {
         .navigationTitle(String(localized: "Notifications"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
+            await refreshNotificationAuthorizationStatus()
             await syncNotificationPreferences()
         }
         .onChange(of: notifyDailyWarning) { _ in
@@ -83,6 +94,88 @@ struct SettingsNotificationsDetailPage: View {
         }
     }
 
+    private var notificationPermissionCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "bell.badge")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(palette.accent)
+                    .frame(width: 30, height: 30)
+                    .background(palette.accentSoft)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                Text(String(localized: "System Notifications Off"))
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(palette.ink)
+            }
+
+            Text(permissionCardDescription)
+                .font(.caption)
+                .foregroundStyle(palette.secondaryInk)
+
+            Button(permissionCardButtonTitle) {
+                handleNotificationPermissionButtonTap()
+            }
+            .buttonStyle(.plain)
+            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(palette.accent)
+            )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .financeCard(palette: palette)
+    }
+
+    private var permissionCardDescription: String {
+        switch notificationAuthorizationStatus {
+        case .notDetermined:
+            return String(localized: "Enable notifications to receive reminders and weekly summaries.")
+        case .denied:
+            return String(localized: "Notifications are blocked for this app. Open iOS Settings to enable them.")
+        default:
+            return String(localized: "Enable notifications in iOS Settings to receive alerts.")
+        }
+    }
+
+    private var permissionCardButtonTitle: String {
+        switch notificationAuthorizationStatus {
+        case .notDetermined:
+            return String(localized: "Enable Notifications")
+        case .denied:
+            return String(localized: "Open Settings")
+        default:
+            return String(localized: "Manage in Settings")
+        }
+    }
+
+    private func handleNotificationPermissionButtonTap() {
+        switch notificationAuthorizationStatus {
+        case .notDetermined:
+            Task {
+                _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
+                await refreshNotificationAuthorizationStatus()
+                await syncNotificationPreferences()
+            }
+        case .denied, .provisional, .ephemeral, .authorized:
+            guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else { return }
+            openURL(settingsURL)
+        @unknown default:
+            guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else { return }
+            openURL(settingsURL)
+        }
+    }
+
+    private func refreshNotificationAuthorizationStatus() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        await MainActor.run {
+            notificationAuthorizationStatus = settings.authorizationStatus
+        }
+    }
+
     private func syncNotificationPreferences() async {
         await notificationScheduler.syncPreferences(
             dailyWarning: notifyDailyWarning,
@@ -90,6 +183,7 @@ struct SettingsNotificationsDetailPage: View {
             weeklySummary: notifyWeeklySummary,
             unusualSpending: notifyUnusualSpending
         )
+        await refreshNotificationAuthorizationStatus()
     }
 }
 

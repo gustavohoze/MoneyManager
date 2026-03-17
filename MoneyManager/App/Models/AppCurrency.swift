@@ -19,6 +19,10 @@ enum AppCurrency {
         ["IDR", "USD", "EUR", "JPY", "GBP", "AUD", "SGD", "MYR"]
     }
 
+    static var allCodes: [String] {
+        Locale.commonISOCurrencyCodes.sorted()
+    }
+
     static func formatted(_ value: Double) -> String {
         value.formatted(.currency(code: currentCode).precision(.fractionLength(0)))
     }

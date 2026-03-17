@@ -17,10 +17,17 @@ struct MilestoneOneRootView: View {
     private let analytics: AnalyticsTracking
     private let appUsageAnalytics: AppUsageAnalyticsService
     private let context: NSManagedObjectContext
+    private let autoFocusAddAmountOnLaunch: Bool
+    private let onInitialLaunchHandled: (() -> Void)?
 
     @State private var selectedTab: MilestoneOneTab = .dashboard
 
-    init(context: NSManagedObjectContext) {
+    init(
+        context: NSManagedObjectContext,
+        initialTab: MilestoneOneTab = .dashboard,
+        autoFocusAddAmountOnLaunch: Bool = false,
+        onInitialLaunchHandled: (() -> Void)? = nil
+    ) {
         let accountRepository = CoreDataPaymentMethodRepository(context: context)
         let categoryRepository = CoreDataCategoryRepository(context: context)
         let transactionRepository = CoreDataTransactionRepository(context: context)
@@ -145,6 +152,9 @@ struct MilestoneOneRootView: View {
         self.analytics = analytics
         self.appUsageAnalytics = appUsageAnalytics
         self.context = context
+        self.autoFocusAddAmountOnLaunch = autoFocusAddAmountOnLaunch
+        self.onInitialLaunchHandled = onInitialLaunchHandled
+        _selectedTab = State(initialValue: initialTab)
     }
 
     var body: some View {
@@ -166,7 +176,10 @@ struct MilestoneOneRootView: View {
                 }
                 .tag(MilestoneOneTab.transactions)
 
-            AddTransactionScreen(viewModel: addTransactionViewModel)
+            AddTransactionScreen(
+                viewModel: addTransactionViewModel,
+                autoFocusAmountOnAppear: autoFocusAddAmountOnLaunch
+            )
                 .tabItem {
                     Label(String(localized: "Add"), systemImage: "plus.circle.fill")
                 }
@@ -217,6 +230,7 @@ struct MilestoneOneRootView: View {
             dashboardViewModel.load()
             transactionListViewModel.load()
             savePlanningViewModel.load()
+            onInitialLaunchHandled?()
         }
         .onReceive(
             NotificationCenter.default
