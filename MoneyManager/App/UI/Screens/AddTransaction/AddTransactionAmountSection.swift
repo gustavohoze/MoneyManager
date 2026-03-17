@@ -2,13 +2,14 @@ import SwiftUI
 
 struct AddTransactionAmountSection: View {
     @Binding var amountText: String
+    var currencyCode: String = AppCurrency.currentCode
     var focusedField: FocusState<AddTransactionFormField?>.Binding
     var onAmountTextChange: (String) -> Void
 
     var body: some View {
         Section {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text("Rp")
+                Text(AppCurrency.symbol(for: currencyCode))
                     .font(.title2)
 
                 TextField("0", text: $amountText)

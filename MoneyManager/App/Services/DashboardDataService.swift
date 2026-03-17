@@ -375,22 +375,23 @@ struct DashboardDataService: DashboardDataProviding {
             let ratio = spent / budget.amount
 
             if ratio >= criticalRatio {
+                let usedPercent = Int((ratio * 100).rounded())
                 return (
                     ratio,
                     DashboardAlert(
-                        title: "⚠︎ \(budget.category) budget exceeded",
-                        detail: "Spent \(currencyText(spent)) vs budget \(currencyText(budget.amount)) this month."
+                        title: "⚠︎ \(budget.category) budget warning",
+                        detail: "\(usedPercent)% of budget used."
                     )
                 )
             }
 
             if ratio >= warningRatio {
-                let remaining = max(budget.amount - spent, 0)
+                let usedPercent = Int((ratio * 100).rounded())
                 return (
                     ratio,
                     DashboardAlert(
                         title: "⚠︎ \(budget.category) budget warning",
-                        detail: "\(Int(ratio * 100))% used. Remaining \(currencyText(remaining))."
+                        detail: "\(usedPercent)% of budget used."
                     )
                 )
             }

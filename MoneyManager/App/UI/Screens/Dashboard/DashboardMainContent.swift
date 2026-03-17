@@ -31,7 +31,7 @@ struct DashboardMainContent: View {
                     .tag(1)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 252)
+            .frame(height: 216)
             .frame(maxWidth: .infinity)
 
             DashboardRecentTransactionsCard(

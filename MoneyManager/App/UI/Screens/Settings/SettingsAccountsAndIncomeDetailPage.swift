@@ -122,7 +122,7 @@ struct SettingsAccountsAndIncomeDetailPage: View {
                         .padding(.vertical, 4)
 
                     Picker(String(localized: "Display Currency"), selection: $selectedDisplayCurrencyCode) {
-                        ForEach(AppCurrency.commonCodes, id: \.self) { code in
+                        ForEach(AppCurrency.allCodes, id: \.self) { code in
                             Text(code).tag(code)
                         }
                     }

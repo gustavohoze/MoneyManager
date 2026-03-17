@@ -28,17 +28,19 @@ struct TransactionEditSheetView: View {
                     )
 
                     HStack(spacing: 12) {
-                        TransactionEditCategoryField(
-                            selectedID: $viewModel.editSelectedCategoryID,
-                            options: state.options.categories,
-                            palette: palette
+                        AddTransactionCategoryPickerCard(
+                            selectedCategory: selectedCategoryOption,
+                            categories: state.options.categories,
+                            palette: palette,
+                            onSelect: { viewModel.editSelectedCategoryID = $0 }
                         )
                         .frame(maxWidth: .infinity)
 
-                        TransactionEditAccountField(
-                            selectedID: $viewModel.editSelectedAccountID,
-                            options: state.options.accounts,
-                            palette: palette
+                        AddTransactionAccountPickerCard(
+                            selectedAccount: selectedAccountOption,
+                            accounts: state.options.accounts,
+                            palette: palette,
+                            onSelect: { viewModel.editSelectedAccountID = $0 }
                         )
                         .frame(maxWidth: .infinity)
                     }
@@ -87,5 +89,13 @@ struct TransactionEditSheetView: View {
                 viewModel.load(from: state)
             }
         }
+    }
+
+    private var selectedCategoryOption: TransactionFormCategoryOption? {
+        state.options.categories.first(where: { $0.id == viewModel.editSelectedCategoryID })
+    }
+
+    private var selectedAccountOption: TransactionFormAccountOption? {
+        state.options.accounts.first(where: { $0.id == viewModel.editSelectedAccountID })
     }
 }

@@ -240,8 +240,8 @@ struct DashboardViewModelTests {
         #expect(viewModel.shouldShowCategoryPrompt)
     }
 
-    @Test("Test: derived alerts include budget warning at threshold")
-    func derivedAlerts_whenWeeklyProgressAboveEightyPercent_includesBudgetWarning() {
+    @Test("Test: derived alerts are disabled for now")
+    func derivedAlerts_whenWeeklyProgressExists_returnsEmpty() {
         let viewModel = DashboardViewModel(
             dataProvider: MockDashboardDataProvider(
                 summary: DashboardSummary(
@@ -262,7 +262,7 @@ struct DashboardViewModelTests {
         )
 
         viewModel.load()
-        #expect(viewModel.derivedAlerts.first?.title.contains("Budget warning") == true)
+        #expect(viewModel.derivedAlerts.isEmpty)
     }
 
     @Test("Test: derived alerts skip weekly budget warnings when budget is estimated")
@@ -288,7 +288,7 @@ struct DashboardViewModelTests {
         )
 
         viewModel.load()
-        #expect(viewModel.derivedAlerts.contains(where: { $0.title.contains("Budget warning") || $0.title.contains("Budget exceeded") }) == false)
+        #expect(viewModel.derivedAlerts.isEmpty)
     }
 
     @Test("Test: configured monthly budget drives weekly budget projection")

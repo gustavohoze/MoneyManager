@@ -27,9 +27,9 @@ struct TransactionsTimelineDetailPage: View {
                     onShiftWeek: viewModel.shiftWeek
                 )
 
-                // Day summary and filters
+                // Unified detail container: Day summary -> Filter -> Time groups
                 VStack(alignment: .leading, spacing: 12) {
-                    TransactionsDaySummaryCard(summary: viewModel.presentation.daySummary, showsContainer: true)
+                    TransactionsDaySummaryCard(summary: viewModel.presentation.daySummary, showsContainer: false)
 
                     if viewModel.presentation.categoryFilters.count > 1 {
                         TransactionsFilterBar(
@@ -38,19 +38,21 @@ struct TransactionsTimelineDetailPage: View {
                             onSelectFilter: viewModel.selectCategory
                         )
                     }
-                }
 
-                // Time-based grid tiles or list
-                if let emptyTitle = viewModel.presentation.emptyStateTitle,
-                   let emptyMessage = viewModel.presentation.emptyStateMessage,
-                   viewModel.presentation.groups.isEmpty {
-                    TransactionsEmptyStateCard(
-                        title: emptyTitle,
-                        message: emptyMessage
-                    )
-                } else {
-                    transactionListLayout
+                    Divider()
+
+                    if let emptyTitle = viewModel.presentation.emptyStateTitle,
+                       let emptyMessage = viewModel.presentation.emptyStateMessage,
+                       viewModel.presentation.groups.isEmpty {
+                        TransactionsEmptyStateCard(
+                            title: emptyTitle,
+                            message: emptyMessage
+                        )
+                    } else {
+                        transactionListLayout
+                    }
                 }
+                .financeCard(palette: palette)
 
                 if let actionMessage = viewModel.actionMessage {
                     TransactionsInlineMessageCard(
@@ -84,7 +86,7 @@ struct TransactionsTimelineDetailPage: View {
                     groups: combinedMorningNightGroups,
                     onEdit: viewModel.beginEdit,
                     onDelete: { viewModel.deleteTransaction(id: $0) },
-                    showsContainer: true
+                    showsContainer: false
                 )
             }
 
@@ -93,7 +95,7 @@ struct TransactionsTimelineDetailPage: View {
                     groups: [group],
                     onEdit: viewModel.beginEdit,
                     onDelete: { viewModel.deleteTransaction(id: $0) },
-                    showsContainer: true
+                    showsContainer: false
                 )
             }
         }

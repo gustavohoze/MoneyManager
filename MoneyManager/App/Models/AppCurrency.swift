@@ -27,6 +27,28 @@ enum AppCurrency {
         value.formatted(.currency(code: currentCode).precision(.fractionLength(0)))
     }
 
+    static func symbol(for code: String) -> String {
+        let normalized = normalizedCode(code) ?? currentCode
+
+        let preferredLocales = Locale.availableIdentifiers
+            .map(Locale.init(identifier:))
+            .filter { $0.currency?.identifier == normalized }
+
+        for locale in preferredLocales {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = locale
+            formatter.currencyCode = normalized
+
+            if let symbol = formatter.currencySymbol,
+               !symbol.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return symbol
+            }
+        }
+
+        return normalized
+    }
+
     static func normalizedCode(_ code: String) -> String? {
         let normalized = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard !normalized.isEmpty else {

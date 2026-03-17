@@ -3,6 +3,7 @@ import SwiftUI
 struct AddTransactionSaveButtonCard: View {
     var isSaving: Bool
     var isEnabled: Bool
+    var titleKey: LocalizedStringKey = "Save Transaction"
     var palette: FinanceTheme.Palette
     var onSave: () -> Void
 
@@ -12,7 +13,7 @@ struct AddTransactionSaveButtonCard: View {
         } label: {
             HStack {
                 Image(systemName: isSaving ? "hourglass" : "checkmark.circle.fill")
-                Text(String(localized: "Save Transaction"))
+                Text(titleKey)
                     .font(.system(.body, design: .rounded).weight(.semibold))
             }
             .frame(maxWidth: .infinity)

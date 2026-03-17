@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddTransactionAmountHeroCard: View {
     @Binding var amountText: String
+    var currencyCode: String
     var fontSize: Double
     var focusedField: FocusState<AddTransactionFormField?>.Binding
     var palette: FinanceTheme.Palette
@@ -33,7 +34,7 @@ struct AddTransactionAmountHeroCard: View {
             }
 
             HStack(alignment: .center, spacing: 8) {
-                Text("Rp")
+                Text(AppCurrency.symbol(for: currencyCode))
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
 

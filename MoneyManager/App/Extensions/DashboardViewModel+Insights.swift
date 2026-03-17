@@ -51,29 +51,7 @@ extension DashboardViewModel {
     }
 
     var derivedAlerts: [DashboardAlert] {
-        var merged = alerts
-        let warningRatio = Double(budgetWarningThreshold) / 100
-        let criticalRatio = Double(budgetCriticalThreshold) / 100
-
-        if isWeeklyBudgetUserConfigured && weeklyProgress >= criticalRatio {
-            merged.insert(
-                DashboardAlert(
-                    title: "⚠︎ " + String(localized: "Budget exceeded"),
-                    detail: String(localized: "Weekly spending is above budget.")
-                ),
-                at: 0
-            )
-        } else if isWeeklyBudgetUserConfigured && weeklyProgress >= warningRatio {
-            merged.insert(
-                DashboardAlert(
-                    title: "⚠︎ " + String(localized: "Budget warning"),
-                    detail: String(localized: "You are close to this week budget limit.")
-                ),
-                at: 0
-            )
-        }
-
-        return Array(merged.prefix(3))
+        []
     }
 
     var weeklyDeltaMessage: String {
@@ -167,7 +145,7 @@ extension DashboardViewModel {
         if title.contains("exceeded") || title.contains("above") || detail.contains("above") {
             return (title: .red, detail: .red.opacity(0.9), background: Color.red.opacity(0.12))
         }
-        if title.contains("warning") || title.contains("up") || detail.contains("higher") {
+        if title.contains("warning") || title.contains("usage") || title.contains("up") || detail.contains("higher") {
             return (title: .orange, detail: .orange.opacity(0.95), background: Color.orange.opacity(0.14))
         }
         return (title: .green, detail: .green.opacity(0.95), background: Color.green.opacity(0.14))

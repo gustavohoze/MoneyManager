@@ -16,7 +16,7 @@ struct DashboardWeeklyTrendCard: View {
             ? viewModel.weekDailySpending[selectedIndex]
             : 0
 
-        return VStack(alignment: .leading, spacing: 14) {
+        return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(hasTransactions ? viewModel.weekdayLabel(for: selectedIndex) : String(localized: "Weekly Trend"))
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
@@ -29,7 +29,7 @@ struct DashboardWeeklyTrendCard: View {
 
             if hasTransactions {
                 Text(viewModel.currencyText(selectedAmount))
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(palette.ink)
 
                 HStack(alignment: .bottom, spacing: 6) {
@@ -49,7 +49,7 @@ struct DashboardWeeklyTrendCard: View {
                         }
                     }
                 }
-                .frame(height: 60)
+                .frame(height: 50)
 
                 if !viewModel.derivedAlerts.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
