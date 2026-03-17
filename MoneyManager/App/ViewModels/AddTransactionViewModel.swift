@@ -40,6 +40,8 @@ final class AddTransactionViewModel: ObservableObject {
     @Published private(set) var isSaving = false
     @Published private(set) var duplicateWarning = false
     @Published private(set) var lastSavedTransactionID: UUID?
+    @Published private(set) var saveMessage: String?
+    @Published private(set) var canUndoLastSave = false
     @Published private(set) var error: AddTransactionViewModelError?
 
     // MARK: - Milestone 2 Features
@@ -54,6 +56,8 @@ final class AddTransactionViewModel: ObservableObject {
     private let accountAutoSelection: AccountAutoSelectionProviding?
     private let errorPrevention: TransactionErrorPreventionProviding?
     private let merchantMemoryRecorder: MerchantMemoryRecording?
+    private let undoService: TransactionUndoProviding?
+    private let mutationService: TransactionMutating?
 
     init(
         transactionEntryService: TransactionEntrySaving,
@@ -62,7 +66,9 @@ final class AddTransactionViewModel: ObservableObject {
         merchantSuggestionProvider: MerchantSuggestionProviding? = nil,
         accountAutoSelection: AccountAutoSelectionProviding? = nil,
         errorPrevention: TransactionErrorPreventionProviding? = nil,
-        merchantMemoryRecorder: MerchantMemoryRecording? = nil
+        merchantMemoryRecorder: MerchantMemoryRecording? = nil,
+        undoService: TransactionUndoProviding? = nil,
+        mutationService: TransactionMutating? = nil
     ) {
         self.transactionEntryService = transactionEntryService
         self.optionsProvider = optionsProvider
@@ -71,6 +77,8 @@ final class AddTransactionViewModel: ObservableObject {
         self.accountAutoSelection = accountAutoSelection
         self.errorPrevention = errorPrevention
         self.merchantMemoryRecorder = merchantMemoryRecorder
+        self.undoService = undoService
+        self.mutationService = mutationService
     }
 
     // MARK: - Category Suggestion
@@ -270,7 +278,25 @@ final class AddTransactionViewModel: ObservableObject {
 
             duplicateWarning = result.duplicateDetected
             lastSavedTransactionID = result.transactionID
+            canUndoLastSave = mutationService != nil
+            saveMessage = String(localized: "Transaction saved")
             error = nil
+
+            undoService?.recordTransaction(
+                UndoableTransaction(
+                    id: result.transactionID,
+                    paymentMethodID: paymentMethodID,
+                    amount: amount,
+                    currency: currency,
+                    date: selectedDate,
+                    merchantRaw: merchantRaw,
+                    categoryID: selectedCategoryID,
+                    note: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note,
+                    timestampCreated: Date()
+                )
+            )
+
+            try accountAutoSelection?.recordAccountUsage(paymentMethodID: paymentMethodID)
 
             // Clear form
             resetForm()
@@ -279,6 +305,32 @@ final class AddTransactionViewModel: ObservableObject {
             case .invalidAmount:
                 error = .invalidAmount
             }
+        } catch {
+            self.error = .saveFailed
+            saveMessage = nil
+            canUndoLastSave = false
+        }
+    }
+
+    func undoLastSave() {
+        guard canUndoLastSave else {
+            return
+        }
+
+        guard let transactionID = lastSavedTransactionID else {
+            return
+        }
+
+        do {
+            if let mutationService {
+                try mutationService.deleteTransaction(id: transactionID)
+            }
+            _ = undoService?.undoLastTransaction()
+            canUndoLastSave = false
+            duplicateWarning = false
+            saveMessage = String(localized: "Transaction undone")
+            lastSavedTransactionID = nil
+            error = nil
         } catch {
             self.error = .saveFailed
         }

@@ -7,18 +7,29 @@ protocol AccountAutoSelectionProviding {
 }
 
 struct AccountAutoSelectionService: AccountAutoSelectionProviding {
+    private static let lastUsedAccountIDKey = "settings.lastUsedAccountID"
+
     private let accountRepository: PaymentMethodRepository
     private let transactionRepository: TransactionRepository
+    private let defaults: UserDefaults
 
     init(
         accountRepository: PaymentMethodRepository,
-        transactionRepository: TransactionRepository
+        transactionRepository: TransactionRepository,
+        defaults: UserDefaults = .standard
     ) {
         self.accountRepository = accountRepository
         self.transactionRepository = transactionRepository
+        self.defaults = defaults
     }
 
     func lastUsedAccountID() throws -> UUID? {
+        if let rawID = defaults.string(forKey: Self.lastUsedAccountIDKey),
+           let storedID = UUID(uuidString: rawID),
+           (try? accountRepository.fetchPaymentMethod(id: storedID)) != nil {
+            return storedID
+        }
+
         let allTransactions = try transactionRepository.fetchTransactions()
         guard let mostRecent = (allTransactions.max { trans1, trans2 in
             let date1 = (trans1.value(forKey: "date") as? Date) ?? Date.distantPast
@@ -29,11 +40,16 @@ struct AccountAutoSelectionService: AccountAutoSelectionProviding {
         else {
             return nil
         }
+
+        defaults.set(paymentMethodID.uuidString, forKey: Self.lastUsedAccountIDKey)
         return paymentMethodID
     }
 
     func recordAccountUsage(paymentMethodID: UUID) throws {
-        // This is called when saving a transaction, updates account's lastUsedDate
-        // Future implementation: add lastUsedDate field to PaymentMethod entity and update it here
+        guard (try? accountRepository.fetchPaymentMethod(id: paymentMethodID)) != nil else {
+            return
+        }
+
+        defaults.set(paymentMethodID.uuidString, forKey: Self.lastUsedAccountIDKey)
     }
 }

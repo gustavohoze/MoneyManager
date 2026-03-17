@@ -92,6 +92,19 @@ struct AddTransactionScreen: View {
                             }
                         )
 
+                        if let saveMessage = viewModel.saveMessage {
+                            AddTransactionUndoRow(
+                                message: saveMessage,
+                                canUndo: viewModel.canUndoLastSave,
+                                duplicateWarning: viewModel.duplicateWarning,
+                                onUndo: {
+                                    focusedField = nil
+                                    viewModel.undoLastSave()
+                                }
+                            )
+                            .padding(.top, 4)
+                        }
+
                         Spacer(minLength: 20)
                     }
                     .padding(16)
@@ -101,7 +114,7 @@ struct AddTransactionScreen: View {
                     focusedField = nil
                 }
             }
-            .navigationTitle(String(localized: "New Expense"))
+            .navigationTitle(String(localized: "New Transaction"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {

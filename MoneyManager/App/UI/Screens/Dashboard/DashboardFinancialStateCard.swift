@@ -23,7 +23,7 @@ struct DashboardFinancialStateCard: View {
 
             HStack(spacing: 12) {
                 DashboardMetricPill(
-                    title: String(localized: "After Bills"),
+                    title: String(localized: "Projected"),
                     value: viewModel.currencyText(viewModel.afterBillsBalance)
                 )
                 DashboardMetricPill(
@@ -32,7 +32,7 @@ struct DashboardFinancialStateCard: View {
                 )
             }
 
-            Text(String(localized: "Next payment in \(viewModel.daysUntilIncome) days"))
+            Text(String(localized: "Cycle resets in \(viewModel.daysRemainingInCycle) days"))
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.92))
         }

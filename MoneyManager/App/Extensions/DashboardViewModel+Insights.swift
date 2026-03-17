@@ -52,8 +52,10 @@ extension DashboardViewModel {
 
     var derivedAlerts: [DashboardAlert] {
         var merged = alerts
+        let warningRatio = Double(budgetWarningThreshold) / 100
+        let criticalRatio = Double(budgetCriticalThreshold) / 100
 
-        if weeklyProgress >= 1 {
+        if isWeeklyBudgetUserConfigured && weeklyProgress >= criticalRatio {
             merged.insert(
                 DashboardAlert(
                     title: "⚠︎ " + String(localized: "Budget exceeded"),
@@ -61,11 +63,11 @@ extension DashboardViewModel {
                 ),
                 at: 0
             )
-        } else if weeklyProgress >= 0.8 {
+        } else if isWeeklyBudgetUserConfigured && weeklyProgress >= warningRatio {
             merged.insert(
                 DashboardAlert(
                     title: "⚠︎ " + String(localized: "Budget warning"),
-                    detail: String(localized: "You have used over 80% of this week budget.")
+                    detail: String(localized: "You are close to this week budget limit.")
                 ),
                 at: 0
             )

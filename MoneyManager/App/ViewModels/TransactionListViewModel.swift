@@ -273,12 +273,14 @@ final class TransactionListViewModel: ObservableObject {
         }
     }
 
-    func deleteTransaction(id: UUID, asOf date: Date = Date()) {
+    func deleteTransaction(id: UUID, asOf date: Date = .distantPast) {
         do {
             try mutationService.deleteTransaction(id: id)
             actionMessage = "Transaction deleted."
-            selectedDate = calendar.startOfDay(for: date)
-            load(asOf: date)
+            if date != .distantPast {
+                selectedDate = calendar.startOfDay(for: date)
+            }
+            load(asOf: selectedDate)
         } catch {
             errorMessage = error.localizedDescription
             actionMessage = nil
@@ -300,13 +302,15 @@ final class TransactionListViewModel: ObservableObject {
         editState = nil
     }
 
-    func saveEdit(draft: TransactionEditDraft, asOf date: Date = Date()) {
+    func saveEdit(draft: TransactionEditDraft, asOf date: Date = .distantPast) {
         do {
             try mutationService.updateTransaction(draft: draft)
             actionMessage = "Transaction updated."
             editState = nil
-            selectedDate = calendar.startOfDay(for: date)
-            load(asOf: date)
+            if date != .distantPast {
+                selectedDate = calendar.startOfDay(for: date)
+            }
+            load(asOf: selectedDate)
         } catch {
             errorMessage = error.localizedDescription
         }

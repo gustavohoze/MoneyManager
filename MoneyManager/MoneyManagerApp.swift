@@ -12,6 +12,10 @@ import CoreData
 struct MoneyManagerApp: App {
     @StateObject private var persistenceStoreManager = PersistenceStoreManager(controller: PersistenceController.shared)
 
+    init() {
+        CloudSyncedPreferencesBridge.shared.start()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

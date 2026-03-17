@@ -29,14 +29,15 @@ This document summarizes which features are already working, which are partially
 ### 4) Dashboard summary calculations
 - Status: Ready
 - Evidence:
-  - `MoneyManager/App/Services/DashboardDataService.swift` computes balances, safe daily spend, category breakdown, recent transactions.
+  - `MoneyManager/App/Services/DashboardDataService.swift` computes balances, cycle days, safe daily spend, category breakdown, recent transactions.
   - `MoneyManager/App/ViewModels/DashboardViewModel.swift` maps summary to UI state.
-  - `MoneyManagerTests/DashboardViewModelTests.swift` validates mapping and salary schedule calculations.
+  - `MoneyManagerTests/DashboardViewModelTests.swift` validates mapping and cycle-based calculations.
 
 ### 5) Dashboard budget warning (weekly)
-- Status: Ready (implemented, but currently fixed threshold)
+- Status: Ready (settings-driven)
 - Evidence:
-  - `MoneyManager/App/Extensions/DashboardViewModel+Insights.swift` adds warning at >=80% and exceeded at >=100% weekly usage.
+  - `MoneyManager/App/Extensions/DashboardViewModel+Insights.swift` now uses configurable warning/critical thresholds from settings.
+  - `MoneyManager/App/Services/DashboardDataService.swift` reads settings and passes thresholds to dashboard summary.
   - `MoneyManagerTests/DashboardViewModelTests.swift` contains test `derivedAlerts_whenWeeklyProgressAboveEightyPercent_includesBudgetWarning`.
 
 ### 6) Merchant memory and suggestions
@@ -66,45 +67,64 @@ This document summarizes which features are already working, which are partially
   - `MoneyManager/App/Services/ICloudAvailabilityService.swift`
   - `MoneyManager/ContentView.swift` and `MoneyManager/App/Persistence/CoreDataStack/PersistenceStoreManager.swift` include upgrade/retry flow.
 
+### 10) Budget settings thresholds wired into dashboard
+- Status: Ready
+- Evidence:
+  - `MoneyManager/App/UI/Screens/Settings/SettingsBudgetsDetailPage.swift` stores warning/critical thresholds.
+  - `MoneyManager/App/Services/DashboardDataService.swift` observes settings changes and supplies threshold values.
+  - `MoneyManager/App/Extensions/DashboardViewModel+Insights.swift` applies threshold values in alert derivation.
+
+### 11) Category budgets integrated into dashboard alerts
+- Status: Ready
+- Evidence:
+  - `MoneyManager/App/Services/DashboardDataService.swift` computes month category spend vs category budgets and adds budget alerts.
+  - `MoneyManager/App/Services/CategoryBudgetService.swift` provides resolved monthly/default category budgets.
+  - Alerts now show clearer warning/exceeded copy and surface up to three top budget issues.
+
+### 12) Account auto-selection persistence and usage recording
+- Status: Ready
+- Evidence:
+  - `MoneyManager/App/Services/AccountAutoSelectionService.swift` now persists and validates last-used account ID.
+  - `MoneyManager/App/ViewModels/AddTransactionViewModel.swift` records account usage after successful save.
+
+### 13) Amount typo prevention wired in app composition
+- Status: Ready
+- Evidence:
+  - `MoneyManager/App/UI/Navigation/MilestoneOneRootView.swift` injects `TransactionErrorPreventionService` into `AddTransactionViewModel`.
+  - `MoneyManager/App/ViewModels/AddTransactionViewModel.swift` evaluates high-amount warning through prevention service.
+
+### 14) Notification scheduling backend for settings toggles
+- Status: Ready
+- Evidence:
+  - `MoneyManager/App/Services/NotificationSchedulingService.swift` implements local notification scheduling + permission request flow.
+  - `MoneyManager/App/UI/Screens/Settings/SettingsNotificationsDetailPage.swift` syncs all toggles with scheduler.
+  - `MoneyManagerTests/NotificationSchedulingServiceTests.swift` validates scheduling/removal and permission-denied behavior.
+
+### 15) Transaction undo in add transaction user flow
+- Status: Ready
+- Evidence:
+  - `MoneyManager/App/ViewModels/AddTransactionViewModel.swift` records undoable saves and supports undo action.
+  - `MoneyManager/App/UI/Screens/AddTransactionScreen.swift` displays undo row and triggers undo.
+  - `MoneyManager/App/UI/Navigation/MilestoneOneRootView.swift` injects undo and mutation services.
+  - `MoneyManagerTests/AddTransactionViewModelTests.swift` includes undo regression coverage.
+
+### 16) Weekly budget projection no longer purely hard-coded
+- Status: Ready
+- Evidence:
+  - `MoneyManager/App/Services/DashboardDomainServices.swift` now derives weekly budget from configured monthly budget when available.
+  - `MoneyManager/App/Services/DashboardDataService.swift` reads `settings.defaultMonthlyBudget` for projection.
+  - `MoneyManagerTests/DashboardViewModelTests.swift` includes configurable weekly projection test.
+
+### 17) Income-independent financial state model
+- Status: Ready
+- Evidence:
+  - `MoneyManager/App/Services/DashboardDataService.swift` now uses opening balance + remaining cycle days instead of salary timing.
+  - `MoneyManager/App/Services/DashboardDomainServices.swift` projections use opening balance and cycle window inputs.
+  - `MoneyManager/App/UI/Screens/Settings/SettingsAccountsAndIncomeDetailPage.swift` provides opening-balance setup and removes income-schedule dependency from the primary settings flow.
+  - `MoneyManager/App/UI/Screens/Dashboard/DashboardFinancialStateCard.swift` uses cycle/reset language in user-facing copy.
+
 ## Partial (Exists but Not Fully Implemented/Wired)
-
-### 1) Budget settings thresholds are not connected to dashboard warnings
-- Status: Partial
-- Current behavior:
-  - User can edit warning/critical thresholds in settings UI.
-  - Dashboard warning logic still uses fixed values (80%/100%).
-- Evidence:
-  - Settings UI: `MoneyManager/App/UI/Screens/Settings/SettingsBudgetsDetailPage.swift`
-  - Fixed logic: `MoneyManager/App/Extensions/DashboardViewModel+Insights.swift`
-
-### 2) Category budget feature is implemented in Transactions flow, but not driving dashboard warnings
-- Status: Partial
-- Current behavior:
-  - Budgets can be saved and shown in transaction month insights.
-  - Dashboard alerting does not use category budgets yet (uses weekly projection ratio instead).
-- Evidence:
-  - Storage/service: `MoneyManager/App/Services/CategoryBudgetService.swift`
-  - VM integration: `MoneyManager/App/ViewModels/TransactionListViewModel.swift`
-  - Test: `MoneyManagerTests/CategoryBudgetServiceTests.swift`
-
-### 3) Account auto-selection is only half-implemented
-- Status: Partial
-- Current behavior:
-  - Last used account can be inferred from most recent transaction.
-  - Recording account usage is TODO/empty implementation.
-- Evidence:
-  - `MoneyManager/App/Services/AccountAutoSelectionService.swift` (`recordAccountUsage` has future implementation comment)
-
-### 4) Amount typo prevention service exists but is not fully wired in app composition
-- Status: Partial
-- Current behavior:
-  - `TransactionErrorPreventionService` exists.
-  - `AddTransactionViewModel` supports warning hooks.
-  - Root composition currently does not pass `errorPrevention` into `AddTransactionViewModel`.
-- Evidence:
-  - Service: `MoneyManager/App/Services/TransactionErrorPreventionService.swift`
-  - VM hooks: `MoneyManager/App/ViewModels/AddTransactionViewModel.swift`
-  - Root wiring: `MoneyManager/App/UI/Navigation/MilestoneOneRootView.swift`
+None (for active, non-commented items in this document).
 
 <!-- ### 5) Save Planning feature exists but tab is currently disabled in navigation
 - Status: Partial
@@ -118,13 +138,7 @@ This document summarizes which features are already working, which are partially
 
 ## Not Implemented (or Only Placeholder UI)
 
-### 1) Notification engine behind notification settings
-- Status: Not implemented
-- Current behavior:
-  - Notification toggles exist in settings.
-  - No scheduling/authorization integration found (`UNUserNotificationCenter` usage not present).
-- Evidence:
-  - UI toggles: `MoneyManager/App/UI/Screens/Settings/SettingsNotificationsDetailPage.swift`
+None (for active, non-commented items in this document).
 
 <!-- ### 2) Voice logging capture flow
 - Status: Not implemented
@@ -142,26 +156,18 @@ This document summarizes which features are already working, which are partially
   - Allowed source values: `MoneyManager/App/Repositories/CoreDataRepositories.swift`
   - No Vision/VisionKit OCR processing flow found in app source. -->
 
-### 4) Transaction undo behavior in user flow
-- Status: Not implemented in main flow
-- Current behavior:
-  - Undo service/UI component exists, but not integrated into add transaction user flow.
-- Evidence:
-  - Service: `MoneyManager/App/Services/TransactionUndoService.swift`
-  - UI component: `MoneyManager/App/UI/Screens/AddTransaction/AddTransactionUndoRow.swift`
-
 ## Hard-Coded / Development-Only Items To Note
 
-- Dashboard weekly warning thresholds are hard-coded in `MoneyManager/App/Extensions/DashboardViewModel+Insights.swift`.
-- Weekly budget projection currently uses formula `max(weeklySpending, lastWeekSpending, 1) * 1.2` in `MoneyManager/App/Services/DashboardDomainServices.swift`.
+- Dashboard weekly warning thresholds are now settings-driven via `settings.budgetWarningThreshold` and `settings.budgetCriticalThreshold`.
+- Weekly budget projection now prefers configured monthly budget (`settings.defaultMonthlyBudget`) and falls back to historical heuristic when monthly budget is unset.
 - Dummy transaction generation/deletion exists for testing in:
   - `MoneyManager/App/Services/DummyTransactionCRUDService.swift`
   - `MoneyManager/App/UI/Screens/Settings/SettingsAdvancedDetailPage.swift`
 
 ## Suggested Next Implementation Priorities
 
-1. Wire settings budget thresholds into dashboard warning logic.
-2. Implement notification scheduler and permission flow for current toggles.
-3. Finish account usage tracking (`recordAccountUsage`) and wire typo-prevention service from root.
+1. Add UI/integration tests that validate notification toggle behavior in Settings screen (not only service-level tests).
+2. Add localization entries for new/updated budget alert phrases in all supported languages.
+3. Monitor real user behavior and adjust fallback weekly-budget heuristic if needed.
 <!-- 4. Decide whether Save tab should be enabled now or postponed.
 5. Implement OCR/voice capture milestones or hide their source options until ready. -->

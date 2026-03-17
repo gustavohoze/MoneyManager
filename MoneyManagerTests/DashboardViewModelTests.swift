@@ -4,8 +4,10 @@ import CoreData
 @testable import MoneyManager
 
 private struct MockDashboardSettingsProvider: DashboardSettingsProviding {
-    let nextSalaryDate: Date?
-    let salaryFrequency: String
+    let budgetWarningThreshold: Int
+    let budgetCriticalThreshold: Int
+    let defaultMonthlyBudget: Double
+    let openingBalance: Double
 }
 
 private struct MockDashboardDataProvider: DashboardDataProviding {
@@ -28,7 +30,7 @@ struct DashboardViewModelTests {
                     currentBalance: 450,
                     afterBillsBalance: 420,
                     safeDailySpend: 35,
-                    daysUntilIncome: 12,
+                    daysRemainingInCycle: 12,
                     weeklySpending: 500,
                     lastWeekSpending: 430,
                     weeklyBudget: 600,
@@ -97,9 +99,9 @@ struct DashboardViewModelTests {
         #expect(viewModel.errorMessage == nil)
     }
 
-    @Test("Test: dashboard uses injected next salary date")
-    func loadSummary_withInjectedMonthlySettings_usesConfiguredIncomeDate() throws {
-        // Objective: Verify dashboard calculations are wired to settings provider, not hardcoded defaults.
+    @Test("Test: dashboard uses configured cycle settings")
+    func loadSummary_withInjectedMonthlySettings_usesConfiguredCycleDays() throws {
+        // Objective: Verify dashboard cycle calculations are wired to settings provider, not hardcoded defaults.
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
 
@@ -109,25 +111,25 @@ struct DashboardViewModelTests {
 
         let calendar = Calendar(identifier: .iso8601)
         let now = calendar.date(from: DateComponents(year: 2026, month: 3, day: 17)) ?? Date()
-        let configuredPayDate = calendar.date(from: DateComponents(year: 2026, month: 3, day: 20)) ?? now
-
         let service = DashboardDataService(
             transactionRepository: transactionRepository,
             categoryRepository: categoryRepository,
             accountRepository: accountRepository,
             settingsProvider: MockDashboardSettingsProvider(
-                nextSalaryDate: configuredPayDate,
-                salaryFrequency: "Monthly"
+                budgetWarningThreshold: 80,
+                budgetCriticalThreshold: 100,
+                defaultMonthlyBudget: 0,
+                openingBalance: 0
             )
         )
 
         let summary = try service.loadSummary(asOf: now, recentLimit: 3)
-        #expect(summary.daysUntilIncome == 3)
+        #expect(summary.daysRemainingInCycle == 15)
     }
 
-    @Test("Test: dashboard advances weekly salary schedule")
-    func loadSummary_withPastWeeklySalary_rollsForwardToNextWeek() throws {
-        // Objective: Ensure weekly schedules are advanced correctly when configured date is in the past.
+    @Test("Test: dashboard keeps consistent cycle days")
+    func loadSummary_withPastWeeklySettings_keepsCycleWindowStable() throws {
+        // Objective: Keep remaining cycle-day calculations stable under custom settings.
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
 
@@ -137,24 +139,24 @@ struct DashboardViewModelTests {
 
         let calendar = Calendar(identifier: .iso8601)
         let now = calendar.date(from: DateComponents(year: 2026, month: 3, day: 17)) ?? Date()
-        let lastPayDate = calendar.date(from: DateComponents(year: 2026, month: 3, day: 10)) ?? now
-
         let service = DashboardDataService(
             transactionRepository: transactionRepository,
             categoryRepository: categoryRepository,
             accountRepository: accountRepository,
             settingsProvider: MockDashboardSettingsProvider(
-                nextSalaryDate: lastPayDate,
-                salaryFrequency: "Weekly"
+                budgetWarningThreshold: 80,
+                budgetCriticalThreshold: 100,
+                defaultMonthlyBudget: 0,
+                openingBalance: 0
             )
         )
 
         let summary = try service.loadSummary(asOf: now, recentLimit: 3)
-        #expect(summary.daysUntilIncome == 1)
+        #expect(summary.daysRemainingInCycle == 15)
     }
 
-    @Test("Test: dashboard advances biweekly salary schedule")
-    func loadSummary_withPastBiweeklySalary_rollsForwardTwoWeeks() throws {
+    @Test("Test: dashboard supports non-default thresholds")
+    func loadSummary_withCustomThresholdSettings_returnsSummary() throws {
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
 
@@ -164,24 +166,24 @@ struct DashboardViewModelTests {
 
         let calendar = Calendar(identifier: .iso8601)
         let now = calendar.date(from: DateComponents(year: 2026, month: 3, day: 17)) ?? Date()
-        let lastPayDate = calendar.date(from: DateComponents(year: 2026, month: 3, day: 10)) ?? now
-
         let service = DashboardDataService(
             transactionRepository: transactionRepository,
             categoryRepository: categoryRepository,
             accountRepository: accountRepository,
             settingsProvider: MockDashboardSettingsProvider(
-                nextSalaryDate: lastPayDate,
-                salaryFrequency: "Biweekly"
+                budgetWarningThreshold: 80,
+                budgetCriticalThreshold: 100,
+                defaultMonthlyBudget: 0,
+                openingBalance: 0
             )
         )
 
         let summary = try service.loadSummary(asOf: now, recentLimit: 3)
-        #expect(summary.daysUntilIncome == 7)
+        #expect(summary.daysRemainingInCycle == 15)
     }
 
-    @Test("Test: dashboard monthly schedule clamps invalid day for short month")
-    func loadSummary_withMonthly31st_clampsToMonthEnd() throws {
+    @Test("Test: dashboard cycle days clamp in short month")
+    func loadSummary_withFebruaryDate_returnsExpectedCycleDays() throws {
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
 
@@ -191,20 +193,20 @@ struct DashboardViewModelTests {
 
         let calendar = Calendar(identifier: .iso8601)
         let now = calendar.date(from: DateComponents(year: 2026, month: 2, day: 20)) ?? Date()
-        let monthlyReference = calendar.date(from: DateComponents(year: 2026, month: 1, day: 31)) ?? now
-
         let service = DashboardDataService(
             transactionRepository: transactionRepository,
             categoryRepository: categoryRepository,
             accountRepository: accountRepository,
             settingsProvider: MockDashboardSettingsProvider(
-                nextSalaryDate: monthlyReference,
-                salaryFrequency: "Monthly"
+                budgetWarningThreshold: 80,
+                budgetCriticalThreshold: 100,
+                defaultMonthlyBudget: 0,
+                openingBalance: 0
             )
         )
 
         let summary = try service.loadSummary(asOf: now, recentLimit: 3)
-        #expect(summary.daysUntilIncome == 8)
+        #expect(summary.daysRemainingInCycle == 9)
     }
 
     @Test("Test: category prompt appears for uncategorized-only data")
@@ -215,7 +217,7 @@ struct DashboardViewModelTests {
                     currentBalance: 0,
                     afterBillsBalance: 0,
                     safeDailySpend: 0,
-                    daysUntilIncome: 1,
+                    daysRemainingInCycle: 1,
                     weeklySpending: 100,
                     lastWeekSpending: 100,
                     weeklyBudget: 200,
@@ -246,7 +248,7 @@ struct DashboardViewModelTests {
                     currentBalance: 0,
                     afterBillsBalance: 0,
                     safeDailySpend: 0,
-                    daysUntilIncome: 1,
+                    daysRemainingInCycle: 1,
                     weeklySpending: 85,
                     lastWeekSpending: 80,
                     weeklyBudget: 100,
@@ -261,5 +263,148 @@ struct DashboardViewModelTests {
 
         viewModel.load()
         #expect(viewModel.derivedAlerts.first?.title.contains("Budget warning") == true)
+    }
+
+    @Test("Test: derived alerts skip weekly budget warnings when budget is estimated")
+    func derivedAlerts_whenBudgetNotConfigured_doesNotIncludeWeeklyBudgetWarning() {
+        let viewModel = DashboardViewModel(
+            dataProvider: MockDashboardDataProvider(
+                summary: DashboardSummary(
+                    currentBalance: 0,
+                    afterBillsBalance: 0,
+                    safeDailySpend: 0,
+                    daysRemainingInCycle: 1,
+                    weeklySpending: 95,
+                    lastWeekSpending: 80,
+                    weeklyBudget: 100,
+                    weekDailySpending: Array(repeating: 0, count: 7),
+                    topSpendingCategory: "Food",
+                    categoryBreakdown: [DashboardCategoryBreakdown(category: "Food", total: 95, ratio: 1)],
+                    alerts: [],
+                    isWeeklyBudgetUserConfigured: false,
+                    recentTransactions: []
+                )
+            )
+        )
+
+        viewModel.load()
+        #expect(viewModel.derivedAlerts.contains(where: { $0.title.contains("Budget warning") || $0.title.contains("Budget exceeded") }) == false)
+    }
+
+    @Test("Test: configured monthly budget drives weekly budget projection")
+    func loadSummary_withConfiguredMonthlyBudget_usesConfiguredWeeklyProjection() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+
+        let categoryRepository = CoreDataCategoryRepository(context: context)
+        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let transactionRepository = CoreDataTransactionRepository(context: context)
+
+        let service = DashboardDataService(
+            transactionRepository: transactionRepository,
+            categoryRepository: categoryRepository,
+            accountRepository: accountRepository,
+            settingsProvider: MockDashboardSettingsProvider(
+                budgetWarningThreshold: 80,
+                budgetCriticalThreshold: 100,
+                defaultMonthlyBudget: 4_330,
+                openingBalance: 0
+            )
+        )
+
+        let summary = try service.loadSummary(asOf: Date(), recentLimit: 3)
+        #expect(abs(summary.weeklyBudget - 1_000) < 0.001)
+    }
+
+    @Test("Test: dashboard includes category budget warning alert")
+    func loadSummary_whenCategoryNearLimit_includesCategoryBudgetAlert() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+
+        let categoryRepository = CoreDataCategoryRepository(context: context)
+        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let transactionRepository = CoreDataTransactionRepository(context: context)
+
+        let paymentMethodID = try accountRepository.ensureDefaultPaymentMethod()
+        let foodID = try categoryRepository.upsertCategory(name: "Food", icon: "fork.knife", type: "expense")
+        let now = Date()
+
+        _ = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 90,
+            currency: "IDR",
+            date: now,
+            merchantRaw: "Lunch",
+            merchantNormalized: "Lunch",
+            categoryID: foodID,
+            source: "manual",
+            note: nil
+        )
+
+        let defaults = UserDefaults(suiteName: "DashboardBudgetAlertsTests")
+        defaults?.removePersistentDomain(forName: "DashboardBudgetAlertsTests")
+        let budgetProvider = UserDefaultsCategoryBudgetService(
+            defaults: defaults ?? .standard,
+            storageKey: "dashboard_budget_alerts_test"
+        )
+        let monthStart = Calendar(identifier: .iso8601).date(from: Calendar(identifier: .iso8601).dateComponents([.year, .month], from: now)) ?? now
+        try budgetProvider.upsertBudget(category: "Food", amount: 100, monthStartDate: monthStart)
+
+        let service = DashboardDataService(
+            transactionRepository: transactionRepository,
+            categoryRepository: categoryRepository,
+            accountRepository: accountRepository,
+            settingsProvider: MockDashboardSettingsProvider(
+                budgetWarningThreshold: 80,
+                budgetCriticalThreshold: 100,
+                defaultMonthlyBudget: 0,
+                openingBalance: 0
+            ),
+            budgetProvider: budgetProvider
+        )
+
+        let summary = try service.loadSummary(asOf: now, recentLimit: 3)
+        #expect(summary.alerts.contains(where: { $0.title.contains("Food budget warning") }))
+    }
+
+    @Test("Test: dashboard current balance includes income transactions")
+    func loadSummary_withIncomeTransaction_increasesCurrentBalance() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+
+        let categoryRepository = CoreDataCategoryRepository(context: context)
+        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let transactionRepository = CoreDataTransactionRepository(context: context)
+
+        let paymentMethodID = try accountRepository.ensureDefaultPaymentMethod()
+        let incomeCategoryID = try categoryRepository.upsertCategory(name: "Salary", icon: "arrow.down.circle.fill", type: "income")
+        let now = Date()
+
+        _ = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 500,
+            currency: "IDR",
+            date: now,
+            merchantRaw: "Salary",
+            merchantNormalized: "Salary",
+            categoryID: incomeCategoryID,
+            source: "manual",
+            note: nil
+        )
+
+        let service = DashboardDataService(
+            transactionRepository: transactionRepository,
+            categoryRepository: categoryRepository,
+            accountRepository: accountRepository,
+            settingsProvider: MockDashboardSettingsProvider(
+                budgetWarningThreshold: 80,
+                budgetCriticalThreshold: 100,
+                defaultMonthlyBudget: 0,
+                openingBalance: 0
+            )
+        )
+
+        let summary = try service.loadSummary(asOf: now, recentLimit: 3)
+        #expect(summary.currentBalance == 500)
     }
 }

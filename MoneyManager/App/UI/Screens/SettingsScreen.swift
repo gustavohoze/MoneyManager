@@ -15,10 +15,10 @@ struct SettingsScreen: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 16) {
-                    // Top priority row: Payment Methods & Income
+                    // Top priority row: Payment Methods & Balance
                     SettingsTileButton(
                         icon: "creditcard.fill",
-                        label: String(localized: "Payment Methods & Income"),
+                        label: String(localized: "Payment Methods & Balance"),
                         description: viewModel.paymentMethodsDescription,
                         palette: palette
                     ) {

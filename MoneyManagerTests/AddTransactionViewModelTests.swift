@@ -34,6 +34,43 @@ private struct TransactionFormOptionsProvidingMock: TransactionFormOptionsProvid
     }
 }
 
+private struct TransactionMutatingMock: TransactionMutating {
+    var deleteHandler: (UUID) throws -> Void = { _ in }
+
+    func loadEditDraft(id: UUID) throws -> TransactionEditDraft {
+        throw CoreDataRepositoryError.missingReference(entity: "Transaction", id: id)
+    }
+
+    func updateTransaction(draft: TransactionEditDraft) throws {}
+
+    func deleteTransaction(id: UUID) throws {
+        try deleteHandler(id)
+    }
+}
+
+private final class UndoServiceMock: TransactionUndoProviding {
+    private(set) var undoStack: [UndoableTransaction] = []
+
+    var canUndo: Bool {
+        !undoStack.isEmpty
+    }
+
+    func recordTransaction(_ transaction: UndoableTransaction) {
+        undoStack.append(transaction)
+    }
+
+    func undoLastTransaction() -> UndoableTransaction? {
+        guard !undoStack.isEmpty else {
+            return nil
+        }
+        return undoStack.removeLast()
+    }
+
+    func clearUndoStack() {
+        undoStack.removeAll()
+    }
+}
+
 @MainActor
 struct AddTransactionViewModelTests {
     @Test("Test: missing account prevents save")
@@ -146,5 +183,68 @@ struct AddTransactionViewModelTests {
         #expect(viewModel.categoryOptions.count == 1)
         #expect(viewModel.selectedAccountID == paymentMethodID)
         #expect(viewModel.selectedCategoryID == categoryID)
+    }
+
+    @Test("Test: category options include income category for direct selection")
+    func loadOptions_withIncomeCategory_allowsIncomeCategorySelection() {
+        let paymentMethodID = UUID()
+        let expenseCategoryID = UUID()
+        let incomeCategoryID = UUID()
+        let viewModel = AddTransactionViewModel(
+            transactionEntryService: TransactionEntrySavingMock { _, _, _, _, _, _, _ in
+                TransactionEntryResult(transactionID: UUID(), duplicateDetected: false)
+            },
+            optionsProvider: TransactionFormOptionsProvidingMock(
+                result: .success(
+                    TransactionFormOptions(
+                        accounts: [TransactionFormAccountOption(id: paymentMethodID, name: "Cash")],
+                        categories: [
+                            TransactionFormCategoryOption(id: expenseCategoryID, name: "Food", icon: "fork.knife", type: "expense"),
+                            TransactionFormCategoryOption(id: incomeCategoryID, name: "Income", icon: "arrow.down.circle.fill", type: "income")
+                        ]
+                    )
+                )
+            )
+        )
+
+        viewModel.loadOptions()
+        viewModel.selectedCategoryID = incomeCategoryID
+
+        #expect(viewModel.categoryOptions.contains(where: { $0.id == incomeCategoryID }))
+        #expect(viewModel.selectedCategoryID == incomeCategoryID)
+    }
+
+    @Test("Test: undo reverts last saved transaction")
+    func undoLastSave_afterSuccessfulSave_deletesSavedTransactionAndResetsUndoState() {
+        let expectedID = UUID()
+        var deletedID: UUID?
+        let undoService = UndoServiceMock()
+
+        let viewModel = AddTransactionViewModel(
+            transactionEntryService: TransactionEntrySavingMock { _, _, _, _, _, _, _ in
+                TransactionEntryResult(transactionID: expectedID, duplicateDetected: false)
+            },
+            optionsProvider: TransactionFormOptionsProvidingMock(
+                result: .success(TransactionFormOptions(accounts: [], categories: []))
+            ),
+            undoService: undoService,
+            mutationService: TransactionMutatingMock(deleteHandler: { id in
+                deletedID = id
+            })
+        )
+
+        viewModel.selectedAccountID = UUID()
+        viewModel.amountText = "12000"
+        viewModel.save()
+
+        #expect(viewModel.canUndoLastSave == true)
+        #expect(viewModel.lastSavedTransactionID == expectedID)
+
+        viewModel.undoLastSave()
+
+        #expect(deletedID == expectedID)
+        #expect(viewModel.canUndoLastSave == false)
+        #expect(viewModel.lastSavedTransactionID == nil)
+        #expect(viewModel.saveMessage == "Transaction undone")
     }
 }

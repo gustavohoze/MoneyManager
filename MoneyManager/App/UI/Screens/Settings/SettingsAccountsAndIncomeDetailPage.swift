@@ -9,19 +9,16 @@ struct SettingsAccountsAndIncomeDetailPage: View {
     @State private var editorDraft = AccountEditorDraft.createDefault()
     @State private var paymentMethodPendingDeleteID: UUID?
 
-    @AppStorage("settings.salaryAmount") private var salaryAmount: Double = 0
-    @AppStorage("settings.salaryFrequency") private var salaryFrequency: String = "Monthly"
-    @AppStorage("settings.nextSalaryDate") private var nextSalaryDateTimestamp: Double = Date().timeIntervalSince1970
+    @AppStorage("settings.openingBalance") private var openingBalance: Double = 0
     @AppStorage("settings.displayCurrencyCode") private var displayCurrencyCode: String = AppCurrency.currentCode
 
-    @State private var salaryAmountText: String = ""
+    @State private var openingBalanceText: String = ""
     @State private var selectedDisplayCurrencyCode: String = AppCurrency.currentCode
     @State private var pendingDisplayCurrencyCode: String?
     @State private var isCurrencyWarningPresented = false
-    @FocusState private var isSalaryAmountFocused: Bool
+    @FocusState private var isOpeningBalanceFocused: Bool
 
     private let paymentMethodTypeOptions = ["cash", "bank", "wallet", "credit"]
-    private let salaryFrequencyOptions = ["Weekly", "Biweekly", "Monthly"]
 
     var body: some View {
         ScrollView {
@@ -136,19 +133,19 @@ struct SettingsAccountsAndIncomeDetailPage: View {
                 Divider()
                     .padding(.vertical, 8)
 
-                // INCOME SECTION
+                // BALANCE SECTION
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(String(localized: "Income"))
+                    Text(String(localized: "Balance"))
                         .font(.system(.caption, design: .rounded).weight(.semibold))
                         .foregroundStyle(palette.accent)
                         .textCase(.uppercase)
-                    Text(String(localized: "Salary Configuration"))
+                    Text(String(localized: "Opening Balance"))
                         .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(palette.ink)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Salary amount card
+                // Opening balance card
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 12) {
                         Image(systemName: "banknote.fill")
@@ -159,16 +156,16 @@ struct SettingsAccountsAndIncomeDetailPage: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(String(localized: "Monthly Salary"))
+                            Text(String(localized: "Starting Balance"))
                                 .font(.system(.body, design: .rounded).weight(.semibold))
                                 .foregroundStyle(palette.ink)
-                            Text(String(localized: "Your regular income"))
+                            Text(String(localized: "Budget base before expenses"))
                                 .font(.caption)
                                 .foregroundStyle(palette.secondaryInk)
                         }
 
                         Spacer()
-                        Text(AppCurrency.formatted(salaryAmount))
+                        Text(AppCurrency.formatted(openingBalance))
                             .font(.system(.body, design: .rounded).weight(.semibold))
                             .foregroundStyle(palette.accent)
                     }
@@ -176,9 +173,9 @@ struct SettingsAccountsAndIncomeDetailPage: View {
                     Divider()
                         .padding(.vertical, 4)
 
-                    TextField(String(localized: "Enter amount"), text: $salaryAmountText)
+                    TextField(String(localized: "Enter amount"), text: $openingBalanceText)
                         .keyboardType(.numberPad)
-                        .focused($isSalaryAmountFocused)
+                        .focused($isOpeningBalanceFocused)
                         .font(.system(.body, design: .rounded))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
@@ -188,88 +185,24 @@ struct SettingsAccountsAndIncomeDetailPage: View {
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
                                 .stroke(palette.cardBorder, lineWidth: 1)
                         )
-                        .onChange(of: salaryAmountText) { newValue in
+                        .onChange(of: openingBalanceText) { newValue in
                             let digitsOnly = newValue.filter(\.isNumber)
                             if digitsOnly != newValue {
-                                salaryAmountText = digitsOnly
+                                openingBalanceText = digitsOnly
                             }
-                            salaryAmount = Double(digitsOnly) ?? 0
+                            openingBalance = Double(digitsOnly) ?? 0
                         }
                 }
                 .financeCard(palette: palette)
 
-                // Frequency card
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "calendar.circle.fill")
-                            .font(.system(size: 20))
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "info.circle.fill")
                             .foregroundStyle(palette.accent)
-                            .frame(width: 32, height: 32)
-                            .background(palette.accentSoft)
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(String(localized: "Payment Frequency"))
-                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                .foregroundStyle(palette.ink)
-                            Text(String(localized: "How often you receive payment"))
-                                .font(.caption)
-                                .foregroundStyle(palette.secondaryInk)
-                        }
-
-                        Spacer()
-                        Text(salaryFrequency)
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(palette.accent)
+                        Text(String(localized: "Use starting balance to track spending without depending on fixed income schedules."))
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryInk)
                     }
-
-                    Divider()
-                        .padding(.vertical, 4)
-
-                    Picker(String(localized: "Frequency"), selection: $salaryFrequency) {
-                        ForEach(salaryFrequencyOptions, id: \.self) { option in
-                            Text(option).tag(option)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
-                .financeCard(palette: palette)
-
-                // Next payment date card
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "calendar.badge.clock")
-                            .font(.system(size: 20))
-                            .foregroundStyle(palette.accent)
-                            .frame(width: 32, height: 32)
-                            .background(palette.accentSoft)
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(String(localized: "Next Payment Date"))
-                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                .foregroundStyle(palette.ink)
-                            Text(String(localized: "Pick your upcoming salary payment date"))
-                                .font(.caption)
-                                .foregroundStyle(palette.secondaryInk)
-                        }
-
-                        Spacer()
-                        Text(nextSalaryDate, format: .dateTime.day().month().year())
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(palette.accent)
-                    }
-
-                    Divider()
-                        .padding(.vertical, 4)
-
-                    DatePicker(
-                        String(localized: "Next Payment Date"),
-                        selection: nextSalaryDateBinding,
-                        in: Date()...,
-                        displayedComponents: .date
-                    )
-                    .datePickerStyle(.compact)
                 }
                 .financeCard(palette: palette)
             }
@@ -277,19 +210,19 @@ struct SettingsAccountsAndIncomeDetailPage: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(FinanceTheme.pageBackground(for: colorScheme).ignoresSafeArea())
-        .navigationTitle(String(localized: "Payment Methods & Income"))
+        .navigationTitle(String(localized: "Payment Methods & Balance"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button(String(localized: "Done")) {
-                    isSalaryAmountFocused = false
+                    isOpeningBalanceFocused = false
                 }
             }
         }
         .onAppear {
-            if salaryAmountText.isEmpty {
-                salaryAmountText = salaryAmount > 0 ? String(Int(salaryAmount.rounded())) : ""
+            if openingBalanceText.isEmpty {
+                openingBalanceText = openingBalance > 0 ? String(Int(openingBalance.rounded())) : ""
             }
             if let normalizedCurrency = AppCurrency.normalizedCode(displayCurrencyCode) {
                 displayCurrencyCode = normalizedCurrency
@@ -371,19 +304,4 @@ struct SettingsAccountsAndIncomeDetailPage: View {
         }
     }
 
-    private var nextSalaryDate: Date {
-        Date(timeIntervalSince1970: nextSalaryDateTimestamp)
-    }
-
-    private var nextSalaryDateBinding: Binding<Date> {
-        Binding(
-            get: {
-                let storedDate = nextSalaryDate
-                return storedDate < Date() ? Date() : storedDate
-            },
-            set: { newValue in
-                nextSalaryDateTimestamp = Calendar.current.startOfDay(for: newValue).timeIntervalSince1970
-            }
-        )
-    }
 }

@@ -14,6 +14,8 @@ struct MilestoneOneRootView: View {
     @StateObject private var rootViewModel: MilestoneOneRootViewModel
 
     private let startupSeedingService: StartupSeedingService
+    private let analytics: AnalyticsTracking
+    private let appUsageAnalytics: AppUsageAnalyticsService
     private let context: NSManagedObjectContext
 
     @State private var selectedTab: MilestoneOneTab = .dashboard
@@ -23,15 +25,18 @@ struct MilestoneOneRootView: View {
         let categoryRepository = CoreDataCategoryRepository(context: context)
         let transactionRepository = CoreDataTransactionRepository(context: context)
         let merchantResolver = MerchantResolver()
-        let analytics = InMemoryAnalyticsService()
+        let analytics = AnalyticsServiceFactory.makeDefault()
+        let appUsageAnalytics = AppUsageAnalyticsService(analytics: analytics)
         let dashboardSettingsProvider = UserDefaultsDashboardSettingsProvider()
         let dashboardRefreshTrigger = UserDefaultsDashboardRefreshTrigger()
+        let categoryBudgetService = UserDefaultsCategoryBudgetService()
 
         let dashboardService = DashboardDataService(
             transactionRepository: transactionRepository,
             categoryRepository: categoryRepository,
             accountRepository: accountRepository,
-            settingsProvider: dashboardSettingsProvider
+            settingsProvider: dashboardSettingsProvider,
+            budgetProvider: categoryBudgetService
         )
 
         let transactionListService = TransactionListDataService(
@@ -81,8 +86,6 @@ struct MilestoneOneRootView: View {
             categoryRepository: categoryRepository
         )
 
-        let categoryBudgetService = UserDefaultsCategoryBudgetService()
-
         // MARK: - Milestone 2: Frictionless Expense Capture Services
         let accountAutoSelectionService = AccountAutoSelectionService(
             accountRepository: accountRepository,
@@ -92,6 +95,7 @@ struct MilestoneOneRootView: View {
         let errorPreventionService = TransactionErrorPreventionService(
             transactionRepository: transactionRepository
         )
+        let undoService = TransactionUndoService()
 
         _dashboardViewModel = StateObject(
             wrappedValue: DashboardViewModel(
@@ -118,7 +122,10 @@ struct MilestoneOneRootView: View {
                 merchantCategorySuggester: merchantMemoryService,
                 merchantSuggestionProvider: merchantSuggestionService,
                 accountAutoSelection: accountAutoSelectionService,
-                merchantMemoryRecorder: merchantMemoryService
+                errorPrevention: errorPreventionService,
+                merchantMemoryRecorder: merchantMemoryService,
+                undoService: undoService,
+                mutationService: transactionMutationService
             )
         )
         _settingsViewModel = StateObject(
@@ -135,6 +142,8 @@ struct MilestoneOneRootView: View {
             accountRepository: accountRepository,
             categoryRepository: categoryRepository
         )
+        self.analytics = analytics
+        self.appUsageAnalytics = appUsageAnalytics
         self.context = context
     }
 
@@ -199,6 +208,10 @@ struct MilestoneOneRootView: View {
             } catch {
                 // Intentionally ignored in UI bootstrap; individual screens expose errors.
             }
+
+            appUsageAnalytics.appDidLaunch()
+            appUsageAnalytics.sessionDidBecomeActive()
+            appUsageAnalytics.didSelectFeature(selectedTab)
 
             addTransactionViewModel.loadOptions()
             dashboardViewModel.load()
@@ -265,14 +278,29 @@ struct MilestoneOneRootView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard rootViewModel.hasLoaded, newPhase == .active else {
+                if rootViewModel.hasLoaded,
+                   newPhase == .inactive || newPhase == .background {
+                    appUsageAnalytics.sessionDidEnd()
+                    analytics.flush(completion: nil)
+                }
                 return
             }
+
+            appUsageAnalytics.sessionDidBecomeActive()
+            appUsageAnalytics.didSelectFeature(selectedTab)
 
             // Lightweight foreground refresh: update visible data only, never rebuild persistence stack.
             addTransactionViewModel.loadOptions()
             dashboardViewModel.load()
             transactionListViewModel.load()
             savePlanningViewModel.load()
+        }
+        .onChange(of: selectedTab) { _, newTab in
+            guard rootViewModel.hasLoaded else {
+                return
+            }
+
+            appUsageAnalytics.didSelectFeature(newTab)
         }
     }
 }

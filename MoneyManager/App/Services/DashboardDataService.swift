@@ -27,7 +27,7 @@ struct DashboardSummary: Equatable {
     let currentBalance: Double
     let afterBillsBalance: Double
     let safeDailySpend: Double
-    let daysUntilIncome: Int
+    let daysRemainingInCycle: Int
     let weeklySpending: Double
     let lastWeekSpending: Double
     let weeklyBudget: Double
@@ -35,7 +35,44 @@ struct DashboardSummary: Equatable {
     let topSpendingCategory: String
     let categoryBreakdown: [DashboardCategoryBreakdown]
     let alerts: [DashboardAlert]
+    let isWeeklyBudgetUserConfigured: Bool
+    let budgetWarningThreshold: Int
+    let budgetCriticalThreshold: Int
     let recentTransactions: [DashboardRecentTransaction]
+
+    init(
+        currentBalance: Double,
+        afterBillsBalance: Double,
+        safeDailySpend: Double,
+        daysRemainingInCycle: Int,
+        weeklySpending: Double,
+        lastWeekSpending: Double,
+        weeklyBudget: Double,
+        weekDailySpending: [Double],
+        topSpendingCategory: String,
+        categoryBreakdown: [DashboardCategoryBreakdown],
+        alerts: [DashboardAlert],
+        isWeeklyBudgetUserConfigured: Bool = true,
+        budgetWarningThreshold: Int = 80,
+        budgetCriticalThreshold: Int = 100,
+        recentTransactions: [DashboardRecentTransaction]
+    ) {
+        self.currentBalance = currentBalance
+        self.afterBillsBalance = afterBillsBalance
+        self.safeDailySpend = safeDailySpend
+        self.daysRemainingInCycle = daysRemainingInCycle
+        self.weeklySpending = weeklySpending
+        self.lastWeekSpending = lastWeekSpending
+        self.weeklyBudget = weeklyBudget
+        self.weekDailySpending = weekDailySpending
+        self.topSpendingCategory = topSpendingCategory
+        self.categoryBreakdown = categoryBreakdown
+        self.alerts = alerts
+        self.isWeeklyBudgetUserConfigured = isWeeklyBudgetUserConfigured
+        self.budgetWarningThreshold = budgetWarningThreshold
+        self.budgetCriticalThreshold = budgetCriticalThreshold
+        self.recentTransactions = recentTransactions
+    }
 }
 
 protocol DashboardDataProviding {
@@ -43,13 +80,15 @@ protocol DashboardDataProviding {
 }
 
 protocol DashboardSettingsProviding {
-    var nextSalaryDate: Date? { get }
-    var salaryFrequency: String { get }
+    var budgetWarningThreshold: Int { get }
+    var budgetCriticalThreshold: Int { get }
+    var defaultMonthlyBudget: Double { get }
+    var openingBalance: Double { get }
 }
 
 struct UserDefaultsDashboardSettingsProvider: DashboardSettingsProviding {
-    static let nextSalaryDateKey = "settings.nextSalaryDate"
-    static let salaryFrequencyKey = "settings.salaryFrequency"
+    static let defaultMonthlyBudgetKey = "settings.defaultMonthlyBudget"
+    static let openingBalanceKey = "settings.openingBalance"
 
     private let defaults: UserDefaults
 
@@ -57,16 +96,23 @@ struct UserDefaultsDashboardSettingsProvider: DashboardSettingsProviding {
         self.defaults = defaults
     }
 
-    var nextSalaryDate: Date? {
-        let timestamp = defaults.double(forKey: Self.nextSalaryDateKey)
-        guard timestamp > 0 else {
-            return nil
-        }
-        return Date(timeIntervalSince1970: timestamp)
+    var budgetWarningThreshold: Int {
+        let stored = defaults.integer(forKey: "settings.budgetWarningThreshold")
+        return (50...95).contains(stored) ? stored : 80
     }
 
-    var salaryFrequency: String {
-        defaults.string(forKey: Self.salaryFrequencyKey) ?? "Monthly"
+    var budgetCriticalThreshold: Int {
+        let stored = defaults.integer(forKey: "settings.budgetCriticalThreshold")
+        return (80...150).contains(stored) ? stored : 100
+    }
+
+    var defaultMonthlyBudget: Double {
+        let value = defaults.double(forKey: Self.defaultMonthlyBudgetKey)
+        return max(value, 0)
+    }
+
+    var openingBalance: Double {
+        defaults.double(forKey: Self.openingBalanceKey)
     }
 }
 
@@ -82,8 +128,10 @@ struct UserDefaultsDashboardRefreshTrigger: DashboardRefreshTriggering {
         center: NotificationCenter = .default,
         observedKeys: Set<String> = [
             AppCurrency.settingsKey,
-            UserDefaultsDashboardSettingsProvider.nextSalaryDateKey,
-            UserDefaultsDashboardSettingsProvider.salaryFrequencyKey
+            UserDefaultsDashboardSettingsProvider.defaultMonthlyBudgetKey,
+            UserDefaultsDashboardSettingsProvider.openingBalanceKey,
+            "settings.budgetWarningThreshold",
+            "settings.budgetCriticalThreshold"
         ]
     ) {
         let initialSignature = Self.signature(defaults: defaults, keys: observedKeys)
@@ -114,6 +162,7 @@ struct DashboardDataService: DashboardDataProviding {
     private let categoryInsightCalculator: DashboardCategoryInsightCalculator
     private let projectionCalculator: DashboardProjectionCalculator
     private let alertFactory: DashboardAlertFactory
+    private let budgetProvider: CategoryBudgetProviding
 
     init(
         transactionRepository: TransactionRepository,
@@ -123,7 +172,8 @@ struct DashboardDataService: DashboardDataProviding {
         trendCalculator: DashboardTrendCalculator = DashboardTrendCalculator(),
         categoryInsightCalculator: DashboardCategoryInsightCalculator = DashboardCategoryInsightCalculator(),
         projectionCalculator: DashboardProjectionCalculator = DashboardProjectionCalculator(),
-        alertFactory: DashboardAlertFactory = DashboardAlertFactory()
+        alertFactory: DashboardAlertFactory = DashboardAlertFactory(),
+        budgetProvider: CategoryBudgetProviding = NoOpCategoryBudgetService()
     ) {
         self.transactionRepository = transactionRepository
         self.categoryRepository = categoryRepository
@@ -133,11 +183,13 @@ struct DashboardDataService: DashboardDataProviding {
         self.categoryInsightCalculator = categoryInsightCalculator
         self.projectionCalculator = projectionCalculator
         self.alertFactory = alertFactory
+        self.budgetProvider = budgetProvider
     }
 
     func loadSummary(asOf date: Date = Date(), recentLimit: Int = 3) throws -> DashboardSummary {
         let calendar = Calendar(identifier: .iso8601)
         let windows = DashboardDateWindows(referenceDate: date, calendar: calendar)
+        let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: windows.asOf)) ?? windows.startOfToday
 
         let allTransactions = try transactionRepository.fetchTransactions()
         let monthWindowTransactions = try transactionRepository.fetchTransactions(
@@ -175,6 +227,7 @@ struct DashboardDataService: DashboardDataProviding {
         var expenseTotal = 0.0
         var expenseByCategory = [String: Double]()
         var expenseEntries: [(amount: Double, date: Date, category: String)] = []
+        var expenseByCategoryCurrentMonth = [String: Double]()
         var billsLast30Days = 0.0
 
         for object in allTransactions {
@@ -191,6 +244,9 @@ struct DashboardDataService: DashboardDataProviding {
                 let categoryName = categoryInfo?.name ?? DashboardDomainConstants.uncategorized
                 expenseByCategory[categoryName, default: 0] += amount
                 expenseEntries.append((amount: amount, date: transactionDate, category: categoryName))
+                if transactionDate >= startOfCurrentMonth && transactionDate <= windows.asOf {
+                    expenseByCategoryCurrentMonth[categoryName, default: 0] += amount
+                }
             }
         }
 
@@ -238,31 +294,40 @@ struct DashboardDataService: DashboardDataProviding {
             )
         }
 
-        let nextIncomeDate = resolveNextIncomeDate(from: windows.asOf, calendar: calendar)
-        let daysUntilIncome = max(1, calendar.dateComponents([.day], from: windows.startOfToday, to: nextIncomeDate).day ?? 1)
+        let daysRemainingInCycle = max(1, daysRemainingInCurrentMonth(from: windows.asOf, calendar: calendar))
 
         let projection = projectionCalculator.makeProjection(
+            openingBalance: settingsProvider.openingBalance,
             incomeTotal: incomeTotal,
             expenseTotal: expenseTotal,
             billsLast30Days: billsLast30Days,
-            daysUntilIncome: daysUntilIncome,
+            daysRemainingInCycle: daysRemainingInCycle,
             weeklySpending: trend.weeklySpending,
-            lastWeekSpending: trend.lastWeekSpending
+            lastWeekSpending: trend.lastWeekSpending,
+            defaultMonthlyBudget: settingsProvider.defaultMonthlyBudget
         )
 
-        let alerts = alertFactory.makeAlerts(
+        var alerts = alertFactory.makeAlerts(
             safeDailySpend: projection.safeDailySpend,
             weekDailySpending: trend.weekDailySpending,
             currentWeekByCategory: trend.currentWeekByCategory,
             lastWeekByCategory: trend.lastWeekByCategory,
             currencyText: currencyText
         )
+        alerts.append(
+            contentsOf: makeCategoryBudgetAlerts(
+                monthStartDate: startOfCurrentMonth,
+                currentMonthSpendByCategory: expenseByCategoryCurrentMonth,
+                warningThreshold: settingsProvider.budgetWarningThreshold,
+                criticalThreshold: settingsProvider.budgetCriticalThreshold
+            )
+        )
 
         return DashboardSummary(
             currentBalance: projection.currentBalance,
             afterBillsBalance: projection.afterBillsBalance,
             safeDailySpend: projection.safeDailySpend,
-            daysUntilIncome: projection.daysUntilIncome,
+            daysRemainingInCycle: projection.daysRemainingInCycle,
             weeklySpending: trend.weeklySpending,
             lastWeekSpending: trend.lastWeekSpending,
             weeklyBudget: projection.weeklyBudget,
@@ -270,58 +335,72 @@ struct DashboardDataService: DashboardDataProviding {
             topSpendingCategory: categoryInsights.topCategory,
             categoryBreakdown: categoryInsights.categoryBreakdown,
             alerts: alerts,
+            isWeeklyBudgetUserConfigured: settingsProvider.defaultMonthlyBudget > 0,
+            budgetWarningThreshold: settingsProvider.budgetWarningThreshold,
+            budgetCriticalThreshold: settingsProvider.budgetCriticalThreshold,
             recentTransactions: recent
         )
     }
 
-    private func resolveNextIncomeDate(from date: Date, calendar: Calendar) -> Date {
-        let startOfToday = calendar.startOfDay(for: date)
-        let storedFrequency = settingsProvider.salaryFrequency
-
-        guard let storedDate = settingsProvider.nextSalaryDate else {
-            return calendar.nextDate(
-                after: date,
-                matching: DateComponents(day: 1),
-                matchingPolicy: .nextTime
-            ) ?? startOfToday
+    private func daysRemainingInCurrentMonth(from date: Date, calendar: Calendar) -> Int {
+        guard
+            let range = calendar.range(of: .day, in: .month, for: date)
+        else {
+            return 1
         }
-
-        var nextDate = calendar.startOfDay(for: storedDate)
-        if nextDate >= startOfToday {
-            return nextDate
-        }
-
-        switch storedFrequency {
-        case "Weekly", "Biweekly":
-            let intervalDays = storedFrequency == "Weekly" ? 7 : 14
-            while nextDate < startOfToday {
-                nextDate = calendar.date(byAdding: .day, value: intervalDays, to: nextDate) ?? startOfToday
-            }
-            return nextDate
-        default:
-            let payDay = calendar.component(.day, from: nextDate)
-            return nextMonthlyPaymentDate(for: payDay, from: startOfToday, calendar: calendar)
-        }
+        let day = calendar.component(.day, from: date)
+        return max(1, range.count - day + 1)
     }
 
-    private func nextMonthlyPaymentDate(for payDay: Int, from date: Date, calendar: Calendar) -> Date {
-        let clampedPayDay = max(1, min(31, payDay))
-
-        func paymentDate(in monthDate: Date) -> Date {
-            let range = calendar.range(of: .day, in: .month, for: monthDate) ?? (1..<29)
-            let day = min(clampedPayDay, range.count)
-            var components = calendar.dateComponents([.year, .month], from: monthDate)
-            components.day = day
-            return calendar.date(from: components) ?? monthDate
+    private func makeCategoryBudgetAlerts(
+        monthStartDate: Date,
+        currentMonthSpendByCategory: [String: Double],
+        warningThreshold: Int,
+        criticalThreshold: Int
+    ) -> [DashboardAlert] {
+        let resolvedBudgets = budgetProvider.resolvedBudgets(for: monthStartDate)
+        guard !resolvedBudgets.isEmpty else {
+            return []
         }
 
-        let thisMonthDate = paymentDate(in: date)
-        if thisMonthDate >= date {
-            return thisMonthDate
-        }
+        let warningRatio = Double(warningThreshold) / 100
+        let criticalRatio = Double(criticalThreshold) / 100
 
-        let nextMonthAnchor = calendar.date(byAdding: .month, value: 1, to: date) ?? date
-        return paymentDate(in: nextMonthAnchor)
+        let sortedAlerts = resolvedBudgets.compactMap { budget -> (Double, DashboardAlert)? in
+            guard budget.amount > 0 else {
+                return nil
+            }
+
+            let spent = currentMonthSpendByCategory[budget.category, default: 0]
+            let ratio = spent / budget.amount
+
+            if ratio >= criticalRatio {
+                return (
+                    ratio,
+                    DashboardAlert(
+                        title: "⚠︎ \(budget.category) budget exceeded",
+                        detail: "Spent \(currencyText(spent)) vs budget \(currencyText(budget.amount)) this month."
+                    )
+                )
+            }
+
+            if ratio >= warningRatio {
+                let remaining = max(budget.amount - spent, 0)
+                return (
+                    ratio,
+                    DashboardAlert(
+                        title: "⚠︎ \(budget.category) budget warning",
+                        detail: "\(Int(ratio * 100))% used. Remaining \(currencyText(remaining))."
+                    )
+                )
+            }
+
+            return nil
+        }
+        .sorted { $0.0 > $1.0 }
+        .prefix(3)
+
+        return sortedAlerts.map { $0.1 }
     }
 
     private func currencyText(_ value: Double) -> String {

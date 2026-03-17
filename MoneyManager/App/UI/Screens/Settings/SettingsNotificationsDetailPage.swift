@@ -8,6 +8,7 @@ struct SettingsNotificationsDetailPage: View {
     @AppStorage("settings.notifyBudgetExceeded") private var notifyBudgetExceeded = true
     @AppStorage("settings.notifyWeeklySummary") private var notifyWeeklySummary = true
     @AppStorage("settings.notifyUnusualSpending") private var notifyUnusualSpending = true
+    private let notificationScheduler: NotificationScheduling = LocalNotificationScheduler()
 
     var body: some View {
         ScrollView {
@@ -65,6 +66,30 @@ struct SettingsNotificationsDetailPage: View {
         .background(FinanceTheme.pageBackground(for: colorScheme))
         .navigationTitle(String(localized: "Notifications"))
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await syncNotificationPreferences()
+        }
+        .onChange(of: notifyDailyWarning) { _ in
+            Task { await syncNotificationPreferences() }
+        }
+        .onChange(of: notifyBudgetExceeded) { _ in
+            Task { await syncNotificationPreferences() }
+        }
+        .onChange(of: notifyWeeklySummary) { _ in
+            Task { await syncNotificationPreferences() }
+        }
+        .onChange(of: notifyUnusualSpending) { _ in
+            Task { await syncNotificationPreferences() }
+        }
+    }
+
+    private func syncNotificationPreferences() async {
+        await notificationScheduler.syncPreferences(
+            dailyWarning: notifyDailyWarning,
+            budgetExceeded: notifyBudgetExceeded,
+            weeklySummary: notifyWeeklySummary,
+            unusualSpending: notifyUnusualSpending
+        )
     }
 }
 

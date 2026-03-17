@@ -5,7 +5,7 @@ struct DashboardViewState: Equatable {
     var currentBalance: Double = 0
     var afterBillsBalance: Double = 0
     var safeDailySpend: Double = 0
-    var daysUntilIncome: Int = 0
+    var daysRemainingInCycle: Int = 0
     var weeklySpending: Double = 0
     var lastWeekSpending: Double = 0
     var weeklyBudget: Double = 0
@@ -13,6 +13,9 @@ struct DashboardViewState: Equatable {
     var topSpendingCategory: String = DashboardDomainConstants.uncategorized
     var categoryBreakdown: [DashboardCategoryBreakdown] = []
     var alerts: [DashboardAlert] = []
+    var isWeeklyBudgetUserConfigured: Bool = true
+    var budgetWarningThreshold: Int = 80
+    var budgetCriticalThreshold: Int = 100
     var recentTransactions: [DashboardRecentTransaction] = []
     var errorMessage: String?
 }
@@ -44,7 +47,7 @@ final class DashboardViewModel: ObservableObject {
                 currentBalance: summary.currentBalance,
                 afterBillsBalance: summary.afterBillsBalance,
                 safeDailySpend: summary.safeDailySpend,
-                daysUntilIncome: summary.daysUntilIncome,
+                daysRemainingInCycle: summary.daysRemainingInCycle,
                 weeklySpending: summary.weeklySpending,
                 lastWeekSpending: summary.lastWeekSpending,
                 weeklyBudget: summary.weeklyBudget,
@@ -52,6 +55,9 @@ final class DashboardViewModel: ObservableObject {
                 topSpendingCategory: summary.topSpendingCategory,
                 categoryBreakdown: summary.categoryBreakdown,
                 alerts: summary.alerts,
+                isWeeklyBudgetUserConfigured: summary.isWeeklyBudgetUserConfigured,
+                budgetWarningThreshold: summary.budgetWarningThreshold,
+                budgetCriticalThreshold: summary.budgetCriticalThreshold,
                 recentTransactions: summary.recentTransactions,
                 errorMessage: nil
             )
@@ -73,7 +79,7 @@ extension DashboardViewModel {
     var currentBalance: Double { state.currentBalance }
     var afterBillsBalance: Double { state.afterBillsBalance }
     var safeDailySpend: Double { state.safeDailySpend }
-    var daysUntilIncome: Int { state.daysUntilIncome }
+    var daysRemainingInCycle: Int { state.daysRemainingInCycle }
     var weeklySpending: Double { state.weeklySpending }
     var lastWeekSpending: Double { state.lastWeekSpending }
     var weeklyBudget: Double { state.weeklyBudget }
@@ -81,6 +87,9 @@ extension DashboardViewModel {
     var topSpendingCategory: String { state.topSpendingCategory }
     var categoryBreakdown: [DashboardCategoryBreakdown] { state.categoryBreakdown }
     var alerts: [DashboardAlert] { state.alerts }
+    var isWeeklyBudgetUserConfigured: Bool { state.isWeeklyBudgetUserConfigured }
+    var budgetWarningThreshold: Int { state.budgetWarningThreshold }
+    var budgetCriticalThreshold: Int { state.budgetCriticalThreshold }
     var recentTransactions: [DashboardRecentTransaction] { state.recentTransactions }
     var errorMessage: String? { state.errorMessage }
 }

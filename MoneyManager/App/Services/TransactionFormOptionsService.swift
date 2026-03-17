@@ -12,6 +12,7 @@ struct TransactionFormCategoryOption: Identifiable, Equatable {
     let id: UUID
     let name: String
     var icon: String = "questionmark.circle"
+    var type: String = "expense"
 }
 
 struct TransactionFormOptions: Equatable {
@@ -61,7 +62,8 @@ struct TransactionFormOptionsService: TransactionFormOptionsProviding {
                     return nil
                 }
                 let icon = object.value(forKey: "icon") as? String ?? "questionmark.circle"
-                return TransactionFormCategoryOption(id: id, name: name, icon: icon)
+                let type = object.value(forKey: "type") as? String ?? "expense"
+                return TransactionFormCategoryOption(id: id, name: name, icon: icon, type: type)
             }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 

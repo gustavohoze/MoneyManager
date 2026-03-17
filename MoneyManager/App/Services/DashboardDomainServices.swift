@@ -95,30 +95,40 @@ struct DashboardProjection {
     let currentBalance: Double
     let afterBillsBalance: Double
     let safeDailySpend: Double
-    let daysUntilIncome: Int
+    let daysRemainingInCycle: Int
     let weeklyBudget: Double
 }
 
 struct DashboardProjectionCalculator {
     func makeProjection(
+        openingBalance: Double,
         incomeTotal: Double,
         expenseTotal: Double,
         billsLast30Days: Double,
-        daysUntilIncome: Int,
+        daysRemainingInCycle: Int,
         weeklySpending: Double,
-        lastWeekSpending: Double
+        lastWeekSpending: Double,
+        defaultMonthlyBudget: Double
     ) -> DashboardProjection {
-        let currentBalance = incomeTotal - expenseTotal
-        let upcomingBills = billsLast30Days / 30 * Double(daysUntilIncome)
+        let currentBalance = openingBalance + incomeTotal - expenseTotal
+        let upcomingBills = billsLast30Days / 30 * Double(daysRemainingInCycle)
         let afterBillsBalance = currentBalance - upcomingBills
-        let safeDailySpend = max(afterBillsBalance, 0) / Double(max(1, daysUntilIncome))
-        let weeklyBudget = max(weeklySpending, lastWeekSpending, 1) * 1.2
+        let safeDailySpend = max(afterBillsBalance, 0) / Double(max(1, daysRemainingInCycle))
+        let computedWeeklyBudget: Double
+        if defaultMonthlyBudget > 0 {
+            // Convert configured monthly budget to an average weekly budget.
+            computedWeeklyBudget = defaultMonthlyBudget / 4.33
+        } else {
+            let baseline = max(weeklySpending, lastWeekSpending, 1)
+            computedWeeklyBudget = baseline * 1.2
+        }
+        let weeklyBudget = max(computedWeeklyBudget, 1)
 
         return DashboardProjection(
             currentBalance: currentBalance,
             afterBillsBalance: afterBillsBalance,
             safeDailySpend: safeDailySpend,
-            daysUntilIncome: daysUntilIncome,
+            daysRemainingInCycle: daysRemainingInCycle,
             weeklyBudget: weeklyBudget
         )
     }

@@ -226,6 +226,68 @@ struct TransactionListViewModelTests {
         #expect(viewModel.errorMessage == nil)
     }
 
+    @Test("Test: delete keeps selected month when asOf is omitted")
+    func deleteTransaction_withoutAsOf_keepsSelectedMonth() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+
+        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let transactionRepository = CoreDataTransactionRepository(context: context)
+        let categoryRepository = CoreDataCategoryRepository(context: context)
+
+        let paymentMethodID = try accountRepository.ensureDefaultPaymentMethod()
+        let calendar = Calendar(identifier: .iso8601)
+        let referenceDate = fixedNoonReferenceDate()
+        let januaryDate = calendar.date(from: DateComponents(year: 2026, month: 1, day: 10, hour: 12)) ?? referenceDate
+
+        let januaryTransactionID = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 55,
+            currency: "IDR",
+            date: januaryDate,
+            merchantRaw: "January Expense",
+            merchantNormalized: "January Expense",
+            categoryID: nil,
+            source: "manual",
+            note: nil
+        )
+
+        _ = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 10,
+            currency: "IDR",
+            date: referenceDate,
+            merchantRaw: "Current Month",
+            merchantNormalized: "Current Month",
+            categoryID: nil,
+            source: "manual",
+            note: nil
+        )
+
+        let service = TransactionListDataService(
+            transactionRepository: transactionRepository,
+            categoryRepository: categoryRepository,
+            accountRepository: accountRepository
+        )
+        let mutation = MockTransactionMutationService(deleteHandler: { targetID in
+            try transactionRepository.deleteTransaction(id: targetID)
+        })
+        let viewModel = TransactionListViewModel(
+            dataProvider: service,
+            mutationService: mutation,
+            optionsProvider: MockTransactionFormOptionsProvider()
+        )
+
+        viewModel.load(asOf: referenceDate)
+        let januaryMonthStart = calendar.date(from: DateComponents(year: 2026, month: 1, day: 1)) ?? januaryDate
+        viewModel.selectMonth(januaryMonthStart)
+        #expect(viewModel.presentation.monthSummary.monthTitle == "January 2026")
+
+        viewModel.deleteTransaction(id: januaryTransactionID)
+
+        #expect(viewModel.presentation.monthSummary.monthTitle == "January 2026")
+    }
+
     @Test("Test: selecting category filters timeline")
     func selectCategory_filtersMonthAndDayPresentation() throws {
         let controller = PersistenceController(inMemory: true)
@@ -389,6 +451,105 @@ struct TransactionListViewModelTests {
         viewModel.saveEdit(draft: updated, asOf: referenceDate)
 
         #expect(viewModel.editState == nil)
+        #expect(viewModel.actionMessage == "Transaction updated.")
+    }
+
+    @Test("Test: edit keeps selected month when asOf is omitted")
+    func saveEdit_withoutAsOf_keepsSelectedMonth() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+
+        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let categoryRepository = CoreDataCategoryRepository(context: context)
+        let transactionRepository = CoreDataTransactionRepository(context: context)
+
+        let paymentMethodID = try accountRepository.ensureDefaultPaymentMethod()
+        let categoryID = try categoryRepository.upsertCategory(name: "Food", icon: "fork.knife", type: "expense")
+        let calendar = Calendar(identifier: .iso8601)
+        let referenceDate = fixedNoonReferenceDate()
+        let januaryDate = calendar.date(from: DateComponents(year: 2026, month: 1, day: 8, hour: 12)) ?? referenceDate
+
+        let januaryTransactionID = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 42,
+            currency: "IDR",
+            date: januaryDate,
+            merchantRaw: "Before January Edit",
+            merchantNormalized: "Before January Edit",
+            categoryID: categoryID,
+            source: "manual",
+            note: nil
+        )
+
+        _ = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 25,
+            currency: "IDR",
+            date: referenceDate,
+            merchantRaw: "Current Month",
+            merchantNormalized: "Current Month",
+            categoryID: categoryID,
+            source: "manual",
+            note: nil
+        )
+
+        let service = TransactionListDataService(
+            transactionRepository: transactionRepository,
+            categoryRepository: categoryRepository,
+            accountRepository: accountRepository
+        )
+        let options = MockTransactionFormOptionsProvider(
+            options: TransactionFormOptions(
+                accounts: [TransactionFormAccountOption(id: paymentMethodID, name: "Cash")],
+                categories: [TransactionFormCategoryOption(id: categoryID, name: "Food")]
+            )
+        )
+        let mutation = MockTransactionMutationService(
+            loadHandler: { id in
+                TransactionEditDraft(
+                    id: id,
+                    paymentMethodID: paymentMethodID,
+                    amount: 42,
+                    currency: "IDR",
+                    date: januaryDate,
+                    merchantRaw: "Before January Edit",
+                    categoryID: categoryID,
+                    note: nil
+                )
+            },
+            updateHandler: { draft in
+                try transactionRepository.updateTransaction(
+                    id: draft.id,
+                    paymentMethodID: draft.paymentMethodID,
+                    amount: draft.amount,
+                    currency: draft.currency,
+                    date: draft.date,
+                    merchantRaw: draft.merchantRaw,
+                    merchantNormalized: draft.merchantRaw,
+                    categoryID: draft.categoryID,
+                    note: draft.note
+                )
+            },
+            deleteHandler: { _ in }
+        )
+
+        let viewModel = TransactionListViewModel(
+            dataProvider: service,
+            mutationService: mutation,
+            optionsProvider: options
+        )
+
+        viewModel.load(asOf: referenceDate)
+        let januaryMonthStart = calendar.date(from: DateComponents(year: 2026, month: 1, day: 1)) ?? januaryDate
+        viewModel.selectMonth(januaryMonthStart)
+        #expect(viewModel.presentation.monthSummary.monthTitle == "January 2026")
+
+        viewModel.beginEdit(id: januaryTransactionID)
+        var updated = try #require(viewModel.editState).draft
+        updated.merchantRaw = "After January Edit"
+        viewModel.saveEdit(draft: updated)
+
+        #expect(viewModel.presentation.monthSummary.monthTitle == "January 2026")
         #expect(viewModel.actionMessage == "Transaction updated.")
     }
 }
