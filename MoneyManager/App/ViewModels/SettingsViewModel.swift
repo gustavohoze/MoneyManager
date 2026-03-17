@@ -131,6 +131,16 @@ final class SettingsViewModel: ObservableObject {
             actionMessage = nil
         }
     }
+
+    // MARK: - Layout Helpers (for Views)
+
+    var paymentMethodsDescription: String {
+        String(localized: "\(paymentMethods.count) payment methods")
+    }
+
+    var categoriesDescription: String {
+        String(localized: "\(categories.count) categories")
+    }
 }
 
 private struct NoOpTransactionFormOptionsProvider: TransactionFormOptionsProviding {

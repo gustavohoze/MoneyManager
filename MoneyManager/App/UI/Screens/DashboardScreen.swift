@@ -15,44 +15,13 @@ struct DashboardScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    DashboardFinancialStateCard(viewModel: viewModel, palette: palette)
-
-                    // Swipeable insight cards — one section at a time
-                    TabView(selection: $insightPage) {
-                        DashboardWeeklyTrendCard(
-                            viewModel: viewModel,
-                            selectedWeeklyDayIndex: $selectedWeeklyDayIndex,
-                            insightPage: $insightPage,
-                            palette: palette
-                        )
-                            .padding(.horizontal, 4)
-                            .tag(0)
-
-                        DashboardCategoryCard(
-                            viewModel: viewModel,
-                            insightPage: $insightPage,
-                            palette: palette
-                        )
-                            .padding(.horizontal, 4)
-                            .tag(1)
-                    }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
-                    .frame(height: 252)
-                    .frame(maxWidth: .infinity)
-
-                    DashboardRecentTransactionsCard(
-                        viewModel: viewModel,
-                        palette: palette,
-                        onSelectTransaction: onSelectTransaction
-                    ).frame(maxWidth: .infinity)
-
-                    if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                            .financeCard(palette: palette)
-                    }
-                }
+                DashboardMainContent(
+                    viewModel: viewModel,
+                    selectedWeeklyDayIndex: $selectedWeeklyDayIndex,
+                    insightPage: $insightPage,
+                    onSelectTransaction: onSelectTransaction,
+                    palette: palette
+                )
                 .padding(16)
             }
             .background(FinanceTheme.pageBackground(for: colorScheme))

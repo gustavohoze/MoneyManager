@@ -59,6 +59,14 @@ final class DashboardViewModel: ObservableObject {
             state = DashboardViewState(errorMessage: error.localizedDescription)
         }
     }
+
+    func defaultWeeklyDayIndex() -> Int {
+        // Default to today (or appropriate day in week)
+        let calendar = Calendar.current
+        let today = Date()
+        let weekday = calendar.component(.weekday, from: today)
+        return max(0, weekday - 2) // Adjust for 0-based indexing
+    }
 }
 
 extension DashboardViewModel {

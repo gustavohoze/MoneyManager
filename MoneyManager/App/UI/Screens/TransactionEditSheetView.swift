@@ -17,77 +17,39 @@ struct TransactionEditSheetView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "Amount"))
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(palette.secondaryInk)
-                        TextField(String(localized: "Amount"), text: $viewModel.editAmountText)
-                            .keyboardType(.decimalPad)
-                    }
-                    .financeCard(palette: palette)
+                    TransactionEditAmountField(
+                        value: $viewModel.editAmountText,
+                        palette: palette
+                    )
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "Merchant"))
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(palette.secondaryInk)
-                        TextField(String(localized: "Merchant"), text: $viewModel.editMerchantRaw)
-                    }
-                    .financeCard(palette: palette)
+                    TransactionEditMerchantField(
+                        value: $viewModel.editMerchantRaw,
+                        palette: palette
+                    )
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "Category"))
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(palette.secondaryInk)
-                        Picker(String(localized: "Category"), selection: $viewModel.editSelectedCategoryID) {
-                            ForEach(state.options.categories) { option in
-                                Text(option.name).tag(Optional(option.id))
-                            }
-                        }
-                    }
-                    .financeCard(palette: palette)
+                    TransactionEditCategoryField(
+                        selectedID: $viewModel.editSelectedCategoryID,
+                        options: state.options.categories,
+                        palette: palette
+                    )
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "Payment Method"))
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(palette.secondaryInk)
-                        Picker(String(localized: "Payment Method"), selection: $viewModel.editSelectedAccountID) {
-                            ForEach(state.options.accounts) { option in
-                                Text(option.name).tag(Optional(option.id))
-                            }
-                        }
-                    }
-                    .financeCard(palette: palette)
+                    TransactionEditAccountField(
+                        selectedID: $viewModel.editSelectedAccountID,
+                        options: state.options.accounts,
+                        palette: palette
+                    )
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "Date"))
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(palette.secondaryInk)
-                        DatePicker(String(localized: "Transaction Date"), selection: $viewModel.editDate, displayedComponents: .date)
-                            .labelsHidden()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .financeCard(palette: palette)
+                    TransactionEditDateField(
+                        value: $viewModel.editDate,
+                        palette: palette
+                    )
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "Note"))
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(palette.secondaryInk)
-                        TextField(String(localized: "Optional Note"), text: $viewModel.editNote)
-                    }
-                    .financeCard(palette: palette)
+                    TransactionEditNoteField(
+                        value: $viewModel.editNote,
+                        palette: palette
+                    )
 
-                    Button(role: .destructive) {
-                        onDelete()
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Text("Delete Transaction")
-                            Spacer()
-                        }
-                    }
-                    .padding(12)
-                    .background(Color.red.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    TransactionEditDeleteButton(action: onDelete)
                 }
                 .padding(16)
             }
