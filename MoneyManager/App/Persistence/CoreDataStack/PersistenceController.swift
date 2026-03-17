@@ -2,7 +2,7 @@ import CoreData
 import Foundation
 import OSLog
 
-struct PersistenceController {
+final class PersistenceController {
     enum StoreMode: String {
         case cloudKitSQLite
         case localSQLite
@@ -16,10 +16,16 @@ struct PersistenceController {
     let storeLoadErrorDescription: String?
     let isUsingFallbackStore: Bool
     let activeStoreMode: StoreMode
+    static var initializationCount = 0
 
     init(inMemory: Bool = false) {
-        let canUseCloudKit = CloudKitConstants.isSyncEnabled && Self.hasLikelyICloudAccount()
+        // In-memory stores are used for tests/previews and must never register CloudKit schedulers.
+        let canUseCloudKit = !inMemory && CloudKitConstants.isSyncEnabledForCurrentRuntime && Self.hasLikelyICloudAccount()
 
+        Self.initializationCount += 1
+        #if DEBUG
+        Self.logger.debug("PersistenceController init count: \(Self.initializationCount, privacy: .public)")
+        #endif
         let primaryAttempt = Self.makeContainer(
             inMemory: inMemory,
             enableCloudKit: canUseCloudKit,
@@ -30,7 +36,11 @@ struct PersistenceController {
             container = primaryAttempt.container
             storeLoadErrorDescription = nil
             isUsingFallbackStore = false
-            activeStoreMode = canUseCloudKit ? .cloudKitSQLite : .localSQLite
+            if inMemory {
+                activeStoreMode = .inMemory
+            } else {
+                activeStoreMode = canUseCloudKit ? .cloudKitSQLite : .localSQLite
+            }
         } else {
             let sqliteFallbackAttempt = Self.makeContainer(
                 inMemory: false,

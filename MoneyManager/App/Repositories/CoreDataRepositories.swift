@@ -18,7 +18,7 @@ enum CoreDataRepositoryError: LocalizedError {
     }
 }
 
-struct CoreDataAccountRepository: AccountRepository {
+struct CoreDataPaymentMethodRepository: PaymentMethodRepository {
     private static let allowedTypes = Set(["cash", "bank", "wallet", "credit"])
 
     private let context: NSManagedObjectContext
@@ -27,11 +27,11 @@ struct CoreDataAccountRepository: AccountRepository {
         self.context = context
     }
 
-    func ensureDefaultAccount() throws -> UUID {
-        try upsertAccount(name: "Cash", type: "cash", currency: "IDR")
+    func ensureDefaultPaymentMethod() throws -> UUID {
+        try upsertPaymentMethod(name: "Cash", type: "cash", currency: "IDR")
     }
 
-    func upsertAccount(name: String, type: String, currency: String) throws -> UUID {
+    func upsertPaymentMethod(name: String, type: String, currency: String) throws -> UUID {
         let trimmedName = normalizedName(name)
         let normalizedType = type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let normalizedCurrency = currency.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
@@ -44,7 +44,7 @@ struct CoreDataAccountRepository: AccountRepository {
             throw CoreDataRepositoryError.invalidValue(field: "account.type", value: type)
         }
 
-        let request = NSFetchRequest<NSManagedObject>(entityName: "Account")
+        let request = NSFetchRequest<NSManagedObject>(entityName: "PaymentMethod")
         request.predicate = NSPredicate(format: "name =[c] %@", trimmedName)
         request.fetchLimit = 1
 
@@ -56,7 +56,7 @@ struct CoreDataAccountRepository: AccountRepository {
             account = existing
             id = existingID
         } else {
-            account = NSManagedObject(entity: try entity(named: "Account"), insertInto: context)
+            account = NSManagedObject(entity: try entity(named: "PaymentMethod"), insertInto: context)
             id = UUID()
             account.setValue(id, forKey: "id")
             account.setValue(Date(), forKey: "createdAt")
@@ -70,9 +70,59 @@ struct CoreDataAccountRepository: AccountRepository {
         return id
     }
 
-    func fetchAccounts() throws -> [NSManagedObject] {
-        let request = NSFetchRequest<NSManagedObject>(entityName: "Account")
+    func fetchPaymentMethods() throws -> [NSManagedObject] {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "PaymentMethod")
         return try context.fetch(request)
+    }
+
+    func fetchPaymentMethod(id: UUID) throws -> NSManagedObject {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "PaymentMethod")
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let account = try context.fetch(request).first else {
+            throw CoreDataRepositoryError.missingReference(entity: "PaymentMethod", id: id)
+        }
+
+        return account
+    }
+
+    func updatePaymentMethod(id: UUID, name: String, type: String, currency: String) throws {
+        let trimmedName = normalizedName(name)
+        let normalizedType = type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalizedCurrency = currency.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+
+        guard !trimmedName.isEmpty else {
+            throw CoreDataRepositoryError.invalidValue(field: "account.name", value: name)
+        }
+
+        guard Self.allowedTypes.contains(normalizedType) else {
+            throw CoreDataRepositoryError.invalidValue(field: "account.type", value: type)
+        }
+
+        let duplicateNameRequest = NSFetchRequest<NSManagedObject>(entityName: "PaymentMethod")
+        duplicateNameRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            NSPredicate(format: "name =[c] %@", trimmedName),
+            NSPredicate(format: "id != %@", id as CVarArg)
+        ])
+        duplicateNameRequest.fetchLimit = 1
+
+        if try !context.fetch(duplicateNameRequest).isEmpty {
+            throw CoreDataRepositoryError.invalidValue(field: "account.name", value: name)
+        }
+
+        let account = try fetchPaymentMethod(id: id)
+        account.setValue(trimmedName, forKey: "name")
+        account.setValue(normalizedType, forKey: "type")
+        account.setValue(normalizedCurrency, forKey: "currency")
+
+        try context.save()
+    }
+
+    func deletePaymentMethod(id: UUID) throws {
+        let account = try fetchPaymentMethod(id: id)
+        context.delete(account)
+        try context.save()
     }
 
     private func entity(named name: String) throws -> NSEntityDescription {
@@ -99,9 +149,9 @@ struct CoreDataTransactionRepository: TransactionRepository {
         self.context = context
     }
 
-    func createExampleTransaction(accountID: UUID) throws -> UUID {
+    func createExampleTransaction(paymentMethodID: UUID) throws -> UUID {
         try createTransaction(
-            accountID: accountID,
+            paymentMethodID: paymentMethodID,
             amount: 45000.0,
             currency: "IDR",
             date: Date(),
@@ -114,7 +164,7 @@ struct CoreDataTransactionRepository: TransactionRepository {
     }
 
     func createTransaction(
-        accountID: UUID,
+        paymentMethodID: UUID,
         amount: Double,
         currency: String,
         date: Date,
@@ -135,8 +185,8 @@ struct CoreDataTransactionRepository: TransactionRepository {
             throw CoreDataRepositoryError.invalidValue(field: "transaction.source", value: source)
         }
 
-        guard try entityExists(named: "Account", id: accountID) else {
-            throw CoreDataRepositoryError.missingReference(entity: "Account", id: accountID)
+        guard try entityExists(named: "PaymentMethod", id: paymentMethodID) else {
+            throw CoreDataRepositoryError.missingReference(entity: "PaymentMethod", id: paymentMethodID)
         }
 
         if let categoryID,
@@ -148,7 +198,7 @@ struct CoreDataTransactionRepository: TransactionRepository {
         let id = UUID()
 
         transaction.setValue(id, forKey: "id")
-        transaction.setValue(accountID, forKey: "accountID")
+        transaction.setValue(paymentMethodID, forKey: "paymentMethodID")
         transaction.setValue(amount, forKey: "amount")
         transaction.setValue(normalizedCurrency, forKey: "currency")
         transaction.setValue(date, forKey: "date")
@@ -165,22 +215,82 @@ struct CoreDataTransactionRepository: TransactionRepository {
 
     func fetchTransactions() throws -> [NSManagedObject] {
         let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
-        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "date", ascending: false),
+            NSSortDescriptor(key: "createdAt", ascending: false)
+        ]
         return try context.fetch(request)
     }
 
-    func fetchTransactions(accountID: UUID) throws -> [NSManagedObject] {
+    func fetchTransaction(id: UUID) throws -> NSManagedObject {
         let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
-        request.predicate = NSPredicate(format: "accountID == %@", accountID as CVarArg)
-        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let transaction = try context.fetch(request).first else {
+            throw CoreDataRepositoryError.missingReference(entity: "Transaction", id: id)
+        }
+
+        return transaction
+    }
+
+    func fetchTransactions(paymentMethodID: UUID) throws -> [NSManagedObject] {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+        request.predicate = NSPredicate(format: "paymentMethodID == %@", paymentMethodID as CVarArg)
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "date", ascending: false),
+            NSSortDescriptor(key: "createdAt", ascending: false)
+        ]
         return try context.fetch(request)
     }
 
     func fetchTransactions(from startDate: Date, to endDate: Date) throws -> [NSManagedObject] {
         let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
         request.predicate = NSPredicate(format: "date >= %@ AND date <= %@", startDate as NSDate, endDate as NSDate)
-        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+        request.sortDescriptors = [
+            NSSortDescriptor(key: "date", ascending: false),
+            NSSortDescriptor(key: "createdAt", ascending: false)
+        ]
         return try context.fetch(request)
+    }
+
+    func updateTransaction(
+        id: UUID,
+        paymentMethodID: UUID,
+        amount: Double,
+        currency: String,
+        date: Date,
+        merchantRaw: String,
+        merchantNormalized: String?,
+        categoryID: UUID?,
+        note: String?
+    ) throws {
+        guard amount > 0 else {
+            throw CoreDataRepositoryError.invalidValue(field: "transaction.amount", value: "\(amount)")
+        }
+
+        guard try entityExists(named: "PaymentMethod", id: paymentMethodID) else {
+            throw CoreDataRepositoryError.missingReference(entity: "PaymentMethod", id: paymentMethodID)
+        }
+
+        if let categoryID,
+           !(try entityExists(named: "Category", id: categoryID)) {
+            throw CoreDataRepositoryError.missingReference(entity: "Category", id: categoryID)
+        }
+
+        let transaction = try fetchTransaction(id: id)
+        let normalizedCurrency = currency.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+
+        transaction.setValue(paymentMethodID, forKey: "paymentMethodID")
+        transaction.setValue(amount, forKey: "amount")
+        transaction.setValue(normalizedCurrency, forKey: "currency")
+        transaction.setValue(date, forKey: "date")
+        transaction.setValue(merchantRaw, forKey: "merchantRaw")
+        transaction.setValue(merchantNormalized, forKey: "merchantNormalized")
+        transaction.setValue(categoryID, forKey: "categoryID")
+        transaction.setValue(note, forKey: "note")
+
+        try context.save()
     }
 
     func deleteTransaction(id: UUID) throws {
@@ -197,7 +307,7 @@ struct CoreDataTransactionRepository: TransactionRepository {
     }
 
     func detectDuplicate(
-        accountID: UUID,
+        paymentMethodID: UUID,
         amount: Double,
         date: Date,
         merchantNormalized: String?
@@ -209,7 +319,7 @@ struct CoreDataTransactionRepository: TransactionRepository {
         }
 
         var predicates: [NSPredicate] = [
-            NSPredicate(format: "accountID == %@", accountID as CVarArg),
+            NSPredicate(format: "paymentMethodID == %@", paymentMethodID as CVarArg),
             NSPredicate(format: "amount == %f", amount),
             NSPredicate(format: "date >= %@ AND date < %@", dayStart as NSDate, nextDay as NSDate)
         ]
@@ -224,6 +334,30 @@ struct CoreDataTransactionRepository: TransactionRepository {
         request.fetchLimit = 1
 
         return try !context.fetch(request).isEmpty
+    }
+
+    func fetchDistinctMerchantRawNames(prefix: String, limit: Int) throws -> [String] {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+        if !prefix.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            request.predicate = NSPredicate(format: "merchantRaw BEGINSWITH[cd] %@", prefix)
+        } else {
+            request.predicate = NSPredicate(format: "merchantRaw != nil AND merchantRaw != ''")
+        }
+        let transactions = try context.fetch(request)
+        var seen = Set<String>()
+        var results: [String] = []
+        for tx in transactions {
+            guard let name = tx.value(forKey: "merchantRaw") as? String else { continue }
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            let key = trimmed.lowercased()
+            if seen.insert(key).inserted {
+                results.append(trimmed)
+                if results.count >= limit { break }
+            }
+        }
+        return results
     }
 
     private func entity(named name: String) throws -> NSEntityDescription {
@@ -302,6 +436,9 @@ struct CoreDataMerchantRepository: MerchantRepository {
         merchant.setValue(brand, forKey: "brand")
         merchant.setValue(category, forKey: "category")
         merchant.setValue(confidence, forKey: "confidence")
+        let usageCount = ((merchant.value(forKey: "usageCount") as? NSNumber)?.intValue) ?? 0
+        merchant.setValue(usageCount + 1, forKey: "usageCount")
+        merchant.setValue(Date(), forKey: "lastUsedDate")
 
         try context.save()
         return id

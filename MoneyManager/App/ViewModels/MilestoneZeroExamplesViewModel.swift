@@ -6,7 +6,7 @@ import Combine
 final class MilestoneZeroExamplesViewModel: ObservableObject {
 
     @Published var persistenceOutput = String(localized: "Tap to inspect Core Data and CloudKit setup.")
-    @Published var entityOutput = String(localized: "Tap to create sample Account, Transaction, Merchant, and Category records.")
+    @Published var entityOutput = String(localized: "Tap to create sample PaymentMethod, Transaction, Merchant, and Category records.")
     @Published var repositoryOutput = String(localized: "Tap to run repository fetch examples.")
     @Published var merchantResolverOutput = String(localized: "Tap to resolve a noisy merchant name.")
     @Published var analyticsOutput = String(localized: "Tap to fire example analytics events.")
@@ -44,7 +44,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
     private var configuredContextIdentifier: ObjectIdentifier?
     private var context: NSManagedObjectContext?
 
-    private var accountRepository: AccountRepository?
+    private var accountRepository: PaymentMethodRepository?
     private var transactionRepository: TransactionRepository?
     private var merchantRepository: MerchantRepository?
     private var categoryRepository: CategoryRepository?
@@ -72,7 +72,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
 
         self.context = context
 
-        accountRepository = CoreDataAccountRepository(context: context)
+        accountRepository = CoreDataPaymentMethodRepository(context: context)
         transactionRepository = CoreDataTransactionRepository(context: context)
         merchantRepository = CoreDataMerchantRepository(context: context)
         categoryRepository = CoreDataCategoryRepository(context: context)
@@ -103,13 +103,13 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
         }
         
         do {
-            let accountID = try accountRepository.ensureDefaultAccount()
-            let transactionID = try transactionRepository.createExampleTransaction(accountID: accountID)
+            let paymentMethodID = try accountRepository.ensureDefaultPaymentMethod()
+            let transactionID = try transactionRepository.createExampleTransaction(paymentMethodID: paymentMethodID)
             let merchantID = try merchantRepository.upsertSampleMerchant(rawName: "TRIJAYA PRATAMA TBK")
             let insertedCategories = try categoryRepository.seedInitialCategories()
 
             entityOutput = """
-            Account sample ID: \(accountID.uuidString)
+            PaymentMethod sample ID: \(paymentMethodID.uuidString)
             Transaction sample ID: \(transactionID.uuidString)
             Merchant sample ID: \(merchantID.uuidString)
             Categories inserted in this run: \(insertedCategories)
@@ -140,7 +140,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
         let trimmedCategoryName = customCategoryName.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedAccountName.isEmpty else {
-            entityOutput = String(localized: "Account name is required.")
+            entityOutput = String(localized: "PaymentMethod name is required.")
             return
         }
 
@@ -165,7 +165,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
         }
 
         do {
-            let accountID = try accountRepository.upsertAccount(
+            let paymentMethodID = try accountRepository.upsertPaymentMethod(
                 name: trimmedAccountName,
                 type: customAccountType,
                 currency: trimmedCurrency
@@ -191,7 +191,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
             )
 
             let transactionID = try transactionRepository.createTransaction(
-                accountID: accountID,
+                paymentMethodID: paymentMethodID,
                 amount: amount,
                 currency: trimmedCurrency,
                 date: Date(),
@@ -228,7 +228,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
             return
         }
         do {
-            let accounts = try accountRepository.fetchAccounts().count
+            let accounts = try accountRepository.fetchPaymentMethods().count
             let transactions = try transactionRepository.fetchTransactions().count
             let merchants = try merchantRepository.fetchMerchants().count
             let categories = try categoryRepository.fetchCategories().count
@@ -332,7 +332,7 @@ final class MilestoneZeroExamplesViewModel: ObservableObject {
         }
 
         do {
-            let accounts = try accountRepository.fetchAccounts()
+            let accounts = try accountRepository.fetchPaymentMethods()
             let transactions = try transactionRepository.fetchTransactions()
             let merchants = try merchantRepository.fetchMerchants()
             let categories = try categoryRepository.fetchCategories()

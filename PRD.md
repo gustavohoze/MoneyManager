@@ -1158,7 +1158,7 @@ Important metric:
 fast_capture_usage_rate
 ```
 
-If this is low, logging is still too slow.
+If this is low, logging is still too slow. 
 
 ---
 

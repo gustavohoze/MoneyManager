@@ -15,7 +15,7 @@ struct RepositoryTests {
 
         #expect(throws: CoreDataRepositoryError.self) {
             _ = try repo.createTransaction(
-                accountID: UUID(),
+                paymentMethodID: UUID(),
                 amount: 20,
                 currency: "USD",
                 date: Date(),
@@ -35,13 +35,13 @@ struct RepositoryTests {
         // When: createTransaction is called with a negative amount.
         // Then: The repository throws a validation error.
         let controller = PersistenceController(inMemory: true)
-        let accountRepo = CoreDataAccountRepository(context: controller.container.viewContext)
+        let accountRepo = CoreDataPaymentMethodRepository(context: controller.container.viewContext)
         let transactionRepo = CoreDataTransactionRepository(context: controller.container.viewContext)
-        let accountID = try accountRepo.ensureDefaultAccount()
+        let paymentMethodID = try accountRepo.ensureDefaultPaymentMethod()
 
         #expect(throws: CoreDataRepositoryError.self) {
             _ = try transactionRepo.createTransaction(
-                accountID: accountID,
+                paymentMethodID: paymentMethodID,
                 amount: -10,
                 currency: "USD",
                 date: Date(),
@@ -96,13 +96,13 @@ struct RepositoryTests {
         // When: createTransaction is called with an unsupported source.
         // Then: The repository throws a validation error.
         let controller = PersistenceController(inMemory: true)
-        let accountRepo = CoreDataAccountRepository(context: controller.container.viewContext)
+        let accountRepo = CoreDataPaymentMethodRepository(context: controller.container.viewContext)
         let repo = CoreDataTransactionRepository(context: controller.container.viewContext)
-        let accountID = try accountRepo.ensureDefaultAccount()
+        let paymentMethodID = try accountRepo.ensureDefaultPaymentMethod()
 
         #expect(throws: CoreDataRepositoryError.self) {
             _ = try repo.createTransaction(
-                accountID: accountID,
+                paymentMethodID: paymentMethodID,
                 amount: 10,
                 currency: "USD",
                 date: Date(),
@@ -115,25 +115,25 @@ struct RepositoryTests {
         }
     }
 
-    @Test("Test: fetchTransactions(accountID)")
-    func fetchTransactions_accountID_returnsOnlyMatchingAccount() throws {
+    @Test("Test: fetchTransactions(paymentMethodID)")
+    func fetchTransactions_paymentMethodID_returnsOnlyMatchingAccount() throws {
         // Objective: Return only transactions for the requested account.
-        // Given: Account A has two transactions and Account B has one.
-        // When: fetchTransactions(accountID: accountA) is executed.
+        // Given: PaymentMethod A has two transactions and PaymentMethod B has one.
+        // When: fetchTransactions(paymentMethodID: accountA) is executed.
         // Then: Exactly two transactions are returned.
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
-        let accountRepo = CoreDataAccountRepository(context: context)
+        let accountRepo = CoreDataPaymentMethodRepository(context: context)
         let transactionRepo = CoreDataTransactionRepository(context: context)
 
-        let accountA = try accountRepo.upsertAccount(name: "A", type: "bank", currency: "USD")
-        let accountB = try accountRepo.upsertAccount(name: "B", type: "bank", currency: "USD")
+        let accountA = try accountRepo.upsertPaymentMethod(name: "A", type: "bank", currency: "USD")
+        let accountB = try accountRepo.upsertPaymentMethod(name: "B", type: "bank", currency: "USD")
 
-        _ = try transactionRepo.createTransaction(accountID: accountA, amount: 10, currency: "USD", date: Date(), merchantRaw: "Cafe", merchantNormalized: "Cafe", categoryID: nil, source: "manual", note: nil)
-        _ = try transactionRepo.createTransaction(accountID: accountA, amount: 20, currency: "USD", date: Date(), merchantRaw: "Store", merchantNormalized: "Store", categoryID: nil, source: "manual", note: nil)
-        _ = try transactionRepo.createTransaction(accountID: accountB, amount: 30, currency: "USD", date: Date(), merchantRaw: "Bus", merchantNormalized: "Bus", categoryID: nil, source: "manual", note: nil)
+        _ = try transactionRepo.createTransaction(paymentMethodID: accountA, amount: 10, currency: "USD", date: Date(), merchantRaw: "Cafe", merchantNormalized: "Cafe", categoryID: nil, source: "manual", note: nil)
+        _ = try transactionRepo.createTransaction(paymentMethodID: accountA, amount: 20, currency: "USD", date: Date(), merchantRaw: "Store", merchantNormalized: "Store", categoryID: nil, source: "manual", note: nil)
+        _ = try transactionRepo.createTransaction(paymentMethodID: accountB, amount: 30, currency: "USD", date: Date(), merchantRaw: "Bus", merchantNormalized: "Bus", categoryID: nil, source: "manual", note: nil)
 
-        let forA = try transactionRepo.fetchTransactions(accountID: accountA)
+        let forA = try transactionRepo.fetchTransactions(paymentMethodID: accountA)
         #expect(forA.count == 2)
     }
 
@@ -145,17 +145,17 @@ struct RepositoryTests {
         // Then: Only the in-range transaction is returned.
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
-        let accountRepo = CoreDataAccountRepository(context: context)
+        let accountRepo = CoreDataPaymentMethodRepository(context: context)
         let transactionRepo = CoreDataTransactionRepository(context: context)
-        let account = try accountRepo.ensureDefaultAccount()
+        let account = try accountRepo.ensureDefaultPaymentMethod()
 
         let calendar = Calendar(identifier: .iso8601)
         let now = Date()
         let within = now
         let outside = calendar.date(byAdding: .day, value: -40, to: now)!
 
-        _ = try transactionRepo.createTransaction(accountID: account, amount: 10, currency: "USD", date: within, merchantRaw: "Cafe", merchantNormalized: "Cafe", categoryID: nil, source: "manual", note: nil)
-        _ = try transactionRepo.createTransaction(accountID: account, amount: 10, currency: "USD", date: outside, merchantRaw: "Old", merchantNormalized: "Old", categoryID: nil, source: "manual", note: nil)
+        _ = try transactionRepo.createTransaction(paymentMethodID: account, amount: 10, currency: "USD", date: within, merchantRaw: "Cafe", merchantNormalized: "Cafe", categoryID: nil, source: "manual", note: nil)
+        _ = try transactionRepo.createTransaction(paymentMethodID: account, amount: 10, currency: "USD", date: outside, merchantRaw: "Old", merchantNormalized: "Old", categoryID: nil, source: "manual", note: nil)
 
         let start = calendar.date(byAdding: .day, value: -7, to: now)!
         let end = now
@@ -171,11 +171,11 @@ struct RepositoryTests {
         // Then: No transaction remains.
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
-        let accountRepo = CoreDataAccountRepository(context: context)
+        let accountRepo = CoreDataPaymentMethodRepository(context: context)
         let transactionRepo = CoreDataTransactionRepository(context: context)
-        let account = try accountRepo.ensureDefaultAccount()
+        let account = try accountRepo.ensureDefaultPaymentMethod()
 
-        let id = try transactionRepo.createTransaction(accountID: account, amount: 99, currency: "USD", date: Date(), merchantRaw: "Cafe", merchantNormalized: "Cafe", categoryID: nil, source: "manual", note: nil)
+        let id = try transactionRepo.createTransaction(paymentMethodID: account, amount: 99, currency: "USD", date: Date(), merchantRaw: "Cafe", merchantNormalized: "Cafe", categoryID: nil, source: "manual", note: nil)
         try transactionRepo.deleteTransaction(id: id)
 
         let all = try transactionRepo.fetchTransactions()
@@ -190,14 +190,14 @@ struct RepositoryTests {
         // Then: Duplicate detection returns true.
         let controller = PersistenceController(inMemory: true)
         let context = controller.container.viewContext
-        let accountRepo = CoreDataAccountRepository(context: context)
+        let accountRepo = CoreDataPaymentMethodRepository(context: context)
         let transactionRepo = CoreDataTransactionRepository(context: context)
-        let account = try accountRepo.ensureDefaultAccount()
+        let account = try accountRepo.ensureDefaultPaymentMethod()
 
         let today = Date()
-        _ = try transactionRepo.createTransaction(accountID: account, amount: 45_000, currency: "IDR", date: today, merchantRaw: "Starbucks", merchantNormalized: "Starbucks", categoryID: nil, source: "manual", note: nil)
+        _ = try transactionRepo.createTransaction(paymentMethodID: account, amount: 45_000, currency: "IDR", date: today, merchantRaw: "Starbucks", merchantNormalized: "Starbucks", categoryID: nil, source: "manual", note: nil)
 
-        let isDuplicate = try transactionRepo.detectDuplicate(accountID: account, amount: 45_000, date: today, merchantNormalized: "Starbucks")
+        let isDuplicate = try transactionRepo.detectDuplicate(paymentMethodID: account, amount: 45_000, date: today, merchantNormalized: "Starbucks")
         #expect(isDuplicate)
     }
 }

@@ -8,21 +8,21 @@ struct CoreDataModelTests {
         // Objective: Verify Milestone 0 model defines exactly the required entities.
         // Given: A freshly generated managed object model.
         // When: Entity names are collected.
-        // Then: Names exactly match Account, Transaction, Merchant, and Category.
+        // Then: Names exactly match PaymentMethod, Transaction, Merchant, and Category.
         let model = CoreDataModelFactory.makeModel()
         let names = Set(model.entities.compactMap(\.name))
 
-        #expect(names == ["Account", "Transaction", "Merchant", "Category"])
+        #expect(names == ["PaymentMethod", "Transaction", "Merchant", "Category"])
     }
 
-    @Test("Test: Field validation - Account")
+    @Test("Test: Field validation - PaymentMethod")
     func fieldValidation_account_matchesExpectedFields() {
-        // Objective: Validate Account schema shape and attribute types.
-        // Given: The Account entity from the generated model.
+        // Objective: Validate PaymentMethod schema shape and attribute types.
+        // Given: The PaymentMethod entity from the generated model.
         // When: Attribute count and type metadata are inspected.
-        // Then: Account has 5 expected fields with correct types.
+        // Then: PaymentMethod has 5 expected fields with correct types.
         let model = CoreDataModelFactory.makeModel()
-        let account = model.entitiesByName["Account"]
+        let account = model.entitiesByName["PaymentMethod"]
 
         #expect(account != nil)
         #expect(account?.attributesByName.count == 5)
@@ -59,5 +59,7 @@ struct CoreDataModelTests {
         let merchant = model.entitiesByName["Merchant"]
 
         #expect(merchant?.attributesByName["confidence"]?.attributeType == .doubleAttributeType)
+        #expect(merchant?.attributesByName["usageCount"]?.attributeType == .integer64AttributeType)
+        #expect(merchant?.attributesByName["lastUsedDate"]?.attributeType == .dateAttributeType)
     }
 }

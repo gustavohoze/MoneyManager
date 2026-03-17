@@ -6,4 +6,8 @@ enum CloudKitConstants {
 
     // Enable sync once the target entitlements and CloudKit container are configured.
     static let isSyncEnabled = true
+
+    static var isSyncEnabledForCurrentRuntime: Bool {
+        isSyncEnabled
+    }
 }

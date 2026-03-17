@@ -42,7 +42,7 @@ struct ExportServiceTests {
         let object = NSManagedObject(entity: entity, insertInto: nil)
 
         object.setValue(UUID(), forKey: "id")
-        object.setValue(UUID(), forKey: "accountID")
+        object.setValue(UUID(), forKey: "paymentMethodID")
         object.setValue(15.5, forKey: "amount")
         object.setValue("USD", forKey: "currency")
         object.setValue(Date(), forKey: "date")

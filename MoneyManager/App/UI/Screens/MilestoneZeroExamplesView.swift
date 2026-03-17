@@ -4,10 +4,21 @@ import CoreData
 struct MilestoneZeroExamplesView: View {
     @Environment(\.managedObjectContext) private var context
     @EnvironmentObject private var persistenceStoreManager: PersistenceStoreManager
+    @AppStorage("debug.showMilestoneZeroExamples") private var showMilestoneZeroExamples = false
     @StateObject private var viewModel = MilestoneZeroExamplesViewModel()
+    @State private var lastActionMessage = ""
 
     var body: some View {
         List {
+#if DEBUG
+            Section(String(localized: "Developer")) {
+                Button(String(localized: "Back to Milestone 1")) {
+                    showMilestoneZeroExamples = false
+                    lastActionMessage = String(localized: "Returned to Milestone 1 app shell.")
+                }
+            }
+#endif
+
             Section(String(localized: "Store Status")) {
                 Text(
                     String(
@@ -30,7 +41,15 @@ struct MilestoneZeroExamplesView: View {
                 }
 
                 Button(String(localized: "Retry CloudKit Store")) {
-                    persistenceStoreManager.reloadPreferredStore()
+                    lastActionMessage = persistenceStoreManager.requestCloudKitUpgrade().message
+                }
+            }
+
+            if !lastActionMessage.isEmpty {
+                Section(String(localized: "Last Action")) {
+                    Text(lastActionMessage)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -42,6 +61,7 @@ struct MilestoneZeroExamplesView: View {
             Section(String(localized: "0.2 Persistence Architecture")) {
                 Button(String(localized: "Show Persistence Example")) {
                     viewModel.showPersistenceExample()
+                    lastActionMessage = String(localized: "Loaded persistence details.")
                 }
                 Text(viewModel.persistenceOutput)
                     .font(.footnote)
@@ -51,6 +71,7 @@ struct MilestoneZeroExamplesView: View {
             Section(String(localized: "0.3 Core Data Entities")) {
                 Button(String(localized: "Create Entity Examples")) {
                     viewModel.runEntityExample()
+                    lastActionMessage = String(localized: "Created sample entity records.")
                 }
                 Text(viewModel.entityOutput)
                     .font(.footnote)
@@ -58,15 +79,15 @@ struct MilestoneZeroExamplesView: View {
             }
 
             Section(String(localized: "Custom Data Entry")) {
-                TextField(String(localized: "Account Name"), text: $viewModel.customAccountName)
+                TextField(String(localized: "PaymentMethod Name"), text: $viewModel.customAccountName)
 
-                Picker(String(localized: "Account Type"), selection: $viewModel.customAccountType) {
+                Picker(String(localized: "PaymentMethod Type"), selection: $viewModel.customAccountType) {
                     ForEach(viewModel.accountTypeOptions, id: \.self) { option in
                         Text(option)
                     }
                 }
 
-                TextField(String(localized: "Account Currency"), text: $viewModel.customAccountCurrency)
+                TextField(String(localized: "PaymentMethod Currency"), text: $viewModel.customAccountCurrency)
 
                 TextField(String(localized: "Transaction Amount"), text: $viewModel.customTransactionAmount)
                     .keyboardType(.decimalPad)
@@ -98,12 +119,14 @@ struct MilestoneZeroExamplesView: View {
 
                 Button(String(localized: "Save Custom Records")) {
                     viewModel.createCustomRecords()
+                    lastActionMessage = String(localized: "Saved custom records request executed.")
                 }
             }
 
             Section(String(localized: "0.4 Repository Layer")) {
                 Button(String(localized: "Run Repository Example")) {
                     viewModel.runRepositoryExample()
+                    lastActionMessage = String(localized: "Repository check completed.")
                 }
                 Text(viewModel.repositoryOutput)
                     .font(.footnote)
@@ -113,6 +136,7 @@ struct MilestoneZeroExamplesView: View {
             Section(String(localized: "0.5 Merchant Resolver")) {
                 Button(String(localized: "Resolve Merchant Example")) {
                     viewModel.runMerchantResolverExample()
+                    lastActionMessage = String(localized: "Merchant resolver example completed.")
                 }
                 Text(viewModel.merchantResolverOutput)
                     .font(.footnote)
@@ -122,6 +146,7 @@ struct MilestoneZeroExamplesView: View {
             Section(String(localized: "0.6 Analytics Tracker")) {
                 Button(String(localized: "Track Analytics Example")) {
                     viewModel.runAnalyticsExample()
+                    lastActionMessage = String(localized: "Analytics example events tracked.")
                 }
                 Text(viewModel.analyticsOutput)
                     .font(.footnote)
@@ -131,6 +156,7 @@ struct MilestoneZeroExamplesView: View {
             Section(String(localized: "0.7 Initial Category Seeding")) {
                 Button(String(localized: "Seed Categories")) {
                     viewModel.runSeedingExample()
+                    lastActionMessage = String(localized: "Category seeding executed.")
                 }
                 Text(viewModel.seedingOutput)
                     .font(.footnote)
@@ -139,8 +165,10 @@ struct MilestoneZeroExamplesView: View {
 
             Section(String(localized: "0.8 iCloud Availability Check")) {
                 Button(String(localized: "Check iCloud")) {
+                    lastActionMessage = String(localized: "Checking iCloud availability...")
                     Task {
                         await viewModel.runICloudAvailabilityExample()
+                        lastActionMessage = String(localized: "iCloud availability check completed.")
                     }
                 }
                 Text(viewModel.iCloudOutput)
@@ -151,6 +179,7 @@ struct MilestoneZeroExamplesView: View {
             Section(String(localized: "0.9 Data Export (CSV/JSON)")) {
                 Button(String(localized: "Generate Export Example")) {
                     viewModel.runExportExample()
+                    lastActionMessage = String(localized: "Export example generated.")
                 }
                 Text(viewModel.exportOutput)
                     .font(.footnote)
@@ -172,6 +201,7 @@ struct MilestoneZeroExamplesView: View {
             Section(String(localized: "Data Browser")) {
                 Button(String(localized: "Refresh Stored Data")) {
                     viewModel.refreshDataBrowser()
+                    lastActionMessage = String(localized: "Data browser refreshed.")
                 }
 
                 Text(viewModel.dataBrowserOutput)

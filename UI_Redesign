@@ -1,0 +1,2118 @@
+I’ll start with **one screen only** as requested.
+We’ll do the **Dashboard** first because it defines the product’s core value. If this screen is weak, the whole app is weak.
+
+Right now the dashboard is mostly **decorative, not decision-making**. It shows numbers but gives the user **no actionable insight**. A finance app that doesn’t guide behavior is basically a notebook with a calculator.
+
+Below is the **Milestone-structured product development doc**.
+
+---
+
+# Milestone 1 — Dashboard That Actually Helps Users Control Money
+
+Screen: **Dashboard**
+
+Goal:
+Transform the dashboard from **a passive summary** into **a decision interface** that answers the user's real questions:
+
+1. **Am I overspending today?**
+2. **Where is my money going?**
+3. **Can I afford something right now?**
+4. **What should I change this week?**
+
+Right now your screen answers **none of these**.
+
+---
+
+# Task 1 — Replace “Current Balance” With Financial State Card
+
+## Problem
+
+Your biggest card only shows:
+
+```
+Current Balance
+-Rp 80.400
+```
+
+This is **almost useless**.
+
+Why:
+
+* Balance alone doesn’t tell the user if they're **safe or in trouble**
+* Negative balance without context is confusing
+* It ignores **income vs expense cycle**
+* It doesn't relate to **budget or time**
+
+Users care about **runway**, not just balance.
+
+---
+
+## Component: Financial State Card
+
+Replace current card with:
+
+```
+Available Money
+Rp 420.000
+
+After bills: Rp 210.000
+Daily safe spend: Rp 17.500
+Until next income: 12 days
+```
+
+---
+
+## Data Requirements
+
+```
+balance
+upcomingBills
+nextIncomeDate
+monthlyIncome
+```
+
+---
+
+## Calculation Logic
+
+**Safe Daily Spend**
+
+```
+safeDailySpend =
+(balance - upcomingBills) /
+daysUntilNextIncome
+```
+
+---
+
+## Visual Structure
+
+Card layout:
+
+```
+Available Money
+Rp 420.000
+
+After bills
+Rp 210.000
+
+Safe daily spend
+Rp 17.500
+
+12 days until income
+```
+
+---
+
+## Why This Matters
+
+This single card answers:
+
+* Can I spend today?
+* Am I about to go broke?
+* How fast am I burning money?
+
+Without this, your dashboard is **just decoration**.
+
+---
+
+# Task 2 — Weekly Spending Insight Module
+
+## Problem
+
+You show:
+
+```
+Weekly Spending
+Rp 80.400
+```
+
+This is **contextless data**.
+
+Users cannot interpret it.
+
+They need comparison.
+
+---
+
+## Component: Weekly Trend Card
+
+Replace with:
+
+```
+This week
+Rp 80.400
+
+vs last week
++34%
+
+Budget progress
+███░░░░ 45%
+```
+
+---
+
+## Required Chart
+
+**Mini Bar Chart (7 days)**
+
+```
+Mon ▇
+Tue ▇▇
+Wed ▇▇▇
+Thu ▇
+Fri ▇▇▇
+Sat ▇▇▇▇
+Sun ▇
+```
+
+Shows:
+
+* spending spikes
+* behavioral pattern
+
+---
+
+## Data Model
+
+```
+transactions[]
+weekStartDate
+weeklyBudget
+```
+
+---
+
+## Metrics
+
+```
+weeklyTotal
+lastWeekTotal
+weeklyBudgetUsage
+dailyAverage
+```
+
+---
+
+# Task 3 — Category Spending Visualization
+
+## Problem
+
+You show:
+
+```
+Top Category
+Groceries
+```
+
+This is **extremely low value**.
+
+Users need **distribution**, not a label.
+
+---
+
+## Component: Category Distribution Chart
+
+Replace with **donut chart**.
+
+Example:
+
+```
+Food        40%
+Transport   25%
+Shopping    20%
+Bills       10%
+Other        5%
+```
+
+---
+
+## Interaction
+
+Tap → opens filtered transactions.
+
+---
+
+## Insight Layer
+
+Under chart:
+
+```
+Food spending is 32% higher than usual
+```
+
+---
+
+## Why This Matters
+
+Users must see:
+
+* what is draining money
+* category inflation
+* lifestyle patterns
+
+Without visualization, it's invisible.
+
+---
+
+# Task 4 — Recent Transactions Refinement
+
+## Problem
+
+Your list is visually fine but **information poor**.
+
+Example:
+
+```
+Mkn
+Rp 200
+```
+
+This tells nothing.
+
+---
+
+## Required Fields
+
+Transaction item must show:
+
+```
+merchant
+category
+account
+time
+```
+
+---
+
+## Improved Layout
+
+```
+Warung Makan
+Food • Cash
+
+Rp 20.000
+2 hours ago
+```
+
+---
+
+## Interaction
+
+Swipe actions:
+
+```
+← Edit
+→ Delete
+```
+
+Long press:
+
+```
+duplicate
+categorize
+split expense
+```
+
+---
+
+# Task 5 — Spending Alert System
+
+## Problem
+
+Your dashboard gives **no warnings**.
+
+Finance apps must warn users.
+
+---
+
+## Component: Spending Alerts
+
+Example:
+
+```
+⚠ Food spending high this week
+
+You spent Rp 120.000
+Weekly average: Rp 75.000
+```
+
+---
+
+## Alert Triggers
+
+```
+category spike > 30%
+daily spending > safe daily spend
+weekly spending > budget
+```
+
+---
+
+# Task 6 — Quick Add Transaction Button (Dashboard)
+
+## Problem
+
+Your add button is hidden in navigation.
+
+When someone pays for something, they need **immediate entry**.
+
+---
+
+## Component
+
+Floating Action Button.
+
+```
++ Add Expense
+```
+
+---
+
+## Behavior
+
+Tap → quick entry sheet
+
+Fields:
+
+```
+amount
+merchant
+category (auto suggestion)
+```
+
+---
+
+# Task 7 — Empty State Intelligence
+
+If user has **<5 transactions**:
+
+Show onboarding insights:
+
+```
+Start tracking expenses.
+
+After 5 transactions
+we will show spending insights.
+```
+
+---
+
+# Final Dashboard Layout
+
+```
+Dashboard
+
+[ Financial State Card ]
+
+Available Money
+Safe daily spend
+Days until income
+
+
+[ Weekly Spending Trend ]
+Mini bar chart
+
+
+[ Category Breakdown ]
+Donut chart
+
+
+[ Spending Alerts ]
+
+
+[ Recent Transactions ]
+```
+
+---
+
+# Brutal Truth
+
+Right now your dashboard is **a summary page**.
+
+Successful finance apps are **behavior change tools**.
+
+Users should open the app and instantly learn:
+
+* what they did wrong
+* what they should do next
+* whether they can spend money today
+
+Your current design does **none of that**.
+
+---
+
+Next we move to the **Add Transaction screen**.
+This screen determines **whether the product lives or dies**.
+
+Right now your design looks clean, but from a product standpoint it’s **slow, redundant, and cognitively heavy**. A finance app must allow users to record an expense in **2–3 seconds**. Yours requires **too many decisions before the user even finishes typing the amount**.
+
+Most people will abandon logging after **3–5 uses** if friction remains.
+
+So this milestone focuses on **ultra-fast capture**.
+
+---
+
+# Milestone 2 — Frictionless Expense Capture
+
+Screen: **Add Transaction**
+
+Goal:
+Reduce the time to log a transaction to **<3 seconds** while minimizing thinking.
+
+User mental flow should be:
+
+```
+enter amount → confirm → done
+```
+
+Everything else should be **optional or automatic**.
+
+---
+
+# Task 1 — Redesign Entry Hierarchy (Amount First)
+
+## Problem
+
+Your current layout:
+
+```
+Amount
+Merchant
+Category
+Account
+Date
+```
+
+This looks logical but it’s **not behaviorally correct**.
+
+Real behavior:
+
+1. User remembers **amount**
+2. Sometimes merchant
+3. Category rarely
+4. Account almost never
+
+So forcing a **top-down form** creates friction.
+
+---
+
+## Component: Amount-First Capture Interface
+
+Replace entire form with:
+
+```
+Rp [ amount input ]
+
+Warung Makan
+Food • Cash
+Today
+```
+
+Auto-filled values appear **after typing amount**.
+
+---
+
+## Interaction
+
+User flow:
+
+```
+type 20000
+→ merchant auto suggested
+→ category auto assigned
+→ tap save
+```
+
+Time: **2 seconds**
+
+---
+
+## Task 2 — Smart Merchant Recognition
+
+## Problem
+
+Merchant field is manual.
+
+Users **hate typing repetitive merchants**.
+
+---
+
+## Component: Merchant Memory Engine
+
+When user types:
+
+```
+"war"
+```
+
+Suggestions:
+
+```
+Warung Makan
+Warung Bu Sari
+Warung Soto
+```
+
+---
+
+## Data Model
+
+```
+merchantName
+merchantCategory
+usageCount
+lastUsedDate
+```
+
+---
+
+## Auto Category Logic
+
+If merchant previously categorized:
+
+```
+Warung Makan → Food
+Shell → Transport
+Indomaret → Groceries
+```
+
+Category auto applied.
+
+---
+
+## Task 3 — Category Suggestion Engine
+
+## Problem
+
+Your UI expects the user to pick category every time.
+
+People will **not do this consistently**.
+
+---
+
+## Component: Category Auto-Suggestion
+
+Categories suggested based on:
+
+```
+merchant history
+time of day
+transaction amount pattern
+```
+
+Example:
+
+```
+Rp 15.000 at 12:30
+→ Food suggested
+```
+
+---
+
+## UI Behavior
+
+Category appears as **editable chip**:
+
+```
+[ Food ]
+```
+
+Tap → change.
+
+---
+
+## Task 4 — Account Auto Selection
+
+## Problem
+
+User must select account every time.
+
+This is unnecessary.
+
+---
+
+## Component: Default Account Logic
+
+Default:
+
+```
+last used account
+```
+
+Example:
+
+```
+Cash
+```
+
+Only change if user taps.
+
+---
+
+## Task 5 — Quick Amount Input Pad
+
+## Problem
+
+Using standard keyboard is slow.
+
+---
+
+## Component: Expense Keypad
+
+Replace keyboard with:
+
+```
+1 2 3
+4 5 6
+7 8 9
+00 0 ⌫
+```
+
+Why:
+
+Many expenses in Indonesia are **multiples of 1000**.
+
+The **00 button drastically speeds input**.
+
+---
+
+## Task 6 — Instant Save Interaction
+
+## Problem
+
+Your UI implies the user must fill the form then confirm.
+
+Instead:
+
+```
+amount typed
+→ Save button appears
+```
+
+---
+
+## UI Example
+
+```
+Rp 20.000
+
+Warung Makan
+Food • Cash
+
+[ Save ]
+```
+
+---
+
+## Gesture Shortcut
+
+Swipe down → save.
+
+---
+
+# Task 7 — Receipt / Context Capture (Optional)
+
+Power users sometimes want context.
+
+---
+
+## Component: Context Attachments
+
+Allow:
+
+```
+photo receipt
+note
+location
+```
+
+Collapsed by default.
+
+---
+
+## UI
+
+```
+Add note
+Add receipt
+```
+
+Expandable section.
+
+---
+
+# Task 8 — Quick Repeat Transactions
+
+Many expenses repeat daily.
+
+Examples:
+
+```
+coffee
+parking
+bus
+lunch
+```
+
+---
+
+## Component: Frequent Transactions
+
+Show suggestions above input:
+
+```
+☕ Coffee Rp 15.000
+🍜 Lunch Rp 20.000
+🚌 Bus Rp 5.000
+```
+
+Tap → instant entry.
+
+---
+
+## Data Logic
+
+Top transactions based on:
+
+```
+frequency
+time-of-day
+last 30 days
+```
+
+---
+
+# Task 9 — Undo Instead of Confirmation
+
+Confirmation slows interaction.
+
+---
+
+## Component
+
+After saving:
+
+```
+Expense saved
+
+Undo
+```
+
+---
+
+Duration:
+
+```
+5 seconds
+```
+
+---
+
+# Task 10 — Error Prevention
+
+## Problem
+
+Users often enter wrong zeros.
+
+Example:
+
+```
+200000 instead of 20000
+```
+
+---
+
+## Detection Rule
+
+If amount > **3× user average**:
+
+Show warning:
+
+```
+Did you mean Rp 20.000?
+```
+
+---
+
+# Final Layout
+
+```
+Add Expense
+
+Rp [ amount ]
+
+Merchant suggestion
+Category chip
+Account chip
+Date
+
+[ Save ]
+
+Frequent transactions
+```
+
+---
+
+# Brutal Truth
+
+Right now your screen behaves like **a bookkeeping form**.
+
+Successful finance apps behave like **a calculator with memory**.
+
+The difference:
+
+```
+Form thinking
+vs
+instant capture
+```
+
+If users hesitate even **one second**, the habit dies.
+
+Your design is currently **beautiful but slow**.
+
+---
+
+Now we analyze the **Settings screen**.
+
+This screen currently exposes something deeper than a design flaw — it exposes that the product **has no financial system behind it**. What you currently have is basically:
+
+```
+Account CRUD
+CloudKit status
+Developer toggle
+```
+
+That’s not a settings page. That’s **a debugging panel with a button to add accounts**.
+
+A real finance app settings page should control the **rules that govern the user’s money system**.
+
+So this milestone restructures Settings into **Financial Configuration + System Control**.
+
+---
+
+# Milestone 4 — Financial System Configuration
+
+Screen: **Settings**
+
+Goal:
+Transform settings from **technical toggles** into **money management controls** that shape how the app behaves.
+
+Users should configure:
+
+```
+accounts
+budgets
+income cycles
+notifications
+data sync
+```
+
+Right now the user cannot configure **any financial behavior**.
+
+---
+
+# Task 1 — Redesign Information Architecture
+
+## Problem
+
+Current sections:
+
+```
+Accounts
+Storage
+Sync
+Last Action
+Developer
+```
+
+This is **developer-centric**, not **user-centric**.
+
+---
+
+## New Settings Structure
+
+```
+Accounts
+Budgets
+Income
+Categories
+Notifications
+Data & Sync
+Privacy
+Advanced
+```
+
+---
+
+# Task 2 — Accounts Management Upgrade
+
+## Problem
+
+Your account card only shows:
+
+```
+Abc
+Cash · IDR
+```
+
+This is insufficient.
+
+Accounts are the **foundation of financial tracking**.
+
+---
+
+## Component: Account Overview Card
+
+Example:
+
+```
+Cash
+Rp 240.000
+
+Last activity
+Today
+```
+
+---
+
+## Additional Metadata
+
+Account should include:
+
+```
+accountName
+accountType
+currency
+balance
+lastTransactionDate
+```
+
+---
+
+## Account Types
+
+Users must specify type:
+
+```
+Cash
+Bank
+E-wallet
+Credit card
+Savings
+Investment
+```
+
+---
+
+## Why This Matters
+
+Different account types affect:
+
+```
+balance calculations
+debt tracking
+net worth
+```
+
+---
+
+# Task 3 — Budget System (Missing Core Feature)
+
+Right now the app **does not prevent overspending**.
+
+That makes it **reactive**, not **protective**.
+
+---
+
+## Component: Budget Settings
+
+Users can create budgets:
+
+```
+Food
+Rp 1.200.000 / month
+
+Transport
+Rp 600.000 / month
+```
+
+---
+
+## Budget Behavior
+
+Trigger alerts when:
+
+```
+75% budget reached
+100% budget exceeded
+```
+
+---
+
+## Data Model
+
+```
+category
+period
+limit
+spentAmount
+```
+
+---
+
+# Task 4 — Income Cycle Configuration
+
+## Problem
+
+Your app cannot calculate **safe daily spending** without knowing income timing.
+
+---
+
+## Component: Income Setup
+
+User defines:
+
+```
+salary amount
+salary frequency
+salary date
+```
+
+Example:
+
+```
+Rp 5.000.000
+Monthly
+25th
+```
+
+---
+
+## Why This Matters
+
+Enables features like:
+
+```
+safe daily spend
+runway calculations
+financial forecasting
+```
+
+---
+
+# Task 5 — Category Management
+
+Currently categories are invisible.
+
+Users must control them.
+
+---
+
+## Component: Category Manager
+
+Example list:
+
+```
+Food
+Transport
+Shopping
+Bills
+Entertainment
+```
+
+---
+
+## Interaction
+
+Users can:
+
+```
+rename
+merge
+delete
+reorder
+```
+
+---
+
+## Custom Categories
+
+Allow creation:
+
+```
++ Add Category
+```
+
+---
+
+# Task 6 — Notification System
+
+Finance apps fail when they stay silent.
+
+---
+
+## Component: Smart Alerts
+
+Users configure alerts:
+
+```
+Daily spending warning
+Budget exceeded
+Weekly spending summary
+Unusual spending detection
+```
+
+---
+
+## Example Alert
+
+```
+Food budget almost exceeded
+Rp 1.050.000 / Rp 1.200.000
+```
+
+---
+
+# Task 7 — Data & Sync Section
+
+Your current UI exposes:
+
+```
+cloudKitSQLite
+retry cloud store
+```
+
+That’s **developer language**.
+
+Users should see:
+
+```
+iCloud sync
+Last sync
+Sync status
+```
+
+---
+
+## Component: Sync Status
+
+Example:
+
+```
+iCloud Sync
+
+Last synced
+2 minutes ago
+
+Status
+Up to date
+```
+
+---
+
+# Task 8 — Data Export / Backup
+
+Critical feature missing.
+
+Users need control over their data.
+
+---
+
+## Component: Export Data
+
+Options:
+
+```
+Export CSV
+Export JSON
+Backup file
+```
+
+---
+
+## Use Cases
+
+Users want to:
+
+```
+analyze spending
+import into spreadsheets
+keep offline backup
+```
+
+---
+
+# Task 9 — Privacy Controls
+
+Finance data is sensitive.
+
+---
+
+## Component
+
+```
+Face ID lock
+Hide balances
+Screenshot protection
+```
+
+---
+
+# Task 10 — Advanced Section
+
+Developer features should be hidden here.
+
+---
+
+## Example
+
+```
+Debug mode
+Sample data
+Reset database
+Cloud sync diagnostics
+```
+
+---
+
+# Final Settings Layout
+
+```
+Settings
+
+Accounts
+Budgets
+Income
+Categories
+Notifications
+Data & Sync
+Privacy
+Advanced
+```
+
+---
+
+# Brutal Truth
+
+Right now your app has **nice UI but no financial infrastructure**.
+
+A finance product without:
+
+```
+budgets
+income cycles
+alerts
+```
+
+is basically **a spending diary**.
+
+People abandon spending diaries in **under two weeks** because they provide **no control over behavior**.
+
+The product only becomes valuable when it actively helps users:
+
+```
+spend less
+predict problems
+build financial awareness
+```
+
+---
+
+If you want, the next step should actually be something you **haven’t designed yet but absolutely need**:
+
+**Milestone 5 — Insights / Analytics screen**
+
+Because right now your product still lacks **the feature that convinces users the tracking effort was worth it**.
+
+
+Now we move to a screen your product **does not currently have but absolutely needs**.
+
+Without this screen, the app will fail long-term.
+
+Users tolerate logging expenses only if they eventually receive **insight or behavioral feedback**. If the product never converts data into understanding, the habit dies in **7–14 days**.
+
+So the next milestone defines a completely new screen.
+
+---
+
+# Milestone 5 — Spending Insights & Financial Awareness
+
+Screen: **Insights / Analytics**
+
+Goal:
+Transform raw transactions into **behavioral understanding**.
+
+The screen must answer:
+
+```
+Where does my money go?
+What patterns repeat?
+What changed this month?
+What should I fix?
+```
+
+Your current product answers **none of these**.
+
+---
+
+# Task 1 — Monthly Spending Overview
+
+## Problem
+
+Users need a **time anchor** to interpret their spending.
+
+Daily or weekly data is too granular.
+
+The primary unit for personal finance is **month**.
+
+---
+
+## Component: Monthly Summary Header
+
+Example:
+
+```
+March 2026
+
+Total spent
+Rp 2.340.000
+
+vs February
++12%
+```
+
+---
+
+## Required Data
+
+```
+monthlyTotal
+previousMonthTotal
+monthlyIncome
+```
+
+---
+
+## Optional Insight
+
+```
+You spent Rp 250.000 more than last month.
+```
+
+---
+
+# Task 2 — Spending Trend Chart
+
+## Problem
+
+Your app currently has **no long-term trend visibility**.
+
+Users need to see whether spending is **rising or stabilizing**.
+
+---
+
+## Component: Monthly Trend Line Chart
+
+```
+Jan    Rp 2.1M
+Feb    Rp 2.0M
+Mar    Rp 2.34M
+Apr    Rp 1.9M
+```
+
+Visual line showing:
+
+```
+spending trend
+```
+
+---
+
+## Data Model
+
+```
+month
+totalSpent
+income
+```
+
+---
+
+# Task 3 — Category Distribution Analysis
+
+## Problem
+
+Users need to know **where their money goes**, not just totals.
+
+---
+
+## Component: Category Breakdown Chart
+
+Donut chart:
+
+```
+Food           35%
+Transport      20%
+Shopping       18%
+Bills          15%
+Entertainment  12%
+```
+
+---
+
+## Interaction
+
+Tap category → open filtered transactions.
+
+---
+
+## Additional Metric
+
+```
+Food spending
+Rp 820.000
++18% vs last month
+```
+
+---
+
+# Task 4 — Spending Habit Detection
+
+This is where the app becomes **intelligent**.
+
+---
+
+## Component: Behavioral Insights
+
+Examples:
+
+```
+You spend the most on Fridays.
+
+Average Friday spending:
+Rp 120.000
+```
+
+---
+
+Other possible insights:
+
+```
+Your lunch spending increased 25% this month.
+You spend Rp 15.000 daily on coffee.
+Transport spending dropped 40%.
+```
+
+---
+
+## Data Sources
+
+```
+weekday spending
+merchant frequency
+category growth
+```
+
+---
+
+# Task 5 — Largest Expense Detection
+
+Users want to see **what actually drained their money**.
+
+---
+
+## Component: Biggest Transactions
+
+Example:
+
+```
+Largest expenses this month
+
+Shopee
+Rp 450.000
+
+Electric bill
+Rp 380.000
+
+Restaurant
+Rp 220.000
+```
+
+---
+
+## Interaction
+
+Tap → open transaction.
+
+---
+
+# Task 6 — Recurring Expense Identification
+
+Many people underestimate subscriptions.
+
+---
+
+## Component: Recurring Payments
+
+Example:
+
+```
+Netflix
+Rp 65.000 / month
+
+Spotify
+Rp 54.000 / month
+
+Gym
+Rp 250.000 / month
+```
+
+---
+
+## Detection Logic
+
+Recurring if:
+
+```
+same merchant
+similar amount
+regular interval
+```
+
+---
+
+# Task 7 — Spending Velocity
+
+Users care about **how quickly money disappears**.
+
+---
+
+## Component: Burn Rate
+
+Example:
+
+```
+Daily average spending
+
+Rp 78.000 / day
+```
+
+---
+
+## Comparison
+
+```
+Last month
+Rp 65.000 / day
+```
+
+---
+
+# Task 8 — Budget Performance
+
+If budgets exist (Milestone 4), users must track progress.
+
+---
+
+## Component: Budget Dashboard
+
+Example:
+
+```
+Food
+Rp 820.000 / Rp 1.200.000
+███████░░░
+
+Transport
+Rp 420.000 / Rp 600.000
+████████░
+```
+
+---
+
+## Alert
+
+```
+Food budget 70% used
+```
+
+---
+
+# Task 9 — Spending Time Pattern
+
+Humans spend differently depending on time.
+
+---
+
+## Component: Time-of-Day Spending Chart
+
+Example:
+
+```
+Morning      Rp 200.000
+Afternoon    Rp 950.000
+Evening      Rp 720.000
+Night        Rp 180.000
+```
+
+---
+
+## Insight Example
+
+```
+Most spending happens in the afternoon.
+```
+
+---
+
+# Task 10 — Financial Health Indicator
+
+Users want a simple summary.
+
+---
+
+## Component: Financial Health Score
+
+Example:
+
+```
+Financial health
+
+78 / 100
+```
+
+---
+
+## Factors
+
+```
+budget adherence
+spending growth
+income ratio
+```
+
+---
+
+# Final Layout
+
+```
+Insights
+
+
+Monthly Summary
+Rp 2.340.000 spent
+
+
+Spending Trend
+
+
+Category Breakdown
+
+
+Behavior Insights
+
+
+Largest Expenses
+
+
+Recurring Payments
+
+
+Budget Progress
+```
+
+---
+
+# Brutal Truth
+
+Right now your product still suffers from a fundamental problem:
+
+```
+effort > reward
+```
+
+Users put in effort to log expenses but receive **very little insight in return**.
+
+Successful finance apps flip the equation:
+
+```
+small effort → strong insight
+```
+
+When the app starts telling users things like:
+
+```
+You spent Rp 450.000 on coffee this month.
+```
+
+that’s when behavior changes.
+
+And **behavior change is the entire value of a finance product**.
+
+---
+
+If you want, the next milestone should be something most indie finance apps completely ignore but is critical for retention:
+
+**Milestone 6 — Habit Loop & Daily Engagement System**
+
+Because finance apps fail when users **stop opening them daily**.
+
+Now we move to something most finance apps completely fail at:
+
+**Daily engagement.**
+
+Logging expenses is a **behavior**, not a feature.
+If the product doesn’t reinforce the habit loop, users stop logging within **10–14 days**.
+
+Right now your app has **zero habit reinforcement**.
+
+So this milestone defines a **system layer**, but it still manifests as a screen.
+
+---
+
+# Milestone 6 — Habit Loop & Daily Engagement
+
+Screen: **Daily Review**
+
+Goal:
+Create a **daily ritual** that keeps users returning to the app.
+
+Users should open the app and immediately see:
+
+```
+what happened today
+whether they stayed on track
+what to fix tomorrow
+```
+
+This screen turns the app from **a ledger** into **a daily reflection tool**.
+
+---
+
+# Task 1 — Introduce Daily Review Entry Point
+
+## Problem
+
+Right now users have no reason to open the app unless they spend money.
+
+That means **low engagement**.
+
+---
+
+## Component: Daily Review Card
+
+Shown when opening the app.
+
+Example:
+
+```
+Today · 17 March
+
+You spent
+Rp 82.000
+
+Safe daily spend
+Rp 70.000
+```
+
+---
+
+## Visual Indicator
+
+```
+Spending status
+
+⚠ Slightly over
+```
+
+---
+
+# Task 2 — Daily Spending Timeline
+
+Users should see the **story of the day**.
+
+---
+
+## Component: Day Timeline
+
+Example:
+
+```
+08:40  Coffee        Rp 15.000
+12:15  Lunch         Rp 22.000
+15:30  Transport     Rp 10.000
+20:10  Groceries     Rp 35.000
+```
+
+---
+
+## Why It Matters
+
+Humans understand behavior **through sequence**, not totals.
+
+The timeline reveals patterns like:
+
+```
+afternoon spending spikes
+late-night impulse purchases
+```
+
+---
+
+# Task 3 — Daily Reflection Prompt
+
+This is a **behavioral reinforcement tool**.
+
+---
+
+## Component: Reflection Question
+
+Example:
+
+```
+How was your spending today?
+
+🙂 Good
+😐 Okay
+😬 Too much
+```
+
+---
+
+## Purpose
+
+Creates awareness and reflection.
+
+---
+
+# Task 4 — Spending Goal Feedback
+
+Users need immediate feedback.
+
+---
+
+## Component: Goal Feedback Card
+
+Example:
+
+```
+Daily target
+Rp 70.000
+
+Spent
+Rp 82.000
+
+Over by
+Rp 12.000
+```
+
+---
+
+## Visual
+
+Progress bar:
+
+```
+███████████░░
+```
+
+---
+
+# Task 5 — Tomorrow Forecast
+
+Finance apps rarely help users **anticipate tomorrow**.
+
+---
+
+## Component: Next Day Forecast
+
+Example:
+
+```
+Tomorrow expected spending
+
+Bills
+Rp 120.000
+
+Subscriptions
+Rp 54.000
+```
+
+---
+
+## Data Sources
+
+```
+recurring payments
+historical spending
+upcoming bills
+```
+
+---
+
+# Task 6 — Streak System (Behavior Reinforcement)
+
+People respond strongly to streaks.
+
+---
+
+## Component: Logging Streak
+
+Example:
+
+```
+Expense logging streak
+
+🔥 6 days
+```
+
+---
+
+## Rule
+
+Streak increases when user logs at least **one transaction per day**.
+
+---
+
+# Task 7 — Weekly Habit Summary
+
+At the end of the week:
+
+```
+This week
+
+Logged expenses
+7 / 7 days
+
+Average spending
+Rp 74.000
+```
+
+---
+
+## Insight
+
+```
+Spending highest on Saturday.
+```
+
+---
+
+# Task 8 — Positive Reinforcement
+
+Apps should reward good behavior.
+
+---
+
+## Component: Micro Achievements
+
+Examples:
+
+```
+Stayed under budget 3 days in a row
+```
+
+```
+Lowest spending day this month
+```
+
+---
+
+# Task 9 — Quick Entry From Timeline
+
+Users should be able to add transactions directly from review.
+
+---
+
+## Component
+
+```
++ Add missing expense
+```
+
+---
+
+## Behavior
+
+Opens **quick capture modal**.
+
+---
+
+# Task 10 — End-of-Day Closure
+
+Encourage a sense of completion.
+
+---
+
+## Component: Close Day Button
+
+Example:
+
+```
+Finish today
+```
+
+After pressing:
+
+```
+Today recorded successfully
+```
+
+---
+
+# Final Layout
+
+```
+Daily Review
+
+
+Today summary
+Rp 82.000 spent
+
+
+Day timeline
+
+
+Goal feedback
+
+
+Reflection prompt
+
+
+Tomorrow forecast
+
+
+Logging streak
+```
+
+---
+
+# Brutal Truth
+
+Right now your app assumes users will:
+
+```
+remember
+care
+stay disciplined
+```
+
+That assumption is wrong.
+
+Users only stick to financial tracking when the app builds a **habit loop**:
+
+```
+trigger → action → reward
+```
+
+Right now your product only provides **the action**.
+
+No trigger.
+No reward.
+
+And without those, even a perfectly designed finance app will be abandoned.
+
+---
+

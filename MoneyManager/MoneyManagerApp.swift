@@ -10,8 +10,6 @@ import CoreData
 
 @main
 struct MoneyManagerApp: App {
-    @Environment(\.scenePhase) private var scenePhase
-    
     @StateObject private var persistenceStoreManager = PersistenceStoreManager(controller: PersistenceController.shared)
 
     var body: some Scene {
@@ -19,11 +17,6 @@ struct MoneyManagerApp: App {
             ContentView()
                 .environment(\.managedObjectContext, persistenceStoreManager.viewContext)
                 .environmentObject(persistenceStoreManager)
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active {
-                persistenceStoreManager.refreshIfNeeded()
-            }
         }
     }
 }

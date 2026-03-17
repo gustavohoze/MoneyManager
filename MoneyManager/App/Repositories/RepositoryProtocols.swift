@@ -2,10 +2,10 @@ import CoreData
 
 protocol TransactionRepository {
     @discardableResult
-    func createExampleTransaction(accountID: UUID) throws -> UUID
+    func createExampleTransaction(paymentMethodID: UUID) throws -> UUID
     @discardableResult
     func createTransaction(
-        accountID: UUID,
+        paymentMethodID: UUID,
         amount: Double,
         currency: String,
         date: Date,
@@ -16,23 +16,39 @@ protocol TransactionRepository {
         note: String?
     ) throws -> UUID
     func fetchTransactions() throws -> [NSManagedObject]
-    func fetchTransactions(accountID: UUID) throws -> [NSManagedObject]
+    func fetchTransaction(id: UUID) throws -> NSManagedObject
+    func fetchTransactions(paymentMethodID: UUID) throws -> [NSManagedObject]
     func fetchTransactions(from startDate: Date, to endDate: Date) throws -> [NSManagedObject]
+    func updateTransaction(
+        id: UUID,
+        paymentMethodID: UUID,
+        amount: Double,
+        currency: String,
+        date: Date,
+        merchantRaw: String,
+        merchantNormalized: String?,
+        categoryID: UUID?,
+        note: String?
+    ) throws
     func deleteTransaction(id: UUID) throws
     func detectDuplicate(
-        accountID: UUID,
+        paymentMethodID: UUID,
         amount: Double,
         date: Date,
         merchantNormalized: String?
     ) throws -> Bool
+    func fetchDistinctMerchantRawNames(prefix: String, limit: Int) throws -> [String]
 }
 
-protocol AccountRepository {
+protocol PaymentMethodRepository {
     @discardableResult
-    func ensureDefaultAccount() throws -> UUID
+    func ensureDefaultPaymentMethod() throws -> UUID
     @discardableResult
-    func upsertAccount(name: String, type: String, currency: String) throws -> UUID
-    func fetchAccounts() throws -> [NSManagedObject]
+    func upsertPaymentMethod(name: String, type: String, currency: String) throws -> UUID
+    func fetchPaymentMethod(id: UUID) throws -> NSManagedObject
+    func updatePaymentMethod(id: UUID, name: String, type: String, currency: String) throws
+    func deletePaymentMethod(id: UUID) throws
+    func fetchPaymentMethods() throws -> [NSManagedObject]
 }
 
 protocol MerchantRepository {

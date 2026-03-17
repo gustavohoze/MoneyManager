@@ -14,7 +14,8 @@ enum CoreDataModelFactory {
 
     private static func makeAccountEntity() -> NSEntityDescription {
         let entity = NSEntityDescription()
-        entity.name = "Account"
+        entity.name = "PaymentMethod"
+        entity.renamingIdentifier = "Account"
         entity.managedObjectClassName = "NSManagedObject"
         entity.properties = [
             attribute(name: "id", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
@@ -32,7 +33,7 @@ enum CoreDataModelFactory {
         entity.managedObjectClassName = "NSManagedObject"
         entity.properties = [
             attribute(name: "id", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
-            attribute(name: "accountID", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID()),
+            attribute(name: "paymentMethodID", type: .UUIDAttributeType, isOptional: false, defaultValue: UUID(), renamingIdentifier: "accountID"),
             attribute(name: "amount", type: .doubleAttributeType, isOptional: false, defaultValue: 0.0),
             attribute(name: "currency", type: .stringAttributeType, isOptional: false, defaultValue: "IDR"),
             attribute(name: "date", type: .dateAttributeType, isOptional: false, defaultValue: Date()),
@@ -57,6 +58,8 @@ enum CoreDataModelFactory {
             attribute(name: "brand", type: .stringAttributeType, isOptional: true),
             attribute(name: "category", type: .stringAttributeType, isOptional: true),
             attribute(name: "confidence", type: .doubleAttributeType, isOptional: false, defaultValue: 0.0),
+            attribute(name: "usageCount", type: .integer64AttributeType, isOptional: false, defaultValue: 0),
+            attribute(name: "lastUsedDate", type: .dateAttributeType, isOptional: true),
             attribute(name: "createdAt", type: .dateAttributeType, isOptional: false, defaultValue: Date())
         ]
         return entity
@@ -79,13 +82,15 @@ enum CoreDataModelFactory {
         name: String,
         type: NSAttributeType,
         isOptional: Bool,
-        defaultValue: Any? = nil
+        defaultValue: Any? = nil,
+        renamingIdentifier: String? = nil
     ) -> NSAttributeDescription {
         let attribute = NSAttributeDescription()
         attribute.name = name
         attribute.attributeType = type
         attribute.isOptional = isOptional
         attribute.defaultValue = defaultValue
+        attribute.renamingIdentifier = renamingIdentifier
         return attribute
     }
 }

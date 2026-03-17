@@ -9,9 +9,16 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
+    @Environment(\.managedObjectContext) private var context
+    @AppStorage("debug.showMilestoneZeroExamples") private var showMilestoneZeroExamples = false
+
     var body: some View {
-        NavigationStack {
-            MilestoneZeroExamplesView()
+        if showMilestoneZeroExamples {
+            NavigationStack {
+                MilestoneZeroExamplesView()
+            }
+        } else {
+            MilestoneOneRootView(context: context)
         }
     }
 }
