@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "041304462F6817B40036F610"
-               BuildableName = "MoneyManager.app"
+               BuildableName = "Money Manager Beta.app"
                BlueprintName = "MoneyManager"
                ReferencedContainer = "container:Money Guard.xcodeproj">
             </BuildableReference>
@@ -58,7 +58,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "041304462F6817B40036F610"
-            BuildableName = "MoneyManager.app"
+            BuildableName = "Money Manager Beta.app"
             BlueprintName = "MoneyManager"
             ReferencedContainer = "container:Money Guard.xcodeproj">
          </BuildableReference>
@@ -75,7 +75,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "041304462F6817B40036F610"
-            BuildableName = "MoneyManager.app"
+            BuildableName = "Money Manager Beta.app"
             BlueprintName = "MoneyManager"
             ReferencedContainer = "container:Money Guard.xcodeproj">
          </BuildableReference>

@@ -39,17 +39,18 @@ Use this as the single input sheet before creating the App Store version.
 - Version String (CFBundleShortVersionString / MARKETING_VERSION): 1.0
 - Build Number (CFBundleVersion / CURRENT_PROJECT_VERSION): 1
 - What is New in This Version: TBD
-- Promotional Text (optional): TBD
-- Keywords (100 chars max): TBD
-- App Description: TBD
-- Support URL: TBD (required)
+- Subtitle (30 chars max): Track spending, hit budgets
+- Promotional Text (optional): Track spending in seconds, stay on budget with clear monthly insights, and keep your data private with Face ID and secure iCloud sync.
+- Keywords (100 chars max): expense tracker,budget planner,money manager,personal finance,spending tracker,bill tracker
+- App Description: MoneyManager helps you track daily spending, stay on top of budgets, and understand your money at a glance. Quickly add transactions, review your timeline, and monitor category trends with clear monthly insights. Your data stays under your control with secure storage, iCloud sync across devices, and optional Face ID protection.
+- Support URL: https://shecraa.com/moneymanager/support (required)
 - Marketing URL: optional (TBD)
 - Copyright: TBD
 
 ### 3) Pricing and Availability
 
 - Price Tier: TBD (Free recommended for v1 if no IAP)
-- Availability Countries/Regions: TBD
+- Availability Countries/Regions: Global (all available App Store territories); GeoJSON: AppStore/supported_regions.geojson
 - App Distribution Method: Public or unlisted/private (TBD)
 - App Store Distribution Date: TBD
 
@@ -68,14 +69,18 @@ Decisions needed for privacy labels:
 - Is data linked to user identity?: TBD
 - Is data used for tracking across apps/sites?: likely No, confirm
 - Data retention policy and deletion process: TBD
-- Privacy Policy URL (required): TBD
+- Privacy Policy URL (required): https://drive.google.com/file/d/REPLACE_WITH_FILE_ID/view (from AppStore/PRIVACY_POLICY_README.md)
 
 ### 5) Age Rating and Content Declarations
 
-- Age Rating questionnaire answers: TBD
-- Does app include user-generated content?: likely No (confirm)
-- Does app include unrestricted web access?: likely No (confirm)
-- Gambling/contests/medical content declarations: TBD
+- Age Rating questionnaire answers:
+  - Parental Controls: NO
+  - Age Assurance: NO
+  - Unrestricted Web Access: NO
+  - User-Generated Content: NO
+  - Messaging and Chat: NO
+  - Advertising: NO
+- Gambling/contests/medical content declarations: NO
 
 ### 6) Export Compliance
 
@@ -87,8 +92,8 @@ Decisions needed for privacy labels:
 
 - Contact first name/last name: TBD
 - Contact email and phone: TBD
-- Demo account credentials: TBD (if reviewers need login; app currently appears no account login)
-- Special instructions for reviewer: TBD
+- Demo account credentials: Not required (no account/login flow)
+- Special instructions for reviewer: On first launch, allow notifications when prompted to validate reminder behavior. You can fully test core flows without creating an account.
 - Notes for hardware dependencies (Face ID, notifications): include test flow instructions
 
 ### 8) Media Assets (Required)
@@ -144,14 +149,16 @@ Release can move to GO when all are true:
 
 Use this section to fill final values quickly:
 - SKU:
-- Support URL:
-- Privacy Policy URL:
+- Support URL: https://shecraa.com/moneymanager/support
+- Privacy Policy URL: https://drive.google.com/file/d/REPLACE_WITH_FILE_ID/view
 - Marketing URL:
 - Copyright:
 - Price Tier:
-- Countries/Regions:
+- Countries/Regions: Global (all available App Store territories); GeoJSON: AppStore/supported_regions.geojson
 - What is New:
-- Promotional Text:
-- Keywords:
+- Subtitle: Track spending, hit budgets
+- Promotional Text: Track spending in seconds, stay on budget with clear monthly insights, and keep your data private with Face ID and secure iCloud sync.
+- App Description: MoneyManager helps you track daily spending, stay on top of budgets, and understand your money at a glance. Quickly add transactions, review your timeline, and monitor category trends with clear monthly insights. Your data stays under your control with secure storage, iCloud sync across devices, and optional Face ID protection.
+- Keywords: expense tracker,budget planner,money manager,personal finance,spending tracker,bill tracker
 - Review Contact:
-- Review Notes:
+- Review Notes: No sign-in is required. Test flow: (1) Add a transaction from the Add screen, (2) edit and delete from the transaction timeline, (3) verify dashboard totals and category insights update immediately, (4) open Settings to test Face ID lock toggle and notification preferences. For notification checks, grant notification permission on first launch. iCloud/CloudKit sync is enabled when the device is signed into iCloud; if not signed in, local usage remains fully functional.
