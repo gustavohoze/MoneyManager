@@ -6,10 +6,8 @@ struct SettingsNotificationsDetailPage: View {
     @Environment(\.openURL) private var openURL
     let palette: FinanceTheme.Palette
 
-    @AppStorage("settings.notifyDailyWarning") private var notifyDailyWarning = true
-    @AppStorage("settings.notifyBudgetExceeded") private var notifyBudgetExceeded = true
-    @AppStorage("settings.notifyWeeklySummary") private var notifyWeeklySummary = true
-    @AppStorage("settings.notifyUnusualSpending") private var notifyUnusualSpending = true
+    @AppStorage("settings.notifyDailyReminder") private var notifyDailyReminder = true
+    @AppStorage("settings.notifyMonthlyReview") private var notifyMonthlyReview = true
     @State private var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
     private let notificationScheduler = LocalNotificationScheduler()
 
@@ -23,39 +21,21 @@ struct SettingsNotificationsDetailPage: View {
                     notificationPermissionCard
                 }
 
-                // Daily warning
+                // Daily reminder
                 SettingsNotificationCard(
                     icon: "sunrise.fill",
-                    title: String(localized: "Daily Spending Warning"),
-                    description: String(localized: "Get reminded about your daily spending limits"),
-                    isEnabled: $notifyDailyWarning,
+                    title: String(localized: "Daily Expense Reminder"),
+                    description: String(localized: "Get a daily reminder to log today's expenses"),
+                    isEnabled: $notifyDailyReminder,
                     palette: palette
                 )
 
-                // Budget exceeded
-                SettingsNotificationCard(
-                    icon: "exclamationmark.circle.fill",
-                    title: String(localized: "Budget Exceeded"),
-                    description: String(localized: "Alert when you exceed your category budgets"),
-                    isEnabled: $notifyBudgetExceeded,
-                    palette: palette
-                )
-
-                // Weekly summary
+                // Monthly review
                 SettingsNotificationCard(
                     icon: "calendar.circle.fill",
-                    title: String(localized: "Weekly Summary"),
-                    description: String(localized: "Receive a summary of your spending each week"),
-                    isEnabled: $notifyWeeklySummary,
-                    palette: palette
-                )
-
-                // Unusual spending
-                SettingsNotificationCard(
-                    icon: "chart.line.uptrend.xyaxis",
-                    title: String(localized: "Unusual Spending Detected"),
-                    description: String(localized: "Alert on unexpected spending patterns"),
-                    isEnabled: $notifyUnusualSpending,
+                    title: String(localized: "Monthly Spending Check"),
+                    description: String(localized: "Review your spending progress at the start of each month"),
+                    isEnabled: $notifyMonthlyReview,
                     palette: palette
                 )
 
@@ -84,16 +64,10 @@ struct SettingsNotificationsDetailPage: View {
             await refreshNotificationAuthorizationStatus()
             await syncNotificationPreferences()
         }
-        .onChange(of: notifyDailyWarning) { _, _ in
+        .onChange(of: notifyDailyReminder) { _, _ in
             Task { await syncNotificationPreferences() }
         }
-        .onChange(of: notifyBudgetExceeded) { _, _ in
-            Task { await syncNotificationPreferences() }
-        }
-        .onChange(of: notifyWeeklySummary) { _, _ in
-            Task { await syncNotificationPreferences() }
-        }
-        .onChange(of: notifyUnusualSpending) { _, _ in
+        .onChange(of: notifyMonthlyReview) { _, _ in
             Task { await syncNotificationPreferences() }
         }
     }
@@ -137,7 +111,7 @@ struct SettingsNotificationsDetailPage: View {
     private var permissionCardDescription: String {
         switch notificationAuthorizationStatus {
         case .notDetermined:
-            return String(localized: "Enable notifications to receive reminders and weekly summaries.")
+            return String(localized: "Enable notifications to receive daily and monthly reminders.")
         case .denied:
             return String(localized: "Notifications are blocked for this app. Open iOS Settings to enable them.")
         default:
@@ -182,10 +156,8 @@ struct SettingsNotificationsDetailPage: View {
 
     private func syncNotificationPreferences() async {
         await notificationScheduler.syncPreferences(
-            dailyWarning: notifyDailyWarning,
-            budgetExceeded: notifyBudgetExceeded,
-            weeklySummary: notifyWeeklySummary,
-            unusualSpending: notifyUnusualSpending
+            dailyReminder: notifyDailyReminder,
+            monthlyReview: notifyMonthlyReview
         )
         await refreshNotificationAuthorizationStatus()
     }
@@ -224,14 +196,10 @@ struct SettingsNotificationsDetailPage: View {
 
     private func debugButtonLabel(for kind: LocalNotificationScheduler.DebugNotificationKind) -> String {
         switch kind {
-        case .dailyWarning:
-            return String(localized: "Test Daily Warning")
-        case .budgetExceeded:
-            return String(localized: "Test Budget Exceeded")
-        case .weeklySummary:
-            return String(localized: "Test Weekly Summary")
-        case .unusualSpending:
-            return String(localized: "Test Unusual Spending")
+        case .dailyReminder:
+            return String(localized: "Test Daily Reminder")
+        case .monthlyReview:
+            return String(localized: "Test Monthly Check")
         }
     }
     #endif

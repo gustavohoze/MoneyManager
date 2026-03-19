@@ -42,7 +42,7 @@ extension DashboardViewModel {
     }
 
     var categoryRows: [DashboardCategoryBreakdown] {
-        categoryBreakdown.filter { $0.total > 0 }
+        Array(categoryBreakdown.filter { $0.total > 0 }.prefix(5))
     }
 
     var shouldShowCategoryPrompt: Bool {

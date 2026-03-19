@@ -96,7 +96,8 @@ struct DashboardMainContent: View {
                 viewModel: viewModel,
                 palette: palette,
                 shouldMaskBalances: shouldMaskBalances,
-                onRevealBalances: { isBalanceHidden = false }
+                onRevealBalances: { isBalanceHidden = false },
+                onToggleBalances: { isBalanceHidden.toggle() }
             )
 
             // Swipeable insight cards — one section at a time

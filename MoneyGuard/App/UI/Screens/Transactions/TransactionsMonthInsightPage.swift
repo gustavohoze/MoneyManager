@@ -3,6 +3,7 @@ import SwiftUI
 struct TransactionsSetupBudgetPage: View {
     @ObservedObject var viewModel: TransactionListViewModel
     @State private var isShowingBudgetSheet = false
+    @State private var editingBudget: TransactionCategoryBudgetPresentation?
     @Environment(\.colorScheme) private var colorScheme
 
     private var palette: FinanceTheme.Palette {
@@ -17,7 +18,17 @@ struct TransactionsSetupBudgetPage: View {
                 TransactionsCategoryBudgetsCard(
                     budgets: viewModel.budgetSummary,
                     canAddBudget: !viewModel.budgetCategories.isEmpty,
-                    onAddBudget: { isShowingBudgetSheet = true }
+                    onAddBudget: {
+                        editingBudget = nil
+                        isShowingBudgetSheet = true
+                    },
+                    onEditBudget: { budget in
+                        editingBudget = budget
+                        isShowingBudgetSheet = true
+                    },
+                    onDeleteBudget: { budget in
+                        viewModel.deleteBudget(category: budget.category, isDefault: budget.isDefault)
+                    }
                 )
             }
             .padding(.horizontal, 16)
@@ -30,6 +41,13 @@ struct TransactionsSetupBudgetPage: View {
         .sheet(isPresented: $isShowingBudgetSheet) {
             TransactionsAddBudgetSheet(
                 categories: viewModel.budgetCategoryOptions,
+                title: editingBudget == nil ? "Add Budget" : "Edit Budget",
+                saveButtonTitle: editingBudget == nil ? "Save" : "Update",
+                initialCategory: editingBudget?.category,
+                initialAmount: editingBudget?.limitValue,
+                initialIsDefault: editingBudget?.isDefault ?? false,
+                allowsCategoryChange: editingBudget == nil,
+                allowsScopeChange: editingBudget == nil,
                 onSave: { category, amount, isDefault in
                     viewModel.saveBudget(category: category, amount: amount, isDefault: isDefault)
                 }

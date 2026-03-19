@@ -4,6 +4,8 @@ struct TransactionsCategoryBudgetsCard: View {
     let budgets: [TransactionCategoryBudgetPresentation]
     let canAddBudget: Bool
     let onAddBudget: () -> Void
+    let onEditBudget: (TransactionCategoryBudgetPresentation) -> Void
+    let onDeleteBudget: (TransactionCategoryBudgetPresentation) -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -59,6 +61,21 @@ struct TransactionsCategoryBudgetsCard: View {
                                 }
 
                                 Spacer()
+
+                                Menu {
+                                    Button("Edit") {
+                                        onEditBudget(budget)
+                                    }
+
+                                    Button("Delete", role: .destructive) {
+                                        onDeleteBudget(budget)
+                                    }
+                                } label: {
+                                    Image(systemName: "ellipsis.circle")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(palette.secondaryInk)
+                                }
+                                .buttonStyle(.plain)
 
                                 Text("\(AppCurrency.formatted(max(budget.remainingValue, 0))) / \(budget.limitText)")
                                     .font(.system(.caption, design: .rounded).weight(.bold))

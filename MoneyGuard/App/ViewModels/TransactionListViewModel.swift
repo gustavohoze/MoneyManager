@@ -278,6 +278,21 @@ final class TransactionListViewModel: ObservableObject {
         }
     }
 
+    func deleteBudget(category: String, isDefault: Bool) {
+        do {
+            let monthStart = isDefault ? nil : selectedMonthStartDate()
+            try budgetProvider.deleteBudget(category: category, monthStartDate: monthStart)
+            actionMessage = "Budget deleted."
+            errorMessage = nil
+            emitToastEvent()
+            refreshPresentation()
+        } catch {
+            errorMessage = error.localizedDescription
+            actionMessage = nil
+            emitToastEvent()
+        }
+    }
+
     func deleteTransaction(id: UUID, asOf date: Date = .distantPast) {
         do {
             try mutationService.deleteTransaction(id: id)
@@ -441,7 +456,7 @@ final class TransactionListViewModel: ObservableObject {
                 id: monthStartDate,
                 monthStartDate: monthStartDate,
                 shortMonthLabel: monthFormatter.string(from: monthStartDate),
-                totalSpentText: currencyText(monthItems.reduce(0) { $0 + $1.amount }),
+                totalSpentText: currencyText(totalExpense(in: monthItems)),
                 transactionCountText: transactionCountText(monthItems.count),
                 lastVisitedText: lastVisitedText,
                 isCurrentMonth: calendar.isDate(monthStartDate, equalTo: selectedDate, toGranularity: .month)
@@ -465,7 +480,7 @@ final class TransactionListViewModel: ObservableObject {
 
         return TransactionMonthSummaryPresentation(
             monthTitle: monthFormatter.string(from: selectedDate),
-            totalSpentText: currencyText(items.reduce(0) { $0 + $1.amount }),
+            totalSpentText: currencyText(totalExpense(in: items)),
             transactionCountText: transactionCountText(items.count)
         )
     }
@@ -499,7 +514,7 @@ final class TransactionListViewModel: ObservableObject {
         return TransactionDaySummaryPresentation(
             title: titleFormatter.string(from: selectedDate),
             subtitle: subtitleFormatter.string(from: selectedDate),
-            totalSpentText: currencyText(items.reduce(0) { $0 + $1.amount }),
+            totalSpentText: currencyText(totalExpense(in: items)),
             transactionCountText: transactionCountText(items.count)
         )
     }
@@ -520,7 +535,7 @@ final class TransactionListViewModel: ObservableObject {
             return TransactionTimeGroupPresentation(
                 id: bucket.title,
                 title: bucket.title,
-                totalSpentText: currencyText(bucketItems.reduce(0) { $0 + $1.amount }),
+                totalSpentText: currencyText(totalExpense(in: bucketItems)),
                 items: bucketItems.map {
                     TransactionRowPresentation(
                         id: $0.id,
@@ -560,7 +575,7 @@ final class TransactionListViewModel: ObservableObject {
         )
         budgetSummary = resolvedBudgets.map { budget in
             let spent = monthItems
-                .filter { $0.category == budget.category }
+                .filter { $0.category == budget.category && isExpense($0) }
                 .reduce(0) { $0 + $1.amount }
             let remaining = budget.amount - spent
             return TransactionCategoryBudgetPresentation(
@@ -605,6 +620,16 @@ final class TransactionListViewModel: ObservableObject {
     private func totalSpent(on date: Date, within items: [TransactionListItem]) -> Double {
         items
             .filter { calendar.isDate($0.date, inSameDayAs: date) }
+            .reduce(0) { $0 + $1.amount }
+    }
+
+    private func isExpense(_ item: TransactionListItem) -> Bool {
+        item.categoryType.caseInsensitiveCompare("expense") == .orderedSame
+    }
+
+    private func totalExpense(in items: [TransactionListItem]) -> Double {
+        items
+            .filter(isExpense)
             .reduce(0) { $0 + $1.amount }
     }
 

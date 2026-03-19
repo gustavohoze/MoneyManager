@@ -41,6 +41,7 @@ struct DashboardFinancialStateCard: View {
     let palette: FinanceTheme.Palette
     let shouldMaskBalances: Bool
     let onRevealBalances: () -> Void
+    let onToggleBalances: () -> Void
     @State private var activeInfoTopic: InfoTopic?
 
     private func maskedCurrencyText(_ value: Double) -> String {
@@ -60,6 +61,24 @@ struct DashboardFinancialStateCard: View {
                     Image(systemName: "info.circle")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.9))
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Button {
+                    onToggleBalances()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: shouldMaskBalances ? "eye.fill" : "eye.slash.fill")
+                            .font(.system(.caption, design: .rounded).weight(.semibold))
+                        Text(shouldMaskBalances ? String(localized: "Show") : String(localized: "Hide"))
+                            .font(.system(.caption, design: .rounded).weight(.semibold))
+                    }
+                    .foregroundStyle(.white.opacity(0.95))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.white.opacity(0.18), in: Capsule(style: .continuous))
                 }
                 .buttonStyle(.plain)
             }

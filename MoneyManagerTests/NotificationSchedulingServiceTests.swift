@@ -34,16 +34,15 @@ struct NotificationSchedulingServiceTests {
         let scheduler = LocalNotificationScheduler(center: center)
 
         await scheduler.syncPreferences(
-            dailyWarning: true,
-            budgetExceeded: false,
-            weeklySummary: true,
-            unusualSpending: false
+            dailyReminder: true,
+            monthlyReview: false
         )
 
-        #expect(center.addedRequestIDs.contains(LocalNotificationScheduler.IDs.dailyWarning))
-        #expect(center.addedRequestIDs.contains(LocalNotificationScheduler.IDs.weeklySummary))
-        #expect(center.removedRequestIDs.contains(LocalNotificationScheduler.IDs.budgetExceeded))
-        #expect(center.removedRequestIDs.contains(LocalNotificationScheduler.IDs.unusualSpending))
+        #expect(center.addedRequestIDs.contains(LocalNotificationScheduler.IDs.dailyReminder))
+        #expect(center.removedRequestIDs.contains(LocalNotificationScheduler.IDs.monthlyReview))
+        #expect(center.removedRequestIDs.contains(LocalNotificationScheduler.LegacyIDs.budgetExceeded))
+        #expect(center.removedRequestIDs.contains(LocalNotificationScheduler.LegacyIDs.weeklySummary))
+        #expect(center.removedRequestIDs.contains(LocalNotificationScheduler.LegacyIDs.unusualSpending))
     }
 
     @Test("Test: scheduler skips scheduling when permission is denied")
@@ -54,10 +53,8 @@ struct NotificationSchedulingServiceTests {
         let scheduler = LocalNotificationScheduler(center: center)
 
         await scheduler.syncPreferences(
-            dailyWarning: true,
-            budgetExceeded: true,
-            weeklySummary: true,
-            unusualSpending: true
+            dailyReminder: true,
+            monthlyReview: true
         )
 
         #expect(center.addedRequestIDs.isEmpty)

@@ -85,6 +85,7 @@ Decisions needed for privacy labels:
 ### 6) Export Compliance
 
 - Uses encryption: Yes (standard iOS HTTPS/TLS).
+- Encryption algorithm type selection: None of the algorithms mentioned above.
 - Export compliance answer usually: uses exempt encryption only (confirm legal/compliance response in ASC form).
 - If custom/non-exempt crypto is used, provide documentation (TBD if applicable).
 

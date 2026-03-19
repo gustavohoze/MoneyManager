@@ -345,6 +345,60 @@ struct TransactionListViewModelTests {
         #expect(viewModel.presentation.groups.first?.items.first?.merchant == "Lunch")
     }
 
+    @Test("Test: month and day totals count expenses only")
+    func load_withIncomeAndExpense_monthAndDayTotalsExcludeIncome() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+
+        let accountRepository = CoreDataPaymentMethodRepository(context: context)
+        let transactionRepository = CoreDataTransactionRepository(context: context)
+        let categoryRepository = CoreDataCategoryRepository(context: context)
+
+        let now = fixedNoonReferenceDate()
+        let paymentMethodID = try accountRepository.ensureDefaultPaymentMethod()
+        let foodID = try categoryRepository.upsertCategory(name: "Food", icon: "fork.knife", type: "expense")
+        let salaryID = try categoryRepository.upsertCategory(name: "Salary", icon: "arrow.down.circle.fill", type: "income")
+
+        _ = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 120,
+            currency: "IDR",
+            date: now,
+            merchantRaw: "Lunch",
+            merchantNormalized: "Lunch",
+            categoryID: foodID,
+            source: "manual",
+            note: nil
+        )
+
+        _ = try transactionRepository.createTransaction(
+            paymentMethodID: paymentMethodID,
+            amount: 8_000,
+            currency: "IDR",
+            date: now,
+            merchantRaw: "Salary",
+            merchantNormalized: "Salary",
+            categoryID: salaryID,
+            source: "manual",
+            note: nil
+        )
+
+        let service = TransactionListDataService(
+            transactionRepository: transactionRepository,
+            categoryRepository: categoryRepository,
+            accountRepository: accountRepository
+        )
+        let viewModel = TransactionListViewModel(
+            dataProvider: service,
+            optionsProvider: MockTransactionFormOptionsProvider()
+        )
+
+        viewModel.load(asOf: now)
+
+        #expect(viewModel.presentation.monthSummary.totalSpentText == AppCurrency.formatted(120))
+        #expect(viewModel.presentation.daySummary.totalSpentText == AppCurrency.formatted(120))
+    }
+
     @Test("Test: delete transaction failure shows error")
     func deleteTransaction_failure_setsErrorMessage() {
         let controller = PersistenceController(inMemory: true)

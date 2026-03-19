@@ -2,6 +2,13 @@ import SwiftUI
 
 struct TransactionsAddBudgetSheet: View {
     let categories: [TransactionBudgetCategoryOption]
+    let title: String
+    let saveButtonTitle: String
+    let initialCategory: String?
+    let initialAmount: Double?
+    let initialIsDefault: Bool
+    let allowsCategoryChange: Bool
+    let allowsScopeChange: Bool
     let onSave: (_ category: String, _ amount: Double, _ isDefault: Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -27,9 +34,19 @@ struct TransactionsAddBudgetSheet: View {
                             .font(.system(.caption, design: .rounded).weight(.semibold))
                             .foregroundStyle(palette.secondaryInk)
 
-                        Picker("Category", selection: $selectedCategory) {
-                            ForEach(categories) { category in
-                                Label(category.name, systemImage: category.icon).tag(category.name)
+                        if allowsCategoryChange {
+                            Picker("Category", selection: $selectedCategory) {
+                                ForEach(categories) { category in
+                                    Label(category.name, systemImage: category.icon).tag(category.name)
+                                }
+                            }
+                        } else {
+                            HStack(spacing: 8) {
+                                let icon = categories.first(where: { $0.name == selectedCategory })?.icon ?? "questionmark.circle"
+                                Image(systemName: icon)
+                                    .foregroundStyle(palette.secondaryInk)
+                                Text(selectedCategory)
+                                    .foregroundStyle(palette.ink)
                             }
                         }
                     }
@@ -46,10 +63,16 @@ struct TransactionsAddBudgetSheet: View {
                     .financeCard(palette: palette)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Toggle("Use as default for all months", isOn: $isDefaultBudget)
-                        Text(isDefaultBudget ? "This limit applies every month unless overridden." : "This limit applies only to the currently selected month.")
-                            .font(.caption)
-                            .foregroundStyle(palette.secondaryInk)
+                        if allowsScopeChange {
+                            Toggle("Use as default for all months", isOn: $isDefaultBudget)
+                            Text(isDefaultBudget ? "This limit applies every month unless overridden." : "This limit applies only to the currently selected month.")
+                                .font(.caption)
+                                .foregroundStyle(palette.secondaryInk)
+                        } else {
+                            Text(isDefaultBudget ? "This is a default budget for all months." : "This is a budget for the selected month.")
+                                .font(.caption)
+                                .foregroundStyle(palette.secondaryInk)
+                        }
                     }
                     .financeCard(palette: palette)
                 }
@@ -57,7 +80,7 @@ struct TransactionsAddBudgetSheet: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .background(FinanceTheme.pageBackground(for: colorScheme).ignoresSafeArea())
-            .navigationTitle("Add Budget")
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -65,7 +88,7 @@ struct TransactionsAddBudgetSheet: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
+                    Button(saveButtonTitle) {
                         let amount = Double(amountText.filter { $0.isNumber }) ?? 0
                         onSave(selectedCategory, amount, isDefaultBudget)
                         dismiss()
@@ -80,9 +103,11 @@ struct TransactionsAddBudgetSheet: View {
                 }
             }
             .onAppear {
-                if selectedCategory.isEmpty {
-                    selectedCategory = categories.first?.name ?? ""
+                selectedCategory = initialCategory ?? categories.first?.name ?? ""
+                if let initialAmount {
+                    amountText = String(Int(initialAmount))
                 }
+                isDefaultBudget = initialIsDefault
             }
         }
     }

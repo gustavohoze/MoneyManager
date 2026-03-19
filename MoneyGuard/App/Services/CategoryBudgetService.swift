@@ -8,6 +8,7 @@ struct ResolvedCategoryBudget: Equatable {
 
 protocol CategoryBudgetProviding {
     func upsertBudget(category: String, amount: Double, monthStartDate: Date?) throws
+    func deleteBudget(category: String, monthStartDate: Date?) throws
     func resolvedBudgets(for monthStartDate: Date) -> [ResolvedCategoryBudget]
 }
 
@@ -19,6 +20,8 @@ private struct StoredCategoryBudget: Codable, Equatable {
 
 struct NoOpCategoryBudgetService: CategoryBudgetProviding {
     func upsertBudget(category: String, amount: Double, monthStartDate: Date?) throws {}
+
+    func deleteBudget(category: String, monthStartDate: Date?) throws {}
 
     func resolvedBudgets(for monthStartDate: Date) -> [ResolvedCategoryBudget] {
         []
@@ -51,6 +54,19 @@ final class UserDefaultsCategoryBudgetService: CategoryBudgetProviding {
         var existing = loadStoredBudgets()
         existing.removeAll { $0.category == normalizedCategory && $0.monthKey == key }
         existing.append(StoredCategoryBudget(category: normalizedCategory, amount: amount, monthKey: key))
+        let data = try encoder.encode(existing)
+        defaults.set(data, forKey: storageKey)
+    }
+
+    func deleteBudget(category: String, monthStartDate: Date?) throws {
+        let normalizedCategory = category.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedCategory.isEmpty else {
+            return
+        }
+
+        let key = monthStartDate.map(monthKey(for:))
+        var existing = loadStoredBudgets()
+        existing.removeAll { $0.category == normalizedCategory && $0.monthKey == key }
         let data = try encoder.encode(existing)
         defaults.set(data, forKey: storageKey)
     }

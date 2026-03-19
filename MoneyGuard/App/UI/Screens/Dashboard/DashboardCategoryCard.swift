@@ -45,36 +45,44 @@ struct DashboardCategoryCard: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else {
-                ForEach(Array(viewModel.categoryRows.prefix(3).enumerated()), id: \.offset) { _, row in
-                    VStack(spacing: 4) {
-                        HStack {
-                            Text(row.category)
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(palette.ink)
-                            Spacer()
-                            Text(maskedCurrencyText(row.total))
-                                .font(.footnote.weight(.bold))
-                                .foregroundStyle(palette.ink)
-                                .onTapGesture {
-                                    if shouldMaskBalances {
-                                        onRevealBalances()
+                VStack(spacing: 8) {
+                    ForEach(Array(viewModel.categoryRows.enumerated()), id: \.offset) { _, row in
+                        VStack(spacing: 4) {
+                            HStack {
+                                Text(row.category)
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundStyle(palette.ink)
+                                    .lineLimit(1)
+                                Spacer()
+                                Text(maskedCurrencyText(row.total))
+                                    .font(.footnote.weight(.bold))
+                                    .foregroundStyle(palette.ink)
+                                    .onTapGesture {
+                                        if shouldMaskBalances {
+                                            onRevealBalances()
+                                        }
                                     }
-                                }
-                        }
+                            }
+                            .frame(height: 18)
 
-                        GeometryReader { proxy in
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(palette.accentSoft)
-                                .overlay(alignment: .leading) {
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(palette.accent)
-                                        .frame(width: max(0, proxy.size.width * viewModel.categoryBarRatio(for: row)))
-                                }
+                            GeometryReader { proxy in
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(palette.accentSoft)
+                                    .overlay(alignment: .leading) {
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .fill(palette.accent)
+                                            .frame(width: max(0, proxy.size.width * viewModel.categoryBarRatio(for: row)))
+                                    }
+                            }
+                            .frame(height: 7)
+                            .frame(maxWidth: .infinity)
                         }
-                        .frame(height: 7)
-                        .frame(maxWidth: .infinity)
+                        .frame(height: 29, alignment: .top)
                     }
+
+                    Spacer(minLength: 0)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
         }

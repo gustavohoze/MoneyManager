@@ -5,6 +5,7 @@ struct TransactionListItem: Equatable {
     let id: UUID
     let merchant: String
     let amount: Double
+    let categoryType: String
     let category: String
     let categoryIcon: String
     let account: String
@@ -40,7 +41,7 @@ struct TransactionListDataService: TransactionListDataProviding {
         let categories = try categoryRepository.fetchCategories()
         let paymentMethods = try accountRepository.fetchPaymentMethods()
 
-        let categoryByID = categories.reduce(into: [UUID: (name: String, icon: String)]()) { partialResult, object in
+        let categoryByID = categories.reduce(into: [UUID: (name: String, icon: String, type: String)]()) { partialResult, object in
             guard
                 let id = object.value(forKey: "id") as? UUID,
                 let name = object.value(forKey: "name") as? String
@@ -48,7 +49,8 @@ struct TransactionListDataService: TransactionListDataProviding {
                 return
             }
             let icon = (object.value(forKey: "icon") as? String) ?? "questionmark.circle"
-            partialResult[id] = (name: name, icon: icon)
+            let type = (object.value(forKey: "type") as? String) ?? "expense"
+            partialResult[id] = (name: name, icon: icon, type: type)
         }
 
         let paymentMethodByID = paymentMethods.reduce(into: [UUID: String]()) { partialResult, object in
@@ -78,6 +80,7 @@ struct TransactionListDataService: TransactionListDataProviding {
             let categoryDetails = categoryID.flatMap { categoryByID[$0] }
             let categoryName = categoryDetails?.name ?? "Uncategorized"
             let categoryIcon = categoryDetails?.icon ?? "questionmark.circle"
+            let categoryType = categoryDetails?.type ?? "expense"
 
             let paymentMethodID = object.value(forKey: "paymentMethodID") as? UUID
             let paymentMethodName = paymentMethodID.flatMap { paymentMethodByID[$0] } ?? "Unknown"
@@ -86,6 +89,7 @@ struct TransactionListDataService: TransactionListDataProviding {
                 id: id,
                 merchant: merchant,
                 amount: amount,
+                categoryType: categoryType,
                 category: categoryName,
                 categoryIcon: categoryIcon,
                 account: paymentMethodName,
