@@ -53,6 +53,8 @@ struct DashboardWeeklyTrendCard: View {
                     .foregroundStyle(palette.secondaryInk)
                 }
 
+                Spacer(minLength: 0)
+
                 HStack(alignment: .bottom, spacing: 6) {
                     ForEach(Array(viewModel.weekDailySpending.enumerated()), id: \.offset) { index, amount in
                         VStack(spacing: 4) {
@@ -70,7 +72,9 @@ struct DashboardWeeklyTrendCard: View {
                         }
                     }
                 }
-                .frame(height: 50)
+                .frame(height: 70)
+
+                Spacer(minLength: 0)
 
                 if !viewModel.derivedAlerts.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
