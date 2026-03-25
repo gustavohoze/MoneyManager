@@ -14,7 +14,7 @@ struct AddTransactionScreen: View {
     @FocusState private var focusedField: AddTransactionFormField?
     @Environment(\.colorScheme) private var colorScheme
     @State private var tutorialPhase: TutorialPhase?
-    @State private var didInitializeFirstExpenseGuide = false
+    @AppStorage("onboarding.hasSeenFirstExpenseGuide") private var hasSeenFirstExpenseGuide = false
     @State private var toast: UniversalToastState?
 
     private var palette: FinanceTheme.Palette {
@@ -274,8 +274,8 @@ struct AddTransactionScreen: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         focusedField = .amount
                     }
-                    if !didInitializeFirstExpenseGuide {
-                        didInitializeFirstExpenseGuide = true
+                    if !hasSeenFirstExpenseGuide {
+                        hasSeenFirstExpenseGuide = true
                         tutorialPhase = orderedTutorialPhases.first
                     }
                 }
