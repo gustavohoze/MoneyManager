@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import UserNotifications
+import AppIntents
 
 final class InAppNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(
@@ -27,6 +28,9 @@ struct MoneyManagerApp: App {
     init() {
         CloudSyncedPreferencesBridge.shared.start()
         UNUserNotificationCenter.current().delegate = inAppNotificationDelegate
+        Task {
+            try? await FinanceAppShortcutsProvider.updateAppShortcutParameters()
+        }
     }
 
     var body: some Scene {

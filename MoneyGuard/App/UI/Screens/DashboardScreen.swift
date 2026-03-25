@@ -22,7 +22,9 @@ struct DashboardScreen: View {
                     onSelectTransaction: onSelectTransaction,
                     palette: palette
                 )
-                .padding(16)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 90) // Extra padding to avoid floating button
             }
             .background(FinanceTheme.pageBackground(for: colorScheme))
             .navigationTitle(String(localized: "Dashboard"))

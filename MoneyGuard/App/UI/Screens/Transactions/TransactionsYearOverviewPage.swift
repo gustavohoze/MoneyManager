@@ -69,7 +69,7 @@ struct TransactionsYearOverviewPage: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
-            .padding(.bottom, 28)
+            .padding(.bottom, 90) // Extra padding for floating action button
         }
     }
 

@@ -19,15 +19,17 @@ struct MilestoneOneRootView: View {
     private let context: NSManagedObjectContext
     private let autoFocusAddAmountOnLaunch: Bool
     private let onInitialLaunchHandled: (() -> Void)?
+    private let initialTab: MilestoneOneTab
 
     @State private var selectedTab: MilestoneOneTab = .dashboard
-
-    init(
+    @State private var showingAddTransactionSheet: Bool = false
+        init(
         context: NSManagedObjectContext,
         initialTab: MilestoneOneTab = .dashboard,
         autoFocusAddAmountOnLaunch: Bool = false,
         onInitialLaunchHandled: (() -> Void)? = nil
     ) {
+        self.initialTab = initialTab
         let accountRepository = CoreDataPaymentMethodRepository(context: context)
         let categoryRepository = CoreDataCategoryRepository(context: context)
         let transactionRepository = CoreDataTransactionRepository(context: context)
@@ -154,50 +156,67 @@ struct MilestoneOneRootView: View {
         self.context = context
         self.autoFocusAddAmountOnLaunch = autoFocusAddAmountOnLaunch
         self.onInitialLaunchHandled = onInitialLaunchHandled
-        _selectedTab = State(initialValue: initialTab)
+        _selectedTab = State(initialValue: initialTab == .add ? .dashboard : initialTab)
+        _showingAddTransactionSheet = State(initialValue: initialTab == .add)
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            DashboardScreen(
-                viewModel: dashboardViewModel,
-                onSelectTransaction: { transactionID in
-                    transactionListViewModel.beginEdit(id: transactionID)
-                }
-            )
-                .tabItem {
-                    Label(String(localized: "Dashboard"), systemImage: "chart.pie.fill")
-                }
-                .tag(MilestoneOneTab.dashboard)
+        ZStack(alignment: .bottomTrailing) {
+            TabView(selection: $selectedTab) {
+                DashboardScreen(
+                    viewModel: dashboardViewModel,
+                    onSelectTransaction: { transactionID in
+                        transactionListViewModel.beginEdit(id: transactionID)
+                    }
+                )
+                    .tabItem {
+                        Label(String(localized: "Dashboard"), systemImage: "chart.pie.fill")
+                    }
+                    .tag(MilestoneOneTab.dashboard)
 
-            TransactionListScreen(viewModel: transactionListViewModel)
-                .tabItem {
-                    Label(String(localized: "Transactions"), systemImage: "list.bullet.rectangle")
-                }
-                .tag(MilestoneOneTab.transactions)
+                TransactionListScreen(viewModel: transactionListViewModel)
+                    .tabItem {
+                        Label(String(localized: "Transactions"), systemImage: "list.bullet.rectangle")
+                    }
+                    .tag(MilestoneOneTab.transactions)
 
+                SettingsScreen(viewModel: settingsViewModel)
+                    .tabItem {
+                        Label(String(localized: "Settings"), systemImage: "gearshape.fill")
+                    }
+                    .tag(MilestoneOneTab.settings)
+            }
+            .tint(FinanceTheme.palette(for: colorScheme).accent)
+            
+            // Floating Action Button
+            if selectedTab == .dashboard || selectedTab == .transactions {
+                Button {
+                    analytics.track(.quickAddUsed)
+                    showingAddTransactionSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 56, height: 56)
+                        .background(FinanceTheme.palette(for: colorScheme).accent)
+                        .clipShape(Circle())
+                        .shadow(color: FinanceTheme.palette(for: colorScheme).accent.opacity(0.4), radius: 8, x: 0, y: 4)
+                }
+                .padding(.trailing, 20)
+                .padding(.bottom, 80) // Above the tab bar
+                .transition(.scale.combined(with: .opacity))
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: selectedTab)
+            }
+        }
+        .sheet(isPresented: $showingAddTransactionSheet, onDismiss: {
+            onInitialLaunchHandled?()
+        }) {
             AddTransactionScreen(
                 viewModel: addTransactionViewModel,
-                autoFocusAmountOnAppear: autoFocusAddAmountOnLaunch
+                autoFocusAmountOnAppear: true
             )
-                .tabItem {
-                    Label(String(localized: "Add"), systemImage: "plus.circle.fill")
-                }
-                .tag(MilestoneOneTab.add)
-
-//            SaveScreen(viewModel: savePlanningViewModel)
-//                .tabItem {
-//                    Label(String(localized: "Save"), systemImage: "banknote.fill")
-//                }
-//                .tag(MilestoneOneTab.save)
-
-            SettingsScreen(viewModel: settingsViewModel)
-                .tabItem {
-                    Label(String(localized: "Settings"), systemImage: "gearshape.fill")
-                }
-                .tag(MilestoneOneTab.settings)
+            .environment(\.managedObjectContext, context) // if needed
         }
-        .tint(FinanceTheme.palette(for: colorScheme).accent)
         .sheet(item: $transactionListViewModel.editState) { state in
             TransactionEditSheetView(
                 state: state,
@@ -289,6 +308,11 @@ struct MilestoneOneRootView: View {
             dashboardViewModel.load()
             transactionListViewModel.load()
             savePlanningViewModel.load()
+        }
+        .onChange(of: initialTab) { _, newTab in
+            if newTab == .add {
+                showingAddTransactionSheet = true
+            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard rootViewModel.hasLoaded, newPhase == .active else {

@@ -270,10 +270,14 @@ struct AddTransactionScreen: View {
             .onAppear {
                 viewModel.loadOptions()
 
-                if autoFocusAmountOnAppear,
-                   !didInitializeFirstExpenseGuide {
-                    didInitializeFirstExpenseGuide = true
-                    tutorialPhase = orderedTutorialPhases.first
+                if autoFocusAmountOnAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        focusedField = .amount
+                    }
+                    if !didInitializeFirstExpenseGuide {
+                        didInitializeFirstExpenseGuide = true
+                        tutorialPhase = orderedTutorialPhases.first
+                    }
                 }
             }
             .animation(.easeInOut(duration: 0.22), value: toast?.id)

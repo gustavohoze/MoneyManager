@@ -47,6 +47,7 @@ struct DashboardRecentTransactionsCard: View {
                             Text(maskedCurrencyText(item.amount))
                                 .font(.system(.subheadline, design: .rounded).weight(.bold))
                                 .foregroundStyle(palette.ink)
+                                .allowsHitTesting(shouldMaskBalances)
                                 .onTapGesture {
                                     if shouldMaskBalances {
                                         onRevealBalances()

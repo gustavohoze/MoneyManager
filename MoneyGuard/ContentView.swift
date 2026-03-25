@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var isShowingRestartPrompt = false
     @State private var isAuthenticating = false
     @State private var requiresAuthentication = false
+    private let analytics = AnalyticsServiceFactory.makeDefault()
 
     private var shouldShowLockScreen: Bool {
         lockWithFaceID && requiresAuthentication
@@ -116,6 +117,12 @@ struct ContentView: View {
                         openAddTransactionAfterCompletion = false
                     }
                 )
+                .onOpenURL { url in
+                    if url.scheme == "moneyguard" && url.host == "add-transaction" {
+                        analytics.track(.lockscreenLoggingUsed)
+                        openAddTransactionAfterCompletion = true
+                    }
+                }
             }
         }
     }

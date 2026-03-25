@@ -6,6 +6,17 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3A0C5A0C0119853052A8ECD1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25DA91BC0D4BD35C24989EF9 /* Assets.xcassets */; };
+		45859AFC9131425E9749A185 /* MoneyGuardsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B063E0029629C26A83F540D0 /* MoneyGuardsWidget.swift */; };
+		60515C1296AD9CD17A46FE8C /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE49B39149DAE44830E72FE8 /* AppIntent.swift */; };
+		6D73C31081745A5B4588C30E /* MoneyGuardsWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 1D4035F11C170B5892E2DCC1 /* MoneyGuardsWidgetExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		72DBC8A8CC1554265F9487E6 /* MoneyGuardsWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E2F3EBE628DBF68463FC26 /* MoneyGuardsWidgetLiveActivity.swift */; };
+		92006DC26E1953D1D8CA6530 /* MoneyGuardsWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C6F7E0713200E58F4CFEE8B /* MoneyGuardsWidgetBundle.swift */; };
+		DC31E0994999B83BC27B6A09 /* MoneyGuardsWidgetControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F9EC7D759F863BB6913E3EA /* MoneyGuardsWidgetControl.swift */; };
+		F46238F718CE84530DE6C855 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44ED5A8A815F56319D65B710 /* Foundation.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		041304862F6843470036F610 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -14,11 +25,41 @@
 			remoteGlobalIDString = 041304462F6817B40036F610;
 			remoteInfo = MoneyManager;
 		};
+		16FE2ED819F073EC347D5294 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0413043F2F6817B40036F610 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8E33C270B09BDF686B243DEF;
+			remoteInfo = MoneyGuardsWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5CA6B71711C89BD637CCC385 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6D73C31081745A5B4588C30E /* MoneyGuardsWidgetExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		041304472F6817B40036F610 /* Money Guard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Money Guard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		041304822F6843470036F610 /* MoneyManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoneyManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D4035F11C170B5892E2DCC1 /* MoneyGuardsWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoneyGuardsWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		25DA91BC0D4BD35C24989EF9 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = MoneyGuardsWidget/Assets.xcassets; sourceTree = "<group>"; };
+		3F9EC7D759F863BB6913E3EA /* MoneyGuardsWidgetControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MoneyGuardsWidgetControl.swift; path = MoneyGuardsWidget/MoneyGuardsWidgetControl.swift; sourceTree = "<group>"; };
+		44ED5A8A815F56319D65B710 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		8C6F7E0713200E58F4CFEE8B /* MoneyGuardsWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MoneyGuardsWidgetBundle.swift; path = MoneyGuardsWidget/MoneyGuardsWidgetBundle.swift; sourceTree = "<group>"; };
+		98D1A7E05BC071B946442D58 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = Info.plist; path = MoneyGuardsWidget/Info.plist; sourceTree = "<group>"; };
+		B063E0029629C26A83F540D0 /* MoneyGuardsWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MoneyGuardsWidget.swift; path = MoneyGuardsWidget/MoneyGuardsWidget.swift; sourceTree = "<group>"; };
+		D8E2F3EBE628DBF68463FC26 /* MoneyGuardsWidgetLiveActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MoneyGuardsWidgetLiveActivity.swift; path = MoneyGuardsWidget/MoneyGuardsWidgetLiveActivity.swift; sourceTree = "<group>"; };
+		DE49B39149DAE44830E72FE8 /* AppIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppIntent.swift; path = MoneyGuardsWidget/AppIntent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -42,7 +83,16 @@
 		};
 		041304832F6843470036F610 /* MoneyManagerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = MoneyManagerTests;
+			sourceTree = "<group>";
+		};
+		04F584D32F73BD6200742F52 /* MoneyGuardsWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = MoneyGuardsWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -62,6 +112,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4D4E5172A105335E22252943 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F46238F718CE84530DE6C855 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -71,6 +129,15 @@
 				041304492F6817B40036F610 /* MoneyGuard */,
 				041304832F6843470036F610 /* MoneyManagerTests */,
 				041304482F6817B40036F610 /* Products */,
+				04F584D32F73BD6200742F52 /* MoneyGuardsWidget */,
+				13B5315FABBCBEB18A4DAF08 /* Frameworks */,
+				B063E0029629C26A83F540D0 /* MoneyGuardsWidget.swift */,
+				8C6F7E0713200E58F4CFEE8B /* MoneyGuardsWidgetBundle.swift */,
+				DE49B39149DAE44830E72FE8 /* AppIntent.swift */,
+				3F9EC7D759F863BB6913E3EA /* MoneyGuardsWidgetControl.swift */,
+				D8E2F3EBE628DBF68463FC26 /* MoneyGuardsWidgetLiveActivity.swift */,
+				25DA91BC0D4BD35C24989EF9 /* Assets.xcassets */,
+				98D1A7E05BC071B946442D58 /* Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -79,8 +146,25 @@
 			children = (
 				041304472F6817B40036F610 /* Money Guard.app */,
 				041304822F6843470036F610 /* MoneyManagerTests.xctest */,
+				1D4035F11C170B5892E2DCC1 /* MoneyGuardsWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		13B5315FABBCBEB18A4DAF08 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				69999E7B9B5CD435FDA1E572 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		69999E7B9B5CD435FDA1E572 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				44ED5A8A815F56319D65B710 /* Foundation.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -93,17 +177,17 @@
 				041304432F6817B40036F610 /* Sources */,
 				041304442F6817B40036F610 /* Frameworks */,
 				041304452F6817B40036F610 /* Resources */,
+				5CA6B71711C89BD637CCC385 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				087FFE7BF01A3F0EFFE6314A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				041304492F6817B40036F610 /* MoneyGuard */,
 			);
 			name = MoneyManager;
-			packageProductDependencies = (
-			);
 			productName = Money_Guard;
 			productReference = 041304472F6817B40036F610 /* Money Guard.app */;
 			productType = "com.apple.product-type.application";
@@ -125,11 +209,26 @@
 				041304832F6843470036F610 /* MoneyManagerTests */,
 			);
 			name = MoneyManagerTests;
-			packageProductDependencies = (
-			);
 			productName = MoneyManagerTests;
 			productReference = 041304822F6843470036F610 /* MoneyManagerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		8E33C270B09BDF686B243DEF /* MoneyGuardsWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5F6FFA4B0928630C40E52CB2 /* Build configuration list for PBXNativeTarget "MoneyGuardsWidgetExtension" */;
+			buildPhases = (
+				5C1999B13F1F48EF1ADC3B7E /* Sources */,
+				4D4E5172A105335E22252943 /* Frameworks */,
+				9B299F33945BDC77D601D7D4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoneyGuardsWidgetExtension;
+			productName = MoneyGuardsWidgetExtension;
+			productReference = 1D4035F11C170B5892E2DCC1 /* MoneyGuardsWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -175,6 +274,7 @@
 			targets = (
 				041304462F6817B40036F610 /* MoneyManager */,
 				041304812F6843470036F610 /* MoneyManagerTests */,
+				8E33C270B09BDF686B243DEF /* MoneyGuardsWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -191,6 +291,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B299F33945BDC77D601D7D4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3A0C5A0C0119853052A8ECD1 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -211,6 +319,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5C1999B13F1F48EF1ADC3B7E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45859AFC9131425E9749A185 /* MoneyGuardsWidget.swift in Sources */,
+				92006DC26E1953D1D8CA6530 /* MoneyGuardsWidgetBundle.swift in Sources */,
+				60515C1296AD9CD17A46FE8C /* AppIntent.swift in Sources */,
+				DC31E0994999B83BC27B6A09 /* MoneyGuardsWidgetControl.swift in Sources */,
+				72DBC8A8CC1554265F9487E6 /* MoneyGuardsWidgetLiveActivity.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -218,6 +338,12 @@
 			isa = PBXTargetDependency;
 			target = 041304462F6817B40036F610 /* MoneyManager */;
 			targetProxy = 041304862F6843470036F610 /* PBXContainerItemProxy */;
+		};
+		087FFE7BF01A3F0EFFE6314A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MoneyGuardsWidgetExtension;
+			target = 8E33C270B09BDF686B243DEF /* MoneyGuardsWidgetExtension */;
+			targetProxy = 16FE2ED819F073EC347D5294 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -461,6 +587,47 @@
 			};
 			name = Release;
 		};
+		9F26DF153A5B1075FA186F38 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LCKK5B35FW;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MoneyGuardsWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = shecraa.MoneyGuard.MoneyGuardsWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D99726D0B812AE72EE5D5F65 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LCKK5B35FW;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MoneyGuardsWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = shecraa.MoneyGuard.MoneyGuardsWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -487,6 +654,15 @@
 			buildConfigurations = (
 				041304892F6843470036F610 /* Debug */,
 				0413048A2F6843470036F610 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5F6FFA4B0928630C40E52CB2 /* Build configuration list for PBXNativeTarget "MoneyGuardsWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9F26DF153A5B1075FA186F38 /* Release */,
+				D99726D0B812AE72EE5D5F65 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
