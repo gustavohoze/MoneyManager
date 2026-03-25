@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import CoreData
-@testable import MoneyManager
+@testable import Money_Guard
 
 @MainActor
 struct TransactionEntryServiceTests {

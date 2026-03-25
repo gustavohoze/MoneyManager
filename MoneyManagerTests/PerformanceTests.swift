@@ -2,7 +2,7 @@ import XCTest
 import CoreData
 @testable import Money_Guard
 
-final class MoneyManagerPerformanceTests: XCTestCase {
+final class PerformanceTests: XCTestCase {
     
     @MainActor
     func testDashboardAggregationPerformance() throws {
@@ -35,17 +35,30 @@ final class MoneyManagerPerformanceTests: XCTestCase {
             )
         }
         
-        let dashboardDataService = DashboardDataService(
+        // Setup service
+        let defaults = UserDefaults(suiteName: "PerformanceTests")!
+        let alertsSettingsService = DefaultAlertsSettingsService(userDefaults: defaults)
+        let accountsSettingsService = DefaultAccountsAndIncomeSettingsService(userDefaults: defaults)
+        let categoryBudgetService = DefaultCategoryBudgetService(context: context)
+        
+        let dashboardDataService = DefaultDashboardDataService(
             transactionRepository: transactionRepo,
             categoryRepository: categoryRepo,
-            accountRepository: accountRepo
+            paymentMethodRepository: accountRepo,
+            alertsSettingsService: alertsSettingsService,
+            accountsSettingsService: accountsSettingsService,
+            categoryBudgetService: categoryBudgetService,
+            dateGenerator: { today }
         )
         
         // Measure performance of computing summary
         self.measure {
             let expectation = self.expectation(description: "Computation finished")
-            _ = try! dashboardDataService.loadSummary(asOf: today, recentLimit: 3)
-            expectation.fulfill()
+            Task {
+                let summary = try await dashboardDataService.computeSummary()
+                XCTAssertGreaterThan(summary.recentTransactions.count, 0)
+                expectation.fulfill()
+            }
             wait(for: [expectation], timeout: 5.0)
         }
     }

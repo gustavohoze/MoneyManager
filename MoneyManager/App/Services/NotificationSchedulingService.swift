@@ -133,9 +133,23 @@ struct LocalNotificationScheduler: NotificationScheduling {
         date.hour = 20
         date.minute = 0
 
+        let dailyTitles = [
+            String(localized: "Log today's expenses"),
+            String(localized: "Did you track your spending today?"),
+            String(localized: "Keep your budget on track!"),
+            String(localized: "Stay mindful of your money"),
+            String(localized: "Quick check-in: expenses")
+        ]
+        let dailyBodies = [
+            String(localized: "Take one minute to record today's spending so your totals stay accurate."),
+            String(localized: "A little tracking goes a long way. Add your expenses now!"),
+            String(localized: "Don't forget to log your purchases for a clearer picture."),
+            String(localized: "Your future self will thank you for tracking today."),
+            String(localized: "Consistency is key. Add your expenses!")
+        ]
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Log today's expenses")
-        content.body = String(localized: "Take one minute to record today's spending so your totals stay accurate.")
+        content.title = dailyTitles.randomElement() ?? dailyTitles[0]
+        content.body = dailyBodies.randomElement() ?? dailyBodies[0]
         content.sound = .default
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: date, repeats: true)
@@ -149,9 +163,23 @@ struct LocalNotificationScheduler: NotificationScheduling {
         date.hour = 20
         date.minute = 30
 
+        let monthlyTitles = [
+            String(localized: "Monthly spending check"),
+            String(localized: "How did your month go?"),
+            String(localized: "Review your budget"),
+            String(localized: "Time for a monthly recap!"),
+            String(localized: "Reflect & plan ahead")
+        ]
+        let monthlyBodies = [
+            String(localized: "Review your month-to-date spending and adjust your next month budget."),
+            String(localized: "Take a moment to see how your spending matched your goals."),
+            String(localized: "Check your categories and set a plan for next month."),
+            String(localized: "A quick review now helps you stay on track all year."),
+            String(localized: "Celebrate your wins and plan for improvements!")
+        ]
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Monthly spending check")
-        content.body = String(localized: "Review your month-to-date spending and adjust your next month budget.")
+        content.title = monthlyTitles.randomElement() ?? monthlyTitles[0]
+        content.body = monthlyBodies.randomElement() ?? monthlyBodies[0]
         content.sound = .default
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: date, repeats: true)

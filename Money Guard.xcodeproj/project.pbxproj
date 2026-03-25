@@ -17,7 +17,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		041304472F6817B40036F610 /* Money Manager Beta.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Money Manager Beta.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		041304472F6817B40036F610 /* Money Guard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Money Guard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		041304822F6843470036F610 /* MoneyManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoneyManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -77,7 +77,7 @@
 		041304482F6817B40036F610 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				041304472F6817B40036F610 /* Money Manager Beta.app */,
+				041304472F6817B40036F610 /* Money Guard.app */,
 				041304822F6843470036F610 /* MoneyManagerTests.xctest */,
 			);
 			name = Products;
@@ -104,8 +104,8 @@
 			name = MoneyManager;
 			packageProductDependencies = (
 			);
-			productName = MoneyManager;
-			productReference = 041304472F6817B40036F610 /* Money Manager Beta.app */;
+			productName = Money_Guard;
+			productReference = 041304472F6817B40036F610 /* Money Guard.app */;
 			productType = "com.apple.product-type.application";
 		};
 		041304812F6843470036F610 /* MoneyManagerTests */ = {
@@ -370,7 +370,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = shecraa.MoneyGuard;
-				PRODUCT_NAME = "Money Manager Beta";
+				PRODUCT_NAME = "Money Guard";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -408,7 +408,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = shecraa.MoneyGuard;
-				PRODUCT_NAME = "Money Manager Beta";
+				PRODUCT_NAME = "Money Guard";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -436,7 +436,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MoneyManager.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MoneyManager";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Money Guard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Money Guard";
 			};
 			name = Debug;
 		};
@@ -457,7 +457,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MoneyManager.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MoneyManager";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Money Guard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Money Guard";
 			};
 			name = Release;
 		};

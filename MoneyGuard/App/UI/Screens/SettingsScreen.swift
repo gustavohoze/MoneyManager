@@ -67,32 +67,9 @@ struct SettingsScreen: View {
                         ) {
                             path.append(.dataSyncPrivacy)
                         }
-
-                        SettingsTileButton(
-                            icon: "wrench.adjustable.fill",
-                            label: String(localized: "Advanced"),
-                            description: "Debug & testing",
-                            palette: palette
-                        ) {
-                            path.append(.advanced)
-                        }
                     }
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "flask.fill")
-                                .foregroundStyle(palette.accent)
-                            Text(String(localized: "Beta Notice"))
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                .foregroundStyle(palette.ink)
-                        }
-
-                        Text(String(localized: "This version is still in beta, so some bugs may occur. Your feedback is appreciated and helps us improve quickly."))
-                            .font(.caption)
-                            .foregroundStyle(palette.secondaryInk)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .financeCard(palette: palette)
+                    // ...existing code...
                 }
                 .padding(16)
             }

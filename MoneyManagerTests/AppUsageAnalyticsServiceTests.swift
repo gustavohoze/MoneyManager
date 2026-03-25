@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import MoneyManager
+@testable import Money_Guard
 
 struct AppUsageAnalyticsServiceTests {
     @Test("Test: tracks most used feature")

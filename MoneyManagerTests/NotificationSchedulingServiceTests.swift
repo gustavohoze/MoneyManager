@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import UserNotifications
-@testable import MoneyManager
+@testable import Money_Guard
 
 private final class NotificationCenterSchedulingMock: NotificationCenterScheduling {
     var status: UNAuthorizationStatus = .authorized

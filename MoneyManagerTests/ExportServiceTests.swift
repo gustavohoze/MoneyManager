@@ -1,6 +1,6 @@
 import CoreData
 import Testing
-@testable import MoneyManager
+@testable import Money_Guard
 
 struct ExportServiceTests {
     @Test("Test: CSV export")

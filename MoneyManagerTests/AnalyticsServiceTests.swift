@@ -1,5 +1,5 @@
 import Testing
-@testable import MoneyManager
+@testable import Money_Guard
 
 struct AnalyticsServiceTests {
     @Test("Test: app_open")

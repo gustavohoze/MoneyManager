@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDisplayName</key>
+	<string>Money Guard</string>
+	<key>CFBundleName</key>
+	<string>Money Guard</string>
+	<key>NSDescription</key>
+	<string>Protect, Track, and Grow Your Wealth</string>
 	<key>SUPABASE_ANALYTICS_TABLE</key>
 	<string>analytics_events</string>
 	<key>SUPABASE_ANON_KEY</key>

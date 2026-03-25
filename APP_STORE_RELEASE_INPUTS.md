@@ -41,7 +41,7 @@ Use this as the single input sheet before creating the App Store version.
 - What is New in This Version: TBD
 - Subtitle (30 chars max): Track spending, hit budgets
 - Promotional Text (optional): Track spending in seconds, stay on budget with clear monthly insights, and keep your data private with Face ID and secure iCloud sync.
-- Keywords (100 chars max): expense tracker,budget planner,money manager,personal finance,spending tracker,bill tracker
+- Keywords (100 chars max): expense tracker,budget planner,money guard,personal finance,spending tracker,bill tracker
 - App Description: MoneyManager helps you track daily spending, stay on top of budgets, and understand your money at a glance. Quickly add transactions, review your timeline, and monitor category trends with clear monthly insights. Your data stays under your control with secure storage, iCloud sync across devices, and optional Face ID protection.
 - Support URL: https://shecraa.com/moneymanager/support (required)
 - Marketing URL: optional (TBD)
@@ -160,6 +160,6 @@ Use this section to fill final values quickly:
 - Subtitle: Track spending, hit budgets
 - Promotional Text: Track spending in seconds, stay on budget with clear monthly insights, and keep your data private with Face ID and secure iCloud sync.
 - App Description: MoneyManager helps you track daily spending, stay on top of budgets, and understand your money at a glance. Quickly add transactions, review your timeline, and monitor category trends with clear monthly insights. Your data stays under your control with secure storage, iCloud sync across devices, and optional Face ID protection.
-- Keywords: expense tracker,budget planner,money manager,personal finance,spending tracker,bill tracker
+- Keywords: expense tracker,budget planner,money guard,personal finance,spending tracker,bill tracker
 - Review Contact:
 - Review Notes: No sign-in is required. Test flow: (1) Add a transaction from the Add screen, (2) edit and delete from the transaction timeline, (3) verify dashboard totals and category insights update immediately, (4) open Settings to test Face ID lock toggle and notification preferences. For notification checks, grant notification permission on first launch. iCloud/CloudKit sync is enabled when the device is signed into iCloud; if not signed in, local usage remains fully functional.

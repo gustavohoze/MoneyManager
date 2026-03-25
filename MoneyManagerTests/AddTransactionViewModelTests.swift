@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import MoneyManager
+@testable import Money_Guard
 
 private struct TransactionEntrySavingMock: TransactionEntrySaving {
     var saveHandler: (
