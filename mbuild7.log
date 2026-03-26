@@ -1,0 +1,77 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build -project "Money Guard.xcodeproj" -scheme MoneyManager -destination "platform=iOS Simulator,name=iPhone 17"
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  Supabase: https://github.com/supabase-community/supabase-swift.git @ 2.41.1
+  swift-concurrency-extras: https://github.com/pointfreeco/swift-concurrency-extras @ 1.3.2
+  swift-asn1: https://github.com/apple/swift-asn1.git @ 1.6.0
+  swift-crypto: https://github.com/apple/swift-crypto.git @ 4.3.0
+  swift-http-types: https://github.com/apple/swift-http-types.git @ 1.5.1
+  swift-clocks: https://github.com/pointfreeco/swift-clocks @ 1.0.6
+  xctest-dynamic-overlay: https://github.com/pointfreeco/xctest-dynamic-overlay @ 1.9.0
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+    Target 'MoneyManager' in project 'Money Guard'
+        ➜ Explicit dependency on target 'MoneyGuardsWidgetExtension' in project 'Money Guard'
+        ➜ Explicit dependency on target 'MoneyGuardsShareExtension' in project 'Money Guard'
+    Target 'MoneyGuardsShareExtension' in project 'Money Guard' (no dependencies)
+    Target 'MoneyGuardsWidgetExtension' in project 'Money Guard' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/mac/Documents/Projects/Xcode/MoneyManager/MoneyGuard/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 8f052fdf76de6acd6534ca3d5518c2c7
+Build description path: /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Intermediates.noindex/XCBuildData/8f052fdf76de6acd6534ca3d5518c2c7.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk /Users/mac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache
+    cd /Users/mac/Documents/Projects/Xcode/MoneyManager/Money\ Guard.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk -o /Users/mac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.4-23E237-686eebb5dc1d8ecb277353a59184f4aa.sdkstatcache
+
+ProcessInfoPlistFile /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/MoneyGuardsShareExtension.appex/Info.plist /Users/mac/Documents/Projects/Xcode/MoneyManager/ShareExtensionConfig/Info.plist (in target 'MoneyGuardsShareExtension' from project 'Money Guard')
+    cd /Users/mac/Documents/Projects/Xcode/MoneyManager
+    builtin-infoPlistUtility /Users/mac/Documents/Projects/Xcode/MoneyManager/ShareExtensionConfig/Info.plist -producttype com.apple.product-type.app-extension -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Intermediates.noindex/Money\ Guard.build/Debug-iphonesimulator/MoneyGuardsShareExtension.build/MainInterface-SBPartialInfo.plist -o /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/MoneyGuardsShareExtension.appex/Info.plist
+
+ProcessInfoPlistFile /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/MoneyGuardsWidgetExtension.appex/Info.plist /Users/mac/Documents/Projects/Xcode/MoneyManager/MoneyGuardsWidget/Info.plist (in target 'MoneyGuardsWidgetExtension' from project 'Money Guard')
+    cd /Users/mac/Documents/Projects/Xcode/MoneyManager
+    builtin-infoPlistUtility /Users/mac/Documents/Projects/Xcode/MoneyManager/MoneyGuardsWidget/Info.plist -producttype com.apple.product-type.app-extension -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Intermediates.noindex/Money\ Guard.build/Debug-iphonesimulator/MoneyGuardsWidgetExtension.build/assetcatalog_generated_info.plist -o /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/MoneyGuardsWidgetExtension.appex/Info.plist
+
+warning: Skipping duplicate build file in Compile Sources build phase: /Users/mac/Documents/Projects/Xcode/MoneyManager/MoneyGuard/App/Services/BankStatementParser.swift (in target 'MoneyManager' from project 'Money Guard')
+warning: Skipping duplicate build file in Compile Sources build phase: /Users/mac/Documents/Projects/Xcode/MoneyManager/MoneyGuard/App/ViewModels/Scanner/ScannerViewModel.swift (in target 'MoneyManager' from project 'Money Guard')
+warning: Skipping duplicate build file in Compile Sources build phase: /Users/mac/Documents/Projects/Xcode/MoneyManager/MoneyGuard/App/UI/Scanner/ScannerScreen.swift (in target 'MoneyManager' from project 'Money Guard')
+ProcessInfoPlistFile /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/Info.plist /Users/mac/Documents/Projects/Xcode/MoneyManager/MoneyGuard/Info.plist (in target 'MoneyManager' from project 'Money Guard')
+    cd /Users/mac/Documents/Projects/Xcode/MoneyManager
+    builtin-infoPlistUtility /Users/mac/Documents/Projects/Xcode/MoneyManager/MoneyGuard/Info.plist -producttype com.apple.product-type.application -genpkginfo /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Intermediates.noindex/Money\ Guard.build/Debug-iphonesimulator/MoneyManager.build/assetcatalog_generated_info.plist -scanforprivacyfile /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/PlugIns/MoneyGuardsShareExtension.appex -scanforprivacyfile /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/PlugIns/MoneyGuardsWidgetExtension.appex -o /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/Info.plist
+
+CopySwiftLibs /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app (in target 'MoneyManager' from project 'Money Guard')
+    cd /Users/mac/Documents/Projects/Xcode/MoneyManager
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/Money\ Guard.debug.dylib --scan-folder /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/Frameworks --scan-folder /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/PlugIns --scan-folder /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/SystemExtensions --scan-folder /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Products/Debug-iphonesimulator/Money\ Guard.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/mac/Library/Developer/Xcode/DerivedData/Money_Guard-dxxmxjuortbjhnewxujqdxewhgxk/Build/Intermediates.noindex/Money\ Guard.build/Debug-iphonesimulator/MoneyManager.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+** BUILD SUCCEEDED **
+

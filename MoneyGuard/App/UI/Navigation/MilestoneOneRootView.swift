@@ -11,6 +11,7 @@ struct MilestoneOneRootView: View {
     @StateObject private var addTransactionViewModel: AddTransactionViewModel
     @StateObject private var savePlanningViewModel: SavePlanningViewModel
     @StateObject private var settingsViewModel: SettingsViewModel
+    @StateObject private var scannerViewModel: ScannerViewModel
     @StateObject private var rootViewModel: MilestoneOneRootViewModel
 
     private let startupSeedingService: StartupSeedingService
@@ -144,6 +145,12 @@ struct MilestoneOneRootView: View {
                 optionsProvider: formOptionsService
             )
         )
+        _scannerViewModel = StateObject(
+            wrappedValue: ScannerViewModel(
+                transactionEntryService: transactionEntryService,
+                accountRepository: accountRepository
+            )
+        )
         _savePlanningViewModel = StateObject(wrappedValue: SavePlanningViewModel(planManager: savingPlanService))
         _rootViewModel = StateObject(wrappedValue: MilestoneOneRootViewModel())
 
@@ -179,6 +186,12 @@ struct MilestoneOneRootView: View {
                         Label(String(localized: "Transactions"), systemImage: "list.bullet.rectangle")
                     }
                     .tag(MilestoneOneTab.transactions)
+
+                ScannerScreen(viewModel: scannerViewModel)
+                    .tabItem {
+                        Label(String(localized: "Scanner"), systemImage: "doc.viewfinder")
+                    }
+                    .tag(MilestoneOneTab.scanner)
 
                 SettingsScreen(viewModel: settingsViewModel)
                     .tabItem {
@@ -309,12 +322,51 @@ struct MilestoneOneRootView: View {
             transactionListViewModel.load()
             savePlanningViewModel.load()
         }
-        .onChange(of: initialTab) { _, newTab in
+        .onChange(of: initialTab) { newTab in
             if newTab == .add {
                 showingAddTransactionSheet = true
             }
         }
-        .onChange(of: scenePhase) { _, newPhase in
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                SharedTransactionReader.shared.loadPending()
+                let pending = SharedTransactionReader.shared.pendingTransactions
+                if pending.count == 1, let first = pending.first {
+                    addTransactionViewModel.amountText = first.amount > 0 ? String(format: "%.2f", first.amount) : ""
+                                        addTransactionViewModel.merchantRaw = first.merchantRaw
+                    addTransactionViewModel.selectedDate = first.date
+                    
+                    showingAddTransactionSheet = true
+                    SharedTransactionReader.shared.clearPending()
+                } else if pending.count > 1 {
+                    do {
+                        let accountRepo = CoreDataPaymentMethodRepository(context: context)
+                        let defaultAccountID = try accountRepo.ensureDefaultPaymentMethod()
+                        let transactionRepo = CoreDataTransactionRepository(context: context)
+                        let categoryRepo = CoreDataCategoryRepository(context: context)
+                        let entryService = TransactionEntryService(transactionRepository: transactionRepo, categoryRepository: categoryRepo, merchantResolver: MerchantResolver())
+                        
+                        for tx in pending {
+                            let actualAmount = tx.isIncome ? tx.amount : -tx.amount
+                            _ = try entryService.saveManualTransaction(
+                                paymentMethodID: defaultAccountID,
+                                amount: actualAmount,
+                                currency: "USD",
+                                date: tx.date,
+                                merchantRaw: tx.merchantRaw,
+                                categoryID: nil,
+                                note: "Auto-imported from statement"
+                            )
+                        }
+                        transactionListViewModel.load()
+                        dashboardViewModel.load()
+                        selectedTab = .transactions
+                        SharedTransactionReader.shared.clearPending()
+                    } catch {
+                        print("Failed bulk import: \(error)")
+                    }
+                }
+            }
             guard rootViewModel.hasLoaded, newPhase == .active else {
                 if rootViewModel.hasLoaded,
                    newPhase == .inactive || newPhase == .background {
@@ -333,7 +385,7 @@ struct MilestoneOneRootView: View {
             transactionListViewModel.load()
             savePlanningViewModel.load()
         }
-        .onChange(of: selectedTab) { _, newTab in
+        .onChange(of: selectedTab) { newTab in
             guard rootViewModel.hasLoaded else {
                 return
             }

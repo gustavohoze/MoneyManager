@@ -5,5 +5,6 @@ enum MilestoneOneTab: Hashable {
     case transactions
     case add
     case save
+    case scanner
     case settings
 }

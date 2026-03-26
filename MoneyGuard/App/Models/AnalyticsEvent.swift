@@ -21,4 +21,5 @@ enum AnalyticsEvent: String, CaseIterable {
     case featureAddViewed = "feature_add_viewed"
     case featureSaveViewed = "feature_save_viewed"
     case featureSettingsViewed = "feature_settings_viewed"
+    case featureScannerViewed = "feature_scanner_viewed"
 }

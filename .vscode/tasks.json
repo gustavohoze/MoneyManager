@@ -68,6 +68,23 @@
 			],
 			"isBackground": false,
 			"group": "test"
+		},
+		{
+			"label": "Test Build",
+			"type": "shell",
+			"command": "xcodebuild",
+			"args": [
+				"test",
+				"-project",
+				"Money Guard.xcodeproj",
+				"-scheme",
+				"MoneyManager",
+				"-destination",
+				"platform=iOS Simulator,name=iPhone 17"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "test"
 		}
 	]
 }

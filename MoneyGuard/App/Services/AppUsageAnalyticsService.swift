@@ -90,6 +90,8 @@ final class AppUsageAnalyticsService {
             return "save"
         case .settings:
             return "settings"
+        case .scanner:
+            return "scanner"
         }
     }
 
@@ -105,6 +107,8 @@ final class AppUsageAnalyticsService {
             return .featureSaveViewed
         case .settings:
             return .featureSettingsViewed
+        case .scanner:
+            return .featureScannerViewed
         }
     }
 

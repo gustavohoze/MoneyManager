@@ -1,0 +1,19 @@
+    func saveManualTransaction(
+        paymentMethodID: UUID,
+        amount: Double,
+        currency: String,
+        date: Date,
+        merchantRaw: String?,
+        categoryID: UUID?,
+        note: String?
+    ) throws -> TransactionEntryResult
+--
+    func saveManualTransaction(
+        paymentMethodID: UUID,
+        amount: Double,
+        currency: String,
+        date: Date,
+        merchantRaw: String?,
+        categoryID: UUID?,
+        note: String?
+    ) throws -> TransactionEntryResult {

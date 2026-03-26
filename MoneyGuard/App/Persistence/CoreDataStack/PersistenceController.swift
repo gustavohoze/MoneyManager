@@ -151,17 +151,21 @@ final class PersistenceController {
         return (container, errorDescription)
     }
 
-    private static func localFallbackStoreURL() -> URL? {
+    private static func appGroupDirectory() -> URL? {
         let fileManager = FileManager.default
+        let groupIdentifier = "group.shecraa.MoneyManager"
+        return fileManager.containerURL(forSecurityApplicationGroupIdentifier: groupIdentifier)
+    }
 
-        guard let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+    private static func localFallbackStoreURL() -> URL? {
+        guard let baseURL = appGroupDirectory() else {
             return nil
         }
-
+        
         let directoryURL = baseURL.appendingPathComponent("MoneyManager", isDirectory: true)
 
         do {
-            try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         } catch {
             return nil
         }
@@ -170,16 +174,14 @@ final class PersistenceController {
     }
 
     private static func cloudKitPrimaryStoreURL() -> URL? {
-        let fileManager = FileManager.default
-
-        guard let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+        guard let baseURL = appGroupDirectory() else {
             return nil
         }
 
         let directoryURL = baseURL.appendingPathComponent("MoneyManager", isDirectory: true)
 
         do {
-            try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         } catch {
             return nil
         }
@@ -188,16 +190,14 @@ final class PersistenceController {
     }
 
     private static func cloudKitRecoveryStoreURL() -> URL? {
-        let fileManager = FileManager.default
-
-        guard let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+        guard let baseURL = appGroupDirectory() else {
             return nil
         }
 
         let directoryURL = baseURL.appendingPathComponent("MoneyManager", isDirectory: true)
 
         do {
-            try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         } catch {
             return nil
         }

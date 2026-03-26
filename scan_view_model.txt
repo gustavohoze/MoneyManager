@@ -1,0 +1,16 @@
+    60	                
+    61	                _ = try transactionEntryService.saveManualTransaction(
+    62	                    paymentMethodID: defaultAccountID,
+    63	                    amount: actualAmount,
+    64	                    currency: "USD", // Might want to localize or support multi-currency
+    65	                    date: tx.date,
+    66	                    merchantRaw: tx.merchantRaw,
+    67	                    categoryID: nil,
+    68	                    note: "Manually imported via OCR"
+    69	                )
+    70	            }
+    71	            
+    72	            self.parsedTransactions = []
+    73	            self.selectedImage = nil
+    74	            self.errorMessage = "Saved successfully!"
+    75	        } catch {
