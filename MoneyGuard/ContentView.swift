@@ -17,10 +17,12 @@ struct ContentView: View {
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @AppStorage("onboarding.openAddTransactionAfterCompletion") private var openAddTransactionAfterCompletion = false
     @AppStorage("settings.lockWithFaceID") private var lockWithFaceID = false
+    @AppStorage("updates.siriShortcutsLogging.v1.shown") private var hasSeenSiriShortcutsUpdate = false
 
     @State private var hasCheckedCloudKitOnLaunch = false
     @State private var isShowingCloudKitLaunchPrompt = false
     @State private var isShowingRestartPrompt = false
+    @State private var isShowingSiriShortcutsUpdate = false
     @State private var isAuthenticating = false
     @State private var requiresAuthentication = false
     private let analytics = AnalyticsServiceFactory.makeDefault()
@@ -58,6 +60,12 @@ struct ContentView: View {
                 requiresAuthentication = true
                 Task { await authenticateIfNeeded() }
             }
+
+            presentSiriShortcutsUpdateIfNeeded()
+        }
+        .onChange(of: onboardingCompleted) { _, isCompleted in
+            guard isCompleted else { return }
+            presentSiriShortcutsUpdateIfNeeded()
         }
         .onChange(of: lockWithFaceID) { _, isEnabled in
             if isEnabled {
@@ -95,6 +103,11 @@ struct ContentView: View {
             Button(String(localized: "OK"), role: .cancel) {}
         } message: {
             Text(String(localized: "Please restart the app so CloudKit sync can be activated."))
+        }
+        .sheet(isPresented: $isShowingSiriShortcutsUpdate, onDismiss: {
+            hasSeenSiriShortcutsUpdate = true
+        }) {
+            siriShortcutsUpdateModal
         }
     }
 
@@ -174,6 +187,52 @@ struct ContentView: View {
             .financeCard(palette: palette)
             .padding(.horizontal, 24)
         }
+    }
+
+    private var siriShortcutsUpdateModal: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Label("What\'s New", systemImage: "sparkles")
+                    .font(.system(.title2, design: .rounded).weight(.bold))
+                    .foregroundStyle(palette.ink)
+
+                Text("Now support Siri and Shortcut logging.")
+                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(palette.ink)
+
+                Text("Try saying: \"Hey Siri, log transaction in MoneyManager\".")
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(palette.secondaryInk)
+
+                Text("You can also add the shortcut from the Shortcuts app and log expenses faster from your lock screen.")
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(palette.secondaryInk)
+
+                Spacer(minLength: 0)
+
+                Button {
+                    hasSeenSiriShortcutsUpdate = true
+                    isShowingSiriShortcutsUpdate = false
+                } label: {
+                    Text("Got it")
+                        .font(.system(.headline, design: .rounded).weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(palette.accent)
+            }
+            .padding(20)
+            .presentationDetents([.height(340), .medium])
+            .presentationDragIndicator(.visible)
+            .interactiveDismissDisabled(false)
+        }
+    }
+
+    private func presentSiriShortcutsUpdateIfNeeded() {
+        guard onboardingCompleted else { return }
+        guard !hasSeenSiriShortcutsUpdate else { return }
+        isShowingSiriShortcutsUpdate = true
     }
 
     @MainActor
