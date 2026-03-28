@@ -37,29 +37,25 @@ final class PerformanceTests: XCTestCase {
         
         // Setup service
         let defaults = UserDefaults(suiteName: "PerformanceTests")!
-        let alertsSettingsService = DefaultAlertsSettingsService(userDefaults: defaults)
-        let accountsSettingsService = DefaultAccountsAndIncomeSettingsService(userDefaults: defaults)
-        let categoryBudgetService = DefaultCategoryBudgetService(context: context)
+        let settingsProvider = UserDefaultsDashboardSettingsProvider(defaults: defaults)
+        let categoryBudgetService = UserDefaultsCategoryBudgetService(defaults: defaults)
         
-        let dashboardDataService = DefaultDashboardDataService(
+        let dashboardDataService = DashboardDataService(
             transactionRepository: transactionRepo,
             categoryRepository: categoryRepo,
-            paymentMethodRepository: accountRepo,
-            alertsSettingsService: alertsSettingsService,
-            accountsSettingsService: accountsSettingsService,
-            categoryBudgetService: categoryBudgetService,
-            dateGenerator: { today }
+            accountRepository: accountRepo,
+            settingsProvider: settingsProvider,
+            budgetProvider: categoryBudgetService
         )
         
-        // Measure performance of computing summary
+        // Measure performance of loading summary
         self.measure {
-            let expectation = self.expectation(description: "Computation finished")
-            Task {
-                let summary = try await dashboardDataService.computeSummary()
+            do {
+                let summary = try dashboardDataService.loadSummary(asOf: today, recentLimit: 3)
                 XCTAssertGreaterThan(summary.recentTransactions.count, 0)
-                expectation.fulfill()
+            } catch {
+                XCTFail("Failed to load summary: \(error)")
             }
-            wait(for: [expectation], timeout: 5.0)
         }
     }
 }
