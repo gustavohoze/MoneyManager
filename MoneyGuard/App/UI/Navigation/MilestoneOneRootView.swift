@@ -123,11 +123,18 @@ struct MilestoneOneRootView: View {
         let merchantSuggestionService = TransactionMerchantSuggestionService(
             transactionRepository: transactionRepository
         )
+        let categoryService = TransactionCategoryService(
+            categoryRepository: categoryRepository
+        )
+        let settingsCategoryService = CategoryManagementService(
+            categoryRepository: categoryRepository
+        )
 
         _addTransactionViewModel = StateObject(
             wrappedValue: AddTransactionViewModel(
                 transactionEntryService: transactionEntryService,
                 optionsProvider: formOptionsService,
+                categoryManager: categoryService,
                 merchantCategorySuggester: merchantMemoryService,
                 merchantSuggestionProvider: merchantSuggestionService,
                 accountAutoSelection: accountAutoSelectionService,
@@ -140,8 +147,11 @@ struct MilestoneOneRootView: View {
         _settingsViewModel = StateObject(
             wrappedValue: SettingsViewModel(
                 paymentMethodManager: paymentMethodManagementService,
+                categoryManager: settingsCategoryService,
                 dummyTransactionManager: dummyTransactionCRUDService,
-                optionsProvider: formOptionsService
+                optionsProvider: formOptionsService,
+                exportService: ExportService(),
+                importService: ImportService(container: PersistenceController.shared.container)
             )
         )
         _savePlanningViewModel = StateObject(wrappedValue: SavePlanningViewModel(planManager: savingPlanService))

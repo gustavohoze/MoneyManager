@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import CoreData
 
 struct SettingsToastState: Identifiable {
     let id = UUID()
@@ -19,17 +20,26 @@ final class SettingsViewModel: ObservableObject {
     @Published private(set) var toast: SettingsToastState?
 
     private let paymentMethodManager: PaymentMethodManaging
+    private let categoryManager: SettingsCategoryManaging
     private let dummyTransactionManager: DummyTransactionDataManaging
     private let optionsProvider: TransactionFormOptionsProviding
+    private let exportService: ExportService?
+    private let importService: ImportService?
 
     init(
         paymentMethodManager: PaymentMethodManaging,
+        categoryManager: SettingsCategoryManaging? = nil,
         dummyTransactionManager: DummyTransactionDataManaging? = nil,
-        optionsProvider: TransactionFormOptionsProviding? = nil
+        optionsProvider: TransactionFormOptionsProviding? = nil,
+        exportService: ExportService? = nil,
+        importService: ImportService? = nil
     ) {
         self.paymentMethodManager = paymentMethodManager
+        self.categoryManager = categoryManager ?? NoOpSettingsCategoryManager()
         self.dummyTransactionManager = dummyTransactionManager ?? NoOpDummyTransactionDataManager()
         self.optionsProvider = optionsProvider ?? NoOpTransactionFormOptionsProvider()
+        self.exportService = exportService
+        self.importService = importService
     }
 
     func loadSettingsData() {
@@ -126,6 +136,48 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    func createCategory(name: String, type: String, icon: String) {
+        do {
+            try categoryManager.createCategory(name: name, type: type, icon: icon)
+            actionMessage = String(localized: "Category created.")
+            errorMessage = nil
+            loadCategories()
+            showToast(message: actionMessage ?? String(localized: "Category created."))
+        } catch {
+            errorMessage = error.localizedDescription
+            actionMessage = nil
+            showToast(message: error.localizedDescription, isError: true)
+        }
+    }
+
+    func updateCategory(id: UUID, name: String, type: String, icon: String) {
+        do {
+            try categoryManager.updateCategory(id: id, name: name, type: type, icon: icon)
+            actionMessage = String(localized: "Category updated.")
+            errorMessage = nil
+            loadCategories()
+            showToast(message: actionMessage ?? String(localized: "Category updated."))
+        } catch {
+            errorMessage = error.localizedDescription
+            actionMessage = nil
+            showToast(message: error.localizedDescription, isError: true)
+        }
+    }
+
+    func deleteCategory(id: UUID) {
+        do {
+            try categoryManager.deleteCategory(id: id)
+            actionMessage = String(localized: "Category deleted.")
+            errorMessage = nil
+            loadCategories()
+            showToast(message: actionMessage ?? String(localized: "Category deleted."))
+        } catch {
+            errorMessage = error.localizedDescription
+            actionMessage = nil
+            showToast(message: error.localizedDescription, isError: true)
+        }
+    }
+
     func syncPaymentMethodsCurrency(to currencyCode: String) {
         let previousState = paymentMethods
         do {
@@ -186,6 +238,80 @@ final class SettingsViewModel: ObservableObject {
             actionMessage = nil
             showToast(message: error.localizedDescription, isError: true)
         }
+    }
+
+    func exportTransactionsAsJSON() -> Data? {
+        guard let exportService = exportService else {
+            showToast(message: String(localized: "Export service not available."), isError: true)
+            return nil
+        }
+
+        do {
+            let context = PersistenceController.shared.container.viewContext
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+            fetchRequest.returnsObjectsAsFaults = false
+            let transactions = try context.fetch(fetchRequest)
+
+            let jsonString = exportService.makeJSON(from: transactions)
+            guard let data = jsonString.data(using: .utf8) else { return nil }
+            return data
+        } catch {
+            showToast(message: error.localizedDescription, isError: true)
+            return nil
+        }
+    }
+
+    func exportTransactionsAsCSV() -> Data? {
+        guard let exportService = exportService else {
+            showToast(message: String(localized: "Export service not available."), isError: true)
+            return nil
+        }
+
+        do {
+            let context = PersistenceController.shared.container.viewContext
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+            fetchRequest.returnsObjectsAsFaults = false
+            let transactions = try context.fetch(fetchRequest)
+
+            let csvString = exportService.makeCSV(from: transactions)
+            guard let data = csvString.data(using: .utf8) else { return nil }
+            return data
+        } catch {
+            showToast(message: error.localizedDescription, isError: true)
+            return nil
+        }
+    }
+
+    func importTransactions(from data: Data, format: String) {
+        guard let importService = importService else {
+            showToast(message: String(localized: "Import service not available."), isError: true)
+            return
+        }
+
+        do {
+            let result: (transactionsImported: Int, categoriesImported: Int)
+
+            if format.lowercased() == "json" {
+                result = try importService.importFromJSON(data)
+            } else if format.lowercased() == "csv" {
+                result = try importService.importFromCSV(data)
+            } else {
+                showToast(message: String(localized: "Unsupported file format."), isError: true)
+                return
+            }
+
+            let message = String(
+                localized: "\(result.transactionsImported) transactions and \(result.categoriesImported) categories imported."
+            )
+            showToast(message: message)
+            loadCategories()
+        } catch {
+            showToast(message: error.localizedDescription, isError: true)
+        }
+    }
+
+    func presentToast(message: String, isError: Bool = false) {
+        showToast(message: message, isError: isError)
     }
 
     func dismissToast() {
@@ -272,4 +398,12 @@ private struct NoOpTransactionFormOptionsProvider: TransactionFormOptionsProvidi
     func loadOptions() throws -> TransactionFormOptions {
         TransactionFormOptions(accounts: [], categories: [])
     }
+}
+
+private struct NoOpSettingsCategoryManager: SettingsCategoryManaging {
+    func createCategory(name: String, type: String, icon: String) throws {}
+
+    func updateCategory(id: UUID, name: String, type: String, icon: String) throws {}
+
+    func deleteCategory(id: UUID) throws {}
 }

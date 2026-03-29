@@ -100,6 +100,16 @@ struct AddTransactionScreen: View {
                             tutorialInstructionCard(text: tutorialInstructionText)
                         }
 
+                        AddTransactionSectionLabel(text: String(localized: "Transaction Type"), palette: palette)
+                            .tutorialDimmed(isFirstExpenseGuideActive && !isHighlightingMerchant)
+
+                        AddTransactionTypePickerCard(
+                            selectedType: $viewModel.selectedTransactionType,
+                            palette: palette
+                        )
+                        .tutorialDimmed(isFirstExpenseGuideActive && !isHighlightingMerchant)
+                        .allowsHitTesting(!isFirstExpenseGuideActive)
+
                         // Merchant section
                         AddTransactionSectionLabel(text: String(localized: "Merchant"), palette: palette)
                             .tutorialDimmed(isFirstExpenseGuideActive && !isHighlightingMerchant)
@@ -125,12 +135,13 @@ struct AddTransactionScreen: View {
                                 .tutorialDimmed(isFirstExpenseGuideActive && !isHighlightingDetails)
 
                             HStack(spacing: 12) {
-                                if !viewModel.categoryOptions.isEmpty {
+                                if !viewModel.visibleCategoryOptions.isEmpty {
                                     AddTransactionCategoryPickerCard(
                                         selectedCategory: viewModel.selectedCategoryOption,
-                                        categories: viewModel.categoryOptions,
+                                        categories: viewModel.visibleCategoryOptions,
                                         palette: palette,
-                                        onSelect: { viewModel.selectedCategoryID = $0 }
+                                        onSelect: { viewModel.selectedCategoryID = $0 },
+                                        onCreateCategory: viewModel.addCustomCategory(named:)
                                     )
                                 }
 

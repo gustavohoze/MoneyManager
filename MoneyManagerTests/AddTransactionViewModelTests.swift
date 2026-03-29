@@ -34,6 +34,14 @@ private struct TransactionFormOptionsProvidingMock: TransactionFormOptionsProvid
     }
 }
 
+private struct TransactionCategoryManagingMock: TransactionCategoryManaging {
+    var upsertHandler: (_ name: String, _ type: String) throws -> TransactionFormCategoryOption
+
+    func upsertCategory(name: String, type: String) throws -> TransactionFormCategoryOption {
+        try upsertHandler(name, type)
+    }
+}
+
 private struct TransactionMutatingMock: TransactionMutating {
     var deleteHandler: (UUID) throws -> Void = { _ in }
 
@@ -185,8 +193,8 @@ struct AddTransactionViewModelTests {
         #expect(viewModel.selectedCategoryID == categoryID)
     }
 
-    @Test("Test: category options include income category for direct selection")
-    func loadOptions_withIncomeCategory_allowsIncomeCategorySelection() {
+    @Test("Test: category picker hides generic income category in UI")
+    func loadOptions_withIncomeCategory_hidesIncomeFromVisiblePickerOptions() {
         let paymentMethodID = UUID()
         let expenseCategoryID = UUID()
         let incomeCategoryID = UUID()
@@ -208,10 +216,81 @@ struct AddTransactionViewModelTests {
         )
 
         viewModel.loadOptions()
-        viewModel.selectedCategoryID = incomeCategoryID
+        viewModel.selectedTransactionType = .income
 
         #expect(viewModel.categoryOptions.contains(where: { $0.id == incomeCategoryID }))
-        #expect(viewModel.selectedCategoryID == incomeCategoryID)
+        #expect(viewModel.visibleCategoryOptions.contains(where: { $0.id == incomeCategoryID }) == false)
+    }
+
+    @Test("Test: save income without explicit category uses hidden income category")
+    func save_incomeWithoutSelectedCategory_usesHiddenIncomeCategory() {
+        let accountID = UUID()
+        let incomeCategoryID = UUID()
+        var capturedCategoryID: UUID?
+        let viewModel = AddTransactionViewModel(
+            transactionEntryService: TransactionEntrySavingMock { _, _, _, _, _, categoryID, _ in
+                capturedCategoryID = categoryID
+                return TransactionEntryResult(transactionID: UUID(), duplicateDetected: false)
+            },
+            optionsProvider: TransactionFormOptionsProvidingMock(
+                result: .success(
+                    TransactionFormOptions(
+                        accounts: [TransactionFormAccountOption(id: accountID, name: "Cash")],
+                        categories: [
+                            TransactionFormCategoryOption(id: incomeCategoryID, name: "Income", icon: "arrow.down.circle.fill", type: "income")
+                        ]
+                    )
+                )
+            )
+        )
+
+        viewModel.loadOptions()
+        viewModel.selectedTransactionType = .income
+        viewModel.selectedCategoryID = nil
+        viewModel.amountText = "4500"
+        viewModel.selectedAccountID = accountID
+
+        viewModel.save()
+
+        #expect(capturedCategoryID == incomeCategoryID)
+    }
+
+    @Test("Test: add custom category uses selected transaction type")
+    func addCustomCategory_createsCategoryWithCurrentTypeAndSelectsIt() {
+        let paymentMethodID = UUID()
+        let createdCategoryID = UUID()
+        var capturedType: String?
+        let viewModel = AddTransactionViewModel(
+            transactionEntryService: TransactionEntrySavingMock { _, _, _, _, _, _, _ in
+                TransactionEntryResult(transactionID: UUID(), duplicateDetected: false)
+            },
+            optionsProvider: TransactionFormOptionsProvidingMock(
+                result: .success(
+                    TransactionFormOptions(
+                        accounts: [TransactionFormAccountOption(id: paymentMethodID, name: "Cash")],
+                        categories: []
+                    )
+                )
+            ),
+            categoryManager: TransactionCategoryManagingMock(
+                upsertHandler: { name, type in
+                    capturedType = type
+                    return TransactionFormCategoryOption(
+                        id: createdCategoryID,
+                        name: name,
+                        icon: "arrow.down.circle.fill",
+                        type: type
+                    )
+                }
+            )
+        )
+
+        viewModel.loadOptions()
+        viewModel.selectedTransactionType = .income
+        viewModel.addCustomCategory(named: "Salary")
+
+        #expect(capturedType == "income")
+        #expect(viewModel.selectedCategoryID == createdCategoryID)
     }
 
     @Test("Test: undo reverts last saved transaction")

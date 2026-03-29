@@ -87,6 +87,9 @@ protocol CategoryRepository {
     func seedInitialCategories() throws -> Int
     @discardableResult
     func upsertCategory(name: String, icon: String, type: String) throws -> UUID
+    func fetchCategory(id: UUID) throws -> NSManagedObject
+    func updateCategory(id: UUID, name: String, icon: String, type: String) throws
+    func deleteCategory(id: UUID, remapTransactionsTo fallbackCategoryID: UUID) throws
     func fetchCategories() throws -> [NSManagedObject]
 }
 

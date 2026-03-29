@@ -579,6 +579,66 @@ struct CoreDataCategoryRepository: CategoryRepository {
         return try context.fetch(request)
     }
 
+    func fetchCategory(id: UUID) throws -> NSManagedObject {
+        try deduplicateCategoriesIfNeeded()
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Category")
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let category = try context.fetch(request).first else {
+            throw CoreDataRepositoryError.missingReference(entity: "Category", id: id)
+        }
+
+        return category
+    }
+
+    func updateCategory(id: UUID, name: String, icon: String, type: String) throws {
+        try deduplicateCategoriesIfNeeded()
+
+        let trimmedName = normalizedName(name)
+        let normalizedType = type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        guard !trimmedName.isEmpty else {
+            throw CoreDataRepositoryError.invalidValue(field: "category.name", value: name)
+        }
+
+        guard Self.allowedTypes.contains(normalizedType) else {
+            throw CoreDataRepositoryError.invalidValue(field: "category.type", value: type)
+        }
+
+        let duplicateNameRequest = NSFetchRequest<NSManagedObject>(entityName: "Category")
+        duplicateNameRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            NSPredicate(format: "name =[c] %@", trimmedName),
+            NSPredicate(format: "id != %@", id as CVarArg)
+        ])
+        duplicateNameRequest.fetchLimit = 1
+
+        if try !context.fetch(duplicateNameRequest).isEmpty {
+            throw CoreDataRepositoryError.invalidValue(field: "category.name", value: name)
+        }
+
+        let category = try fetchCategory(id: id)
+        category.setValue(trimmedName, forKey: "name")
+        category.setValue(icon, forKey: "icon")
+        category.setValue(normalizedType, forKey: "type")
+
+        try context.save()
+    }
+
+    func deleteCategory(id: UUID, remapTransactionsTo fallbackCategoryID: UUID) throws {
+        guard id != fallbackCategoryID else {
+            throw CoreDataRepositoryError.invalidValue(field: "category.fallback", value: "fallback category must differ from deleted category")
+        }
+
+        let category = try fetchCategory(id: id)
+        _ = try fetchCategory(id: fallbackCategoryID)
+
+        try remapTransactions(fromCategoryID: id, toCategoryID: fallbackCategoryID)
+        context.delete(category)
+        try context.save()
+    }
+
     private func deduplicateCategoriesIfNeeded() throws {
         let request = NSFetchRequest<NSManagedObject>(entityName: "Category")
         request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]

@@ -24,6 +24,10 @@ protocol TransactionFormOptionsProviding {
     func loadOptions() throws -> TransactionFormOptions
 }
 
+protocol TransactionCategoryManaging {
+    func upsertCategory(name: String, type: String) throws -> TransactionFormCategoryOption
+}
+
 struct TransactionFormOptionsService: TransactionFormOptionsProviding {
     private let accountRepository: PaymentMethodRepository
     private let categoryRepository: CategoryRepository
@@ -77,6 +81,37 @@ struct TransactionFormOptionsService: TransactionFormOptionsProviding {
         case "debit", "debit_card": return "creditcard.fill"
         case "bank", "checking", "savings", "saving": return "building.columns"
         default: return "creditcard"
+        }
+    }
+}
+
+struct TransactionCategoryService: TransactionCategoryManaging {
+    private let categoryRepository: CategoryRepository
+
+    init(categoryRepository: CategoryRepository) {
+        self.categoryRepository = categoryRepository
+    }
+
+    func upsertCategory(name: String, type: String) throws -> TransactionFormCategoryOption {
+        let normalizedType = type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let icon = Self.defaultIcon(for: normalizedType)
+        let id = try categoryRepository.upsertCategory(name: name, icon: icon, type: normalizedType)
+        let normalizedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return TransactionFormCategoryOption(
+            id: id,
+            name: normalizedName,
+            icon: icon,
+            type: normalizedType
+        )
+    }
+
+    private static func defaultIcon(for type: String) -> String {
+        switch type {
+        case "income":
+            return "arrow.down.circle.fill"
+        default:
+            return "questionmark.circle"
         }
     }
 }

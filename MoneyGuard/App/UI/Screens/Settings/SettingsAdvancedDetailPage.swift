@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsAdvancedDetailPage: View {
     @ObservedObject var viewModel: SettingsViewModel
@@ -7,6 +8,8 @@ struct SettingsAdvancedDetailPage: View {
 
     @AppStorage("debug.showMilestoneZeroExamples") private var showMilestoneZeroExamples = false
     @State private var isDeleteConfirmationPresented = false
+    @State private var isImportFilePickerPresented = false
+    @State private var importFileType: String = "json"
 
     var body: some View {
         ScrollView {
@@ -107,6 +110,124 @@ struct SettingsAdvancedDetailPage: View {
                 Divider()
                     .padding(.vertical, 4)
 
+                // Data Import/Export section
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: "Data"))
+                        .font(.system(.caption, design: .rounded).weight(.semibold))
+                        .foregroundStyle(palette.accent)
+                        .textCase(.uppercase)
+                    Text(String(localized: "Import & Export"))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .foregroundStyle(palette.ink)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    // Export as JSON
+                    Button {
+                        let fileName = "transactions_\(ISO8601DateFormatter().string(from: Date())).json"
+                        if let jsonData = viewModel.exportTransactionsAsJSON() {
+                            exportFile(data: jsonData, filename: fileName)
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.up.doc.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(palette.accent)
+                                .frame(width: 32, height: 32)
+                                .background(palette.accentSoft)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(String(localized: "Export as JSON"))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .foregroundStyle(palette.ink)
+                                Text(String(localized: "Export all transactions in JSON format"))
+                                    .font(.caption)
+                                    .foregroundStyle(palette.secondaryInk)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+                    }
+
+                    // Export as CSV
+                    Button {
+                        let fileName = "transactions_\(ISO8601DateFormatter().string(from: Date())).csv"
+                        if let csvData = viewModel.exportTransactionsAsCSV() {
+                            exportFile(data: csvData, filename: fileName)
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.up.doc.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(palette.accent)
+                                .frame(width: 32, height: 32)
+                                .background(palette.accentSoft)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(String(localized: "Export as CSV"))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .foregroundStyle(palette.ink)
+                                Text(String(localized: "Export all transactions in CSV format"))
+                                    .font(.caption)
+                                    .foregroundStyle(palette.secondaryInk)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+                    }
+
+                    // Import transactions
+                    Button {
+                        isImportFilePickerPresented = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.down.doc.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(palette.accent)
+                                .frame(width: 32, height: 32)
+                                .background(palette.accentSoft)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(String(localized: "Import Transactions"))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .foregroundStyle(palette.ink)
+                                Text(String(localized: "Import from JSON or CSV file"))
+                                    .font(.caption)
+                                    .foregroundStyle(palette.secondaryInk)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+                    }
+                    .fileImporter(
+                        isPresented: $isImportFilePickerPresented,
+                        allowedContentTypes: [.json, .data],
+                        allowsMultipleSelection: false
+                    ) { result in
+                        handleImport(result: result)
+                    }
+                }
+                .financeCard(palette: palette)
+
+                Divider()
+                    .padding(.vertical, 4)
+
                 // Debug section
 #if DEBUG
                 VStack(alignment: .leading, spacing: 4) {
@@ -164,6 +285,45 @@ struct SettingsAdvancedDetailPage: View {
         .background(FinanceTheme.pageBackground(for: colorScheme))
         .navigationTitle(String(localized: "Advanced"))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Helper Methods
+
+    private func exportFile(data: Data, filename: String) {
+        let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let fileURL = documentDirectory.appendingPathComponent(filename)
+
+        do {
+            try data.write(to: fileURL)
+        } catch {
+            // Error is handled by the toast in the viewModel
+        }
+    }
+
+    private func handleImport(result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let fileURL = urls.first else { return }
+
+            do {
+                let data = try Data(contentsOf: fileURL)
+                let filename = fileURL.lastPathComponent.lowercased()
+
+                if filename.hasSuffix(".json") {
+                    viewModel.importTransactions(from: data, format: "json")
+                } else if filename.hasSuffix(".csv") {
+                    viewModel.importTransactions(from: data, format: "csv")
+                } else {
+                    // Toast will be shown by viewModel
+                }
+            } catch {
+                // Toast will be shown by viewModel
+            }
+
+        case .failure:
+            // Toast will be shown by viewModel
+            break
+        }
     }
 }
 

@@ -45,17 +45,20 @@ struct DashboardCategoryCard: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else {
-                VStack(spacing: 8) {
-                    ForEach(Array(viewModel.categoryRows.enumerated()), id: \.offset) { _, row in
-                        VStack(spacing: 4) {
+                VStack(spacing: 10) {
+                    let topCategories = Array(viewModel.categoryRows.prefix(3))
+                    let maxCategoryTotal = topCategories.map { $0.total }.max() ?? 1
+                    
+                    ForEach(Array(topCategories.enumerated()), id: \.offset) { _, row in
+                        VStack(spacing: 5) {
                             HStack {
                                 Text(row.category)
-                                    .font(.footnote.weight(.semibold))
+                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                     .foregroundStyle(palette.ink)
                                     .lineLimit(1)
                                 Spacer()
                                 Text(maskedCurrencyText(row.total))
-                                    .font(.footnote.weight(.bold))
+                                    .font(.system(.subheadline, design: .rounded).weight(.bold))
                                     .foregroundStyle(palette.ink)
                                     .onTapGesture {
                                         if shouldMaskBalances {
@@ -63,7 +66,7 @@ struct DashboardCategoryCard: View {
                                         }
                                     }
                             }
-                            .frame(height: 18)
+                            .frame(height: 20)
 
                             GeometryReader { proxy in
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -71,13 +74,13 @@ struct DashboardCategoryCard: View {
                                     .overlay(alignment: .leading) {
                                         RoundedRectangle(cornerRadius: 6, style: .continuous)
                                             .fill(palette.accent)
-                                            .frame(width: max(0, proxy.size.width * viewModel.categoryBarRatio(for: row)))
+                                            .frame(width: max(0, proxy.size.width * (row.total / maxCategoryTotal)))
                                     }
                             }
-                            .frame(height: 7)
+                            .frame(height: 8)
                             .frame(maxWidth: .infinity)
                         }
-                        .frame(height: 29, alignment: .top)
+                        .frame(height: 38, alignment: .top)
                     }
 
                     Spacer(minLength: 0)

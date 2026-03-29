@@ -120,7 +120,10 @@ struct SettingsScreen: View {
                 case .notifications:
                     SettingsNotificationsDetailPage(palette: palette)
                 case .dataSyncPrivacy:
-                    SettingsDataSyncPrivacyDetailPage(palette: palette)
+                    SettingsDataSyncPrivacyDetailPage(
+                        viewModel: viewModel,
+                        palette: palette
+                    )
                 case .advanced:
                     SettingsAdvancedDetailPage(
                         viewModel: viewModel,

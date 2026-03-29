@@ -8,6 +8,20 @@ enum AddTransactionViewModelError: Error, Equatable {
     case amountTooLarge(suggested: Double?)
 }
 
+enum AddTransactionType: String, CaseIterable, Equatable {
+    case expense
+    case income
+
+    var title: String {
+        switch self {
+        case .expense:
+            return String(localized: "Expense")
+        case .income:
+            return String(localized: "Income")
+        }
+    }
+}
+
 @MainActor
 final class AddTransactionViewModel: ObservableObject {
     private static let amountDisplayFormatter: NumberFormatter = {
@@ -21,6 +35,11 @@ final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Basic Input
     @Published var amountText = ""
+    @Published var selectedTransactionType: AddTransactionType = .expense {
+        didSet {
+            alignSelectedCategoryWithTransactionType()
+        }
+    }
     @Published var merchantRaw = ""
     @Published var selectedCategoryID: UUID?
     @Published var selectedAccountID: UUID? {
@@ -52,6 +71,7 @@ final class AddTransactionViewModel: ObservableObject {
     // MARK: - Private Services
     private let transactionEntryService: TransactionEntrySaving
     private let optionsProvider: TransactionFormOptionsProviding
+    private let categoryManager: TransactionCategoryManaging?
     private let merchantCategorySuggester: MerchantCategorySuggesting?
     private let merchantSuggestionProvider: MerchantSuggestionProviding?
     private let accountAutoSelection: AccountAutoSelectionProviding?
@@ -64,6 +84,7 @@ final class AddTransactionViewModel: ObservableObject {
     init(
         transactionEntryService: TransactionEntrySaving,
         optionsProvider: TransactionFormOptionsProviding,
+        categoryManager: TransactionCategoryManaging? = nil,
         merchantCategorySuggester: MerchantCategorySuggesting? = nil,
         merchantSuggestionProvider: MerchantSuggestionProviding? = nil,
         accountAutoSelection: AccountAutoSelectionProviding? = nil,
@@ -75,6 +96,7 @@ final class AddTransactionViewModel: ObservableObject {
     ) {
         self.transactionEntryService = transactionEntryService
         self.optionsProvider = optionsProvider
+        self.categoryManager = categoryManager
         self.merchantCategorySuggester = merchantCategorySuggester
         self.merchantSuggestionProvider = merchantSuggestionProvider
         self.accountAutoSelection = accountAutoSelection
@@ -133,8 +155,9 @@ final class AddTransactionViewModel: ObservableObject {
             }
 
             if selectedCategoryID == nil {
-                selectedCategoryID = options.categories.first(where: { $0.name == "Uncategorized" })?.id
-                    ?? options.categories.first?.id
+                alignSelectedCategoryWithTransactionType()
+            } else {
+                alignSelectedCategoryWithTransactionType()
             }
 
             syncCurrencyWithSelectedAccount()
@@ -266,19 +289,20 @@ final class AddTransactionViewModel: ObservableObject {
         }
 
         do {
+            let effectiveCategoryID = resolveCategoryIDForSave()
             let result = try transactionEntryService.saveManualTransaction(
                 paymentMethodID: paymentMethodID,
                 amount: amount,
                 currency: currency,
                 date: selectedDate,
                 merchantRaw: merchantRaw,
-                categoryID: selectedCategoryID,
+                categoryID: effectiveCategoryID,
                 note: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note
             )
 
             // Record merchant usage and category mapping
             try merchantMemoryRecorder?.recordMerchantUsage(merchantRaw: merchantRaw)
-            if let categoryID = selectedCategoryID {
+            if let categoryID = effectiveCategoryID {
                 try merchantMemoryRecorder?.recordCategoryMapping(merchantRaw: merchantRaw, categoryID: categoryID)
             }
 
@@ -300,7 +324,7 @@ final class AddTransactionViewModel: ObservableObject {
                     currency: currency,
                     date: selectedDate,
                     merchantRaw: merchantRaw,
-                    categoryID: selectedCategoryID,
+                    categoryID: effectiveCategoryID,
                     note: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note,
                     timestampCreated: Date()
                 )
@@ -381,7 +405,7 @@ final class AddTransactionViewModel: ObservableObject {
     }
 
     var shouldShowDetailsSection: Bool {
-        !categoryOptions.isEmpty || !accountOptions.isEmpty
+        !visibleCategoryOptions.isEmpty || !accountOptions.isEmpty
     }
 
     var shouldShowErrorSection: Bool {
@@ -392,11 +416,85 @@ final class AddTransactionViewModel: ObservableObject {
     }
 
     var selectedCategoryOption: TransactionFormCategoryOption? {
-        categoryOptions.first(where: { $0.id == selectedCategoryID })
+        visibleCategoryOptions.first(where: { $0.id == selectedCategoryID })
+            ?? categoryOptions.first(where: { $0.id == selectedCategoryID })
     }
 
     var selectedAccountOption: TransactionFormAccountOption? {
         accountOptions.first(where: { $0.id == selectedAccountID })
+    }
+
+    var visibleCategoryOptions: [TransactionFormCategoryOption] {
+        categoryOptions.filter { category in
+            let categoryType = category.type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard categoryType == selectedTransactionType.rawValue else {
+                return false
+            }
+
+            // Hide the default generic income category in the picker UI only.
+            if category.name.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare("Income") == .orderedSame {
+                return false
+            }
+
+            return true
+        }
+    }
+
+    func addCustomCategory(named name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return
+        }
+
+        do {
+            let created = try categoryManager?.upsertCategory(name: trimmed, type: selectedTransactionType.rawValue)
+            loadOptions()
+
+            if let createdID = created?.id {
+                selectedCategoryID = createdID
+            } else {
+                selectedCategoryID = visibleCategoryOptions.first(where: {
+                    $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                        .caseInsensitiveCompare(trimmed) == .orderedSame
+                })?.id
+            }
+        } catch {
+            self.error = .saveFailed
+            emitToastEvent()
+        }
+    }
+
+    private func alignSelectedCategoryWithTransactionType() {
+        let visible = visibleCategoryOptions
+
+        if let selectedCategoryID,
+           visible.contains(where: { $0.id == selectedCategoryID }) {
+            return
+        }
+
+        if selectedTransactionType == .expense {
+            selectedCategoryID = visible.first(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare("Uncategorized") == .orderedSame
+            })?.id ?? visible.first?.id
+            return
+        }
+
+        selectedCategoryID = visible.first?.id
+    }
+
+    private func resolveCategoryIDForSave() -> UUID? {
+        if let selectedCategoryID,
+           categoryOptions.contains(where: { $0.id == selectedCategoryID }) {
+            return selectedCategoryID
+        }
+
+        if selectedTransactionType == .income {
+            return categoryOptions.first(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare("Income") == .orderedSame
+            })?.id
+        }
+
+        return nil
     }
 }
 

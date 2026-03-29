@@ -5,6 +5,10 @@ struct AddTransactionCategoryPickerCard: View {
     let categories: [TransactionFormCategoryOption]
     let palette: FinanceTheme.Palette
     let onSelect: (UUID) -> Void
+    var onCreateCategory: ((String) -> Void)? = nil
+
+    @State private var showingCreateCategoryAlert = false
+    @State private var newCategoryName = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -29,6 +33,17 @@ struct AddTransactionCategoryPickerCard: View {
                             Image(systemName: category.icon)
                             Text(category.name)
                         }
+                    }
+                }
+
+                if onCreateCategory != nil {
+                    Divider()
+
+                    Button {
+                        newCategoryName = ""
+                        showingCreateCategoryAlert = true
+                    } label: {
+                        Label(String(localized: "Add Category"), systemImage: "plus")
                     }
                 }
             } label: {
@@ -56,5 +71,19 @@ struct AddTransactionCategoryPickerCard: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(palette.cardBorder, lineWidth: 1)
         )
+        .alert(String(localized: "New Category"), isPresented: $showingCreateCategoryAlert) {
+            TextField(String(localized: "Category name"), text: $newCategoryName)
+
+            Button(String(localized: "Cancel"), role: .cancel) {
+                newCategoryName = ""
+            }
+
+            Button(String(localized: "Add")) {
+                onCreateCategory?(newCategoryName)
+                newCategoryName = ""
+            }
+        } message: {
+            Text(String(localized: "Create a custom category"))
+        }
     }
 }

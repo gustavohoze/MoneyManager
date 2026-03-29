@@ -144,6 +144,54 @@ struct RepositoryTests {
         #expect(transactionCategoryID == resolvedFoodID)
     }
 
+    @Test("Test: update category")
+    func updateCategory_changesNameAndType() throws {
+        let context = PersistenceController(inMemory: true).container.viewContext
+        let repo = CoreDataCategoryRepository(context: context)
+
+        let categoryID = try repo.upsertCategory(name: "Other", icon: "questionmark.circle", type: "expense")
+        try repo.updateCategory(id: categoryID, name: "Salary", icon: "arrow.down.circle.fill", type: "income")
+
+        let updated = try repo.fetchCategory(id: categoryID)
+        #expect((updated.value(forKey: "name") as? String) == "Salary")
+        #expect((updated.value(forKey: "type") as? String) == "income")
+    }
+
+    @Test("Test: delete category remaps transactions")
+    func deleteCategory_remapsTransactionsToFallback() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.container.viewContext
+        let categoryRepo = CoreDataCategoryRepository(context: context)
+        let accountRepo = CoreDataPaymentMethodRepository(context: context)
+        let transactionRepo = CoreDataTransactionRepository(context: context)
+
+        let oldCategoryID = try categoryRepo.upsertCategory(name: "Food", icon: "fork.knife", type: "expense")
+        let fallbackCategoryID = try categoryRepo.upsertCategory(name: "Uncategorized", icon: "questionmark.circle", type: "expense")
+        let accountID = try accountRepo.ensureDefaultPaymentMethod()
+
+        let transactionID = try transactionRepo.createTransaction(
+            paymentMethodID: accountID,
+            amount: 25,
+            currency: "USD",
+            date: Date(),
+            merchantRaw: "Cafe",
+            merchantNormalized: "Cafe",
+            categoryID: oldCategoryID,
+            source: "manual",
+            note: nil
+        )
+
+        try categoryRepo.deleteCategory(id: oldCategoryID, remapTransactionsTo: fallbackCategoryID)
+
+        let transaction = try transactionRepo.fetchTransaction(id: transactionID)
+        let categoryID = transaction.value(forKey: "categoryID") as? UUID
+        #expect(categoryID == fallbackCategoryID)
+
+        #expect(throws: CoreDataRepositoryError.self) {
+            _ = try categoryRepo.fetchCategory(id: oldCategoryID)
+        }
+    }
+
     @Test("Test: validates transaction source")
     func createTransaction_invalidSource_throwsError() throws {
         // Objective: Enforce allowed transaction source values.
