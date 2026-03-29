@@ -10,7 +10,7 @@
 		3A0C5A0C0119853052A8ECD1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25DA91BC0D4BD35C24989EF9 /* Assets.xcassets */; };
 		45859AFC9131425E9749A185 /* MoneyGuardsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B063E0029629C26A83F540D0 /* MoneyGuardsWidget.swift */; };
 		60515C1296AD9CD17A46FE8C /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE49B39149DAE44830E72FE8 /* AppIntent.swift */; };
-		6D73C31081745A5B4588C30E /* MoneyGuardsWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 1D4035F11C170B5892E2DCC1 /* MoneyGuardsWidgetExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6D73C31081745A5B4588C30E /* MoneyGuardsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1D4035F11C170B5892E2DCC1 /* MoneyGuardsWidgetExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		72DBC8A8CC1554265F9487E6 /* MoneyGuardsWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E2F3EBE628DBF68463FC26 /* MoneyGuardsWidgetLiveActivity.swift */; };
 		92006DC26E1953D1D8CA6530 /* MoneyGuardsWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C6F7E0713200E58F4CFEE8B /* MoneyGuardsWidgetBundle.swift */; };
 		DC31E0994999B83BC27B6A09 /* MoneyGuardsWidgetControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F9EC7D759F863BB6913E3EA /* MoneyGuardsWidgetControl.swift */; };
@@ -35,15 +35,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		5CA6B71711C89BD637CCC385 /* Embed App Extensions */ = {
+		5CA6B71711C89BD637CCC385 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				6D73C31081745A5B4588C30E /* MoneyGuardsWidgetExtension.appex in Embed App Extensions */,
+				6D73C31081745A5B4588C30E /* MoneyGuardsWidgetExtension.appex in Embed Foundation Extensions */,
 			);
-			name = "Embed App Extensions";
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -175,7 +175,7 @@
 				041304432F6817B40036F610 /* Sources */,
 				041304442F6817B40036F610 /* Frameworks */,
 				041304452F6817B40036F610 /* Resources */,
-				5CA6B71711C89BD637CCC385 /* Embed App Extensions */,
+				5CA6B71711C89BD637CCC385 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -236,7 +236,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2630;
-				LastUpgradeCheck = 2630;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					041304462F6817B40036F610 = {
 						CreatedOnToolsVersion = 26.3;
@@ -351,6 +351,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -405,6 +406,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -415,6 +417,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -462,6 +465,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -592,8 +596,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = MoneyGuardsWidgetExtension.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LCKK5B35FW;
