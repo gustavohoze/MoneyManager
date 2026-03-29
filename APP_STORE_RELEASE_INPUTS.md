@@ -1,6 +1,6 @@
 # MoneyManager App Store Release Inputs
 
-Last updated: 2026-03-18
+Last updated: 2026-03-29
 
 ## Release Readiness Verdict (Current)
 
@@ -22,7 +22,7 @@ Non-blocking technical warnings to track:
 
 ## App Store Connect Information Checklist
 
-Use this as the single input sheet before creating the App Store version.
+Use this as the single input sheet before creating the App Store version for v1.1.
 
 ### 1) App Record (One-time)
 
@@ -36,11 +36,11 @@ Use this as the single input sheet before creating the App Store version.
 
 ### 2) Version Metadata (Per release)
 
-- Version String (CFBundleShortVersionString / MARKETING_VERSION): 1.0
-- Build Number (CFBundleVersion / CURRENT_PROJECT_VERSION): 1
-- What is New in This Version: TBD
+- Version String (CFBundleShortVersionString / MARKETING_VERSION): 1.1
+- Build Number (CFBundleVersion / CURRENT_PROJECT_VERSION): TBD (increment for v1.1 submission)
+- What is New in This Version: New in 1.1: added App Intents and Shortcuts support for faster actions, improved first-time transaction entry flow, polished dashboard trend chart visuals, and completed reliability updates including widget/app group capability setup and stability fixes.
 - Subtitle (30 chars max): Track spending, hit budgets
-- Promotional Text (optional): Track spending in seconds, stay on budget with clear monthly insights, and keep your data private with Face ID and secure iCloud sync.
+- Promotional Text (optional): Use new Shortcuts-ready actions, enjoy a smoother first transaction experience, and track spending with a cleaner dashboard trend view, all with private Face ID protection and secure iCloud sync.
 - Keywords (100 chars max): expense tracker,budget planner,money guard,personal finance,spending tracker,bill tracker
 - App Description: MoneyManager helps you track daily spending, stay on top of budgets, and understand your money at a glance. Quickly add transactions, review your timeline, and monitor category trends with clear monthly insights. Your data stays under your control with secure storage, iCloud sync across devices, and optional Face ID protection.
 - Support URL: https://shecraa.com/moneymanager/support (required)
@@ -49,7 +49,7 @@ Use this as the single input sheet before creating the App Store version.
 
 ### 3) Pricing and Availability
 
-- Price Tier: TBD (Free recommended for v1 if no IAP)
+- Price Tier: TBD (Free recommended for v1.1 if no IAP)
 - Availability Countries/Regions: Global (all available App Store territories); GeoJSON: AppStore/supported_regions.geojson
 - App Distribution Method: Public or unlisted/private (TBD)
 - App Store Distribution Date: TBD
@@ -104,7 +104,7 @@ Decisions needed for privacy labels:
 - iPad screenshots: TBD only if iPad supported in App Store record
 - App Preview videos (optional): TBD
 
-Recommended screenshot set for v1:
+Recommended screenshot set for v1.1:
 - Dashboard overview
 - Add transaction flow
 - Transaction timeline
@@ -149,6 +149,8 @@ Release can move to GO when all are true:
 ## Owner Fill-In Section
 
 Use this section to fill final values quickly:
+- Version String: 1.1
+- Build Number:
 - SKU:
 - Support URL: https://shecraa.com/moneymanager/support
 - Privacy Policy URL: https://drive.google.com/file/d/REPLACE_WITH_FILE_ID/view
@@ -156,9 +158,9 @@ Use this section to fill final values quickly:
 - Copyright:
 - Price Tier:
 - Countries/Regions: Global (all available App Store territories); GeoJSON: AppStore/supported_regions.geojson
-- What is New:
+- What is New: New in 1.1: added App Intents and Shortcuts support for faster actions, improved first-time transaction entry flow, polished dashboard trend chart visuals, and completed reliability updates including widget/app group capability setup and stability fixes.
 - Subtitle: Track spending, hit budgets
-- Promotional Text: Track spending in seconds, stay on budget with clear monthly insights, and keep your data private with Face ID and secure iCloud sync.
+- Promotional Text: Use new Shortcuts-ready actions, enjoy a smoother first transaction experience, and track spending with a cleaner dashboard trend view, all with private Face ID protection and secure iCloud sync.
 - App Description: MoneyManager helps you track daily spending, stay on top of budgets, and understand your money at a glance. Quickly add transactions, review your timeline, and monitor category trends with clear monthly insights. Your data stays under your control with secure storage, iCloud sync across devices, and optional Face ID protection.
 - Keywords: expense tracker,budget planner,money guard,personal finance,spending tracker,bill tracker
 - Review Contact:
