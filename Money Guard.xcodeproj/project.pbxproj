@@ -51,6 +51,7 @@
 /* Begin PBXFileReference section */
 		041304472F6817B40036F610 /* Money Guard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Money Guard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		041304822F6843470036F610 /* MoneyManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoneyManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		04F59FDB2F78FA6000742F52 /* MoneyGuardsWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoneyGuardsWidgetExtension.entitlements; sourceTree = "<group>"; };
 		1D4035F11C170B5892E2DCC1 /* MoneyGuardsWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoneyGuardsWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		25DA91BC0D4BD35C24989EF9 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = MoneyGuardsWidget/Assets.xcassets; sourceTree = "<group>"; };
 		3F9EC7D759F863BB6913E3EA /* MoneyGuardsWidgetControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MoneyGuardsWidgetControl.swift; path = MoneyGuardsWidget/MoneyGuardsWidgetControl.swift; sourceTree = "<group>"; };
@@ -122,6 +123,7 @@
 		0413043E2F6817B40036F610 = {
 			isa = PBXGroup;
 			children = (
+				04F59FDB2F78FA6000742F52 /* MoneyGuardsWidgetExtension.entitlements */,
 				041304492F6817B40036F610 /* MoneyGuard */,
 				041304832F6843470036F610 /* MoneyManagerTests */,
 				041304482F6817B40036F610 /* Products */,
@@ -590,6 +592,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = MoneyGuardsWidgetExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -613,6 +616,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = MoneyGuardsWidgetExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
